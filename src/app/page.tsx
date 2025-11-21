@@ -76,33 +76,6 @@ type Tab = {
   isLoading: boolean;
 };
 
-function ThemeToggle() {
-    const [theme, setTheme] = useState('dark');
-
-    useEffect(() => {
-        const isDark = document.documentElement.classList.contains('dark');
-        setTheme(isDark ? 'dark' : 'light');
-    }, []);
-
-    const toggleTheme = () => {
-        if (theme === 'light') {
-            document.documentElement.classList.add('dark');
-            setTheme('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            setTheme('light');
-        }
-    };
-
-    return (
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-        </Button>
-    );
-}
-
 export default function BrowserPage() {
   const [tabs, setTabs] = useState<Tab[]>([
     {
@@ -115,7 +88,23 @@ export default function BrowserPage() {
   ]);
   const [activeTabId, setActiveTabId] = useState("tab-1");
   const [inputValue, setInputValue] = useState("");
+  const [theme, setTheme] = useState('dark');
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === 'light') {
+        document.documentElement.classList.add('dark');
+        setTheme('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        setTheme('light');
+    }
+  };
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
@@ -345,7 +334,6 @@ export default function BrowserPage() {
               <Star className="w-5 h-5 text-muted-foreground hover:text-yellow-400" />
             </Button>
           </div>
-          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -386,6 +374,10 @@ export default function BrowserPage() {
                     <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={toggleTheme}>
+                  {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                  <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                     <KeyRound className="mr-2 h-4 w-4" />
                     <span>Passwords and autofill</span>
