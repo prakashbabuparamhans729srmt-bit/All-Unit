@@ -39,6 +39,7 @@ import {
   Sun,
   Moon,
   Link,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -373,6 +375,17 @@ export default function BrowserPage() {
           <Button variant="ghost" size="icon">
             <Download className="w-5 h-5" />
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="w-7 h-7">
+                  <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
+                  <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+          </DropdownMenu>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -508,3 +521,5 @@ export default function BrowserPage() {
     </div>
   );
 }
+
+    
