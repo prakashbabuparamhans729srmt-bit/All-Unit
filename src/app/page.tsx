@@ -369,6 +369,10 @@ export default function BrowserPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button variant="ghost" size="icon">
+            <Download className="w-5 h-5" />
+          </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
