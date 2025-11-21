@@ -17,6 +17,7 @@ import {
   Camera,
   Sparkles,
   Book,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,93 +43,165 @@ const shortcuts = [
     { name: "google admob", icon: 'A', color: 'bg-yellow-500' },
     { name: "flutter full co...", icon: <Book className="w-5 h-5" />, color: 'bg-red-500' },
     { name: "Flip Book", icon: <Book className="w-5 h-5" />, color: 'bg-sky-500' },
-  ];
+];
+
+type Tab = {
+  id: string;
+  history: string[];
+  currentIndex: number;
+  title: string;
+  isLoading: boolean;
+};
 
 export default function BrowserPage() {
-  const [history, setHistory] = useState<string[]>([DEFAULT_URL]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [tabs, setTabs] = useState<Tab[]>([
+    {
+      id: "tab-1",
+      history: [DEFAULT_URL],
+      currentIndex: 0,
+      title: "New Tab",
+      isLoading: false,
+    },
+  ]);
+  const [activeTabId, setActiveTabId] = useState("tab-1");
   const [inputValue, setInputValue] = useState("");
-  const [currentTitle, setCurrentTitle] = useState("New Tab");
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
 
-  const currentUrl = history[currentIndex];
-
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
+  
   useEffect(() => {
-    if (currentUrl === DEFAULT_URL) {
-      setInputValue("");
-      setCurrentTitle("New Tab");
-      setIsLoading(false);
-    } else {
-      setInputValue(currentUrl);
-      setIsLoading(true);
+    if (activeTab) {
+      const newUrl = activeTab.history[activeTab.currentIndex];
+      if (newUrl === DEFAULT_URL) {
+        setInputValue("");
+      } else {
+        setInputValue(newUrl);
+      }
     }
-  }, [currentUrl]);
+  }, [activeTab]);
 
-  const handleNavigation = (url: string) => {
+
+  const updateTab = (id: string, updates: Partial<Tab>) => {
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
+    );
+  };
+  
+  const handleNavigation = (tabId: string, url: string) => {
     let newUrl = url.trim();
     if (!newUrl) return;
 
     if (!/^(https?:\/\/|about:)/i.test(newUrl)) {
       newUrl = `https://www.google.com/search?q=${encodeURIComponent(newUrl)}`;
     }
-
-    const newHistory = history.slice(0, currentIndex + 1);
+    
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    
+    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
     newHistory.push(newUrl);
-    setHistory(newHistory);
-    setCurrentIndex(newHistory.length - 1);
+    
+    updateTab(tabId, { 
+        history: newHistory,
+        currentIndex: newHistory.length - 1,
+        isLoading: true 
+    });
   };
 
   const goBack = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+    if (!activeTab) return;
+    if (activeTab.currentIndex > 0) {
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: true });
     }
   };
 
   const goForward = () => {
-    if (currentIndex < history.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (!activeTab) return;
+    if (activeTab.currentIndex < activeTab.history.length - 1) {
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: true });
     }
   };
 
   const reload = () => {
-    if (iframeRef.current) {
-      setIsLoading(true);
-      iframeRef.current.src = iframeRef.current.src;
+    if (activeTab && iframeRefs.current[activeTab.id]) {
+      updateTab(activeTabId, { isLoading: true });
+      iframeRefs.current[activeTab.id]!.src = iframeRefs.current[activeTab.id]!.src;
     }
   };
   
   const goHome = () => {
-    handleNavigation(DEFAULT_URL);
-  };
-
-  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleNavigation(inputValue);
+    if (activeTab) {
+      handleNavigation(activeTabId, DEFAULT_URL);
     }
   };
 
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    try {
-      if (iframeRef.current && iframeRef.current.contentWindow) {
-        const title = iframeRef.current.contentWindow.document.title;
-        setCurrentTitle(title || "Untitled");
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && activeTab) {
+      handleNavigation(activeTabId, inputValue);
+    }
+  };
 
-        const realUrl = iframeRef.current.contentWindow.location.href;
-         if (realUrl !== 'about:blank' && realUrl !== currentUrl) {
-            const newHistory = [...history];
-            newHistory[currentIndex] = realUrl;
-            setHistory(newHistory);
-            setInputValue(realUrl);
+  const handleIframeLoad = (tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+
+    let title = "Untitled";
+    try {
+      const iframe = iframeRefs.current[tabId];
+      if (iframe && iframe.contentWindow) {
+        title = iframe.contentWindow.document.title || "Untitled";
+
+        const realUrl = iframe.contentWindow.location.href;
+        if (realUrl !== 'about:blank' && realUrl !== tab.history[tab.currentIndex]) {
+           const newHistory = [...tab.history];
+           newHistory[tab.currentIndex] = realUrl;
+           updateTab(tabId, {history: newHistory});
+           if (tabId === activeTabId) {
+             setInputValue(realUrl);
+           }
         }
       }
     } catch (error) {
       console.warn("Could not access iframe content due to cross-origin restrictions:", error);
-      setCurrentTitle("Page");
+      title = "Page";
     }
+    updateTab(tabId, { isLoading: false, title });
   };
   
+  const addTab = () => {
+    const newTabId = `tab-${Date.now()}`;
+    const newTab: Tab = {
+      id: newTabId,
+      history: [DEFAULT_URL],
+      currentIndex: 0,
+      title: "New Tab",
+      isLoading: false,
+    };
+    setTabs([...tabs, newTab]);
+    setActiveTabId(newTabId);
+  };
+
+  const closeTab = (tabIdToClose: string) => {
+    const tabIndex = tabs.findIndex(t => t.id === tabIdToClose);
+    if (tabIndex === -1) return;
+
+    // Prevent closing the last tab
+    if (tabs.length === 1) return;
+
+    const newTabs = tabs.filter(t => t.id !== tabIdToClose);
+    setTabs(newTabs);
+
+    // If the closed tab was active, switch to another tab
+    if (activeTabId === tabIdToClose) {
+      if (newTabs[tabIndex]) {
+        setActiveTabId(newTabs[tabIndex].id);
+      } else {
+        setActiveTabId(newTabs[tabIndex - 1].id);
+      }
+    }
+  };
+
   const NewTabPage = () => (
     <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Google</h1>
@@ -168,25 +241,42 @@ export default function BrowserPage() {
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
       <header className="flex-shrink-0">
         <div className="flex items-end pt-2 px-2">
-          {/* Active Tab */}
-          <div className="relative flex items-center bg-card text-sm font-medium h-10 px-4 rounded-t-lg z-10 -mb-px border border-b-0 border-border">
-            <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-            <span className="truncate max-w-[200px] sm:max-w-xs">{isLoading ? "Loading..." : currentTitle}</span>
-          </div>
-          {/* New Tab Button */}
-          <Button variant="ghost" size="icon" className="h-9 w-9 ml-1">
+          {tabs.map((tab) => (
+             <div key={tab.id}
+                onClick={() => setActiveTabId(tab.id)}
+                className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
+                ${activeTabId === tab.id 
+                    ? 'bg-card text-card-foreground z-10 -mb-px' 
+                    : 'bg-secondary text-secondary-foreground hover:bg-card/80'
+                }`}
+             >
+                <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
+                <span className="truncate max-w-[150px]">
+                    {tab.isLoading ? "Loading..." : tab.title}
+                </span>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20"
+                    onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
+                >
+                    <X className="w-4 h-4" />
+                </Button>
+            </div>
+          ))}
+          <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
             <Plus className="w-4 h-4" />
           </Button>
         </div>
         <Card className="flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border">
-          <Button variant="ghost" size="icon" onClick={goBack} disabled={currentIndex === 0}>
+          <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={goForward} disabled={currentIndex >= history.length - 1}>
+          <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
             <ArrowRight className="w-5 h-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={reload}>
-            {isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
+            {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={goHome}>
             <Home className="w-5 h-5" />
@@ -214,8 +304,8 @@ export default function BrowserPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem disabled>History</DropdownMenuItem>
               <Separator />
-              {history.slice(0).reverse().map((item, index) => (
-                 item !== DEFAULT_URL && <DropdownMenuItem key={`${item}-${index}`} onSelect={() => setCurrentIndex(history.length - 1 - index)}>
+              {tabs.flatMap(t => t.history).filter(item => item !== DEFAULT_URL).reverse().slice(0, 10).map((item, index) => (
+                 <DropdownMenuItem key={`${item}-${index}`} onSelect={() => activeTab && handleNavigation(activeTab.id, item)}>
                    <p className="max-w-xs truncate">{item}</p>
                 </DropdownMenuItem>
               ))}
@@ -226,19 +316,23 @@ export default function BrowserPage() {
           </Button>
         </Card>
       </header>
-      <main className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-hidden">
-        {currentUrl === DEFAULT_URL ? (
-            <NewTabPage />
-        ) : (
-            <iframe
-            ref={iframeRef}
-            src={currentUrl}
-            onLoad={handleIframeLoad}
-            className="w-full h-full border-0"
-            title="Browser Content"
-            sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-            />
-        )}
+      <main className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-hidden relative">
+        {tabs.map(tab => (
+            <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                {tab.history[tab.currentIndex] === DEFAULT_URL ? (
+                    <NewTabPage />
+                ) : (
+                    <iframe
+                        ref={el => (iframeRefs.current[tab.id] = el)}
+                        src={tab.history[tab.currentIndex]}
+                        onLoad={() => handleIframeLoad(tab.id)}
+                        className="w-full h-full border-0"
+                        title="Browser Content"
+                        sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                    />
+                )}
+            </div>
+        ))}
       </main>
     </div>
   );
