@@ -369,7 +369,7 @@ export default function BrowserPage() {
                 <MoreVertical className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
                 <DropdownMenuItem onSelect={addTab}>
                     <FilePlus className="mr-2 h-4 w-4" />
                     <span>New tab</span>
@@ -493,5 +493,3 @@ export default function BrowserPage() {
     </div>
   );
 }
-
-    
