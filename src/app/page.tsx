@@ -36,6 +36,8 @@ import {
   LogOut,
   Minus,
   RectangleHorizontal,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +75,33 @@ type Tab = {
   title: string;
   isLoading: boolean;
 };
+
+function ThemeToggle() {
+    const [theme, setTheme] = useState('dark');
+
+    useEffect(() => {
+        const isDark = document.documentElement.classList.contains('dark');
+        setTheme(isDark ? 'dark' : 'light');
+    }, []);
+
+    const toggleTheme = () => {
+        if (theme === 'light') {
+            document.documentElement.classList.add('dark');
+            setTheme('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            setTheme('light');
+        }
+    };
+
+    return (
+        <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+        </Button>
+    );
+}
 
 export default function BrowserPage() {
   const [tabs, setTabs] = useState<Tab[]>([
@@ -316,6 +345,7 @@ export default function BrowserPage() {
               <Star className="w-5 h-5 text-muted-foreground hover:text-yellow-400" />
             </Button>
           </div>
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -463,3 +493,5 @@ export default function BrowserPage() {
     </div>
   );
 }
+
+    
