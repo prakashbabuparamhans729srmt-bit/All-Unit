@@ -38,6 +38,7 @@ import {
   RectangleHorizontal,
   Sun,
   Moon,
+  Link,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -90,6 +92,7 @@ export default function BrowserPage() {
   const [inputValue, setInputValue] = useState("");
   const [theme, setTheme] = useState('dark');
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
+  const { toast } = useToast();
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -99,9 +102,11 @@ export default function BrowserPage() {
   const toggleTheme = () => {
     if (theme === 'light') {
         document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = 'dark';
         setTheme('dark');
     } else {
         document.documentElement.classList.remove('dark');
+        document.documentElement.style.colorScheme = 'light';
         setTheme('light');
     }
   };
@@ -240,6 +245,17 @@ export default function BrowserPage() {
       }
     }
   };
+  
+  const copyLink = () => {
+    if (currentUrl !== DEFAULT_URL) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        toast({ title: "Copied to clipboard!" });
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+        toast({ title: "Failed to copy link", variant: "destructive" });
+      });
+    }
+  };
 
   const NewTabPage = () => (
     <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4">
@@ -330,6 +346,9 @@ export default function BrowserPage() {
               className="bg-transparent border-none h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               placeholder="Search Google or type a URL"
             />
+             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+              <Link className="w-5 h-5 text-muted-foreground" />
+            </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7">
               <Star className="w-5 h-5 text-muted-foreground hover:text-yellow-400" />
             </Button>
