@@ -18,6 +18,24 @@ import {
   Sparkles,
   Book,
   X,
+  FilePlus,
+  PlusSquare,
+  ShieldOff,
+  KeyRound,
+  Download,
+  Bookmark,
+  PanelsTopLeft,
+  Trash2,
+  ZoomIn,
+  ZoomOut,
+  Printer,
+  Languages,
+  Cast,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Minus,
+  RectangleHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +45,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 
@@ -311,9 +332,114 @@ export default function BrowserPage() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-5 h-5" />
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuItem onSelect={addTab}>
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    <span>New tab</span>
+                    <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <PlusSquare className="mr-2 h-4 w-4" />
+                    <span>New window</span>
+                    <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <ShieldOff className="mr-2 h-4 w-4" />
+                    <span>New Incognito window</span>
+                    <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    <span>Passwords and autofill</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <HistoryIcon className="mr-2 h-4 w-4" />
+                    <span>History</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Downloads</span>
+                    <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    <span>Bookmarks and lists</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <PanelsTopLeft className="mr-2 h-4 w-4" />
+                    <span>Tab groups</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    <span>Extensions</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete browsing data...</span>
+                    <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuItem>
+                        <ZoomIn className="mr-2 h-4 w-4" />
+                        <span>Zoom</span>
+                         <div className="ml-auto flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-6 w-6"><Minus className="w-4 h-4"/></Button>
+                            <span>100%</span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6"><Plus className="w-4 h-4"/></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6"><RectangleHorizontal className="w-4 h-4"/></Button>
+                        </div>
+                    </DropdownMenuItem>
+                </DropdownMenuGroup>
+                 <DropdownMenuItem>
+                    <Printer className="mr-2 h-4 w-4" />
+                    <span>Print...</span>
+                    <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Search with Google Lens</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Languages className="mr-2 h-4 w-4" />
+                    <span>Translate...</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Find and edit</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Cast className="mr-2 h-4 w-4" />
+                    <span>Cast, save, and share</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    <span>More tools</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                 <DropdownMenuItem>
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    <span>Help</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Exit</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
         </Card>
       </header>
       <main className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-hidden relative">
