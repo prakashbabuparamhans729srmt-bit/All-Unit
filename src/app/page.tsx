@@ -62,6 +62,9 @@ import {
   SquareArrowOutUpRight,
   QrCode,
   Computer,
+  Info,
+  CheckCircle2,
+  MessageSquareWarning,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -785,10 +788,33 @@ export default function BrowserPage() {
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem>
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    <span>Help</span>
-                </DropdownMenuItem>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem>
+                          <Info className="mr-2 h-4 w-4" />
+                          <span>About Google Chrome</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <span>What's New</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <HelpCircle className="mr-2 h-4 w-4" />
+                          <span>Help center</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <MessageSquareWarning className="mr-2 h-4 w-4" />
+                          <span>Report an issue...</span>
+                          <DropdownMenuShortcut>Alt+Shift+I</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
                  <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
