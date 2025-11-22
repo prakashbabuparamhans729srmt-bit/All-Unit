@@ -557,10 +557,42 @@ export default function BrowserPage() {
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
-                 <DropdownMenuItem>
-                    <PanelsTopLeft className="mr-2 h-4 w-4" />
-                    <span>Tab groups</span>
-                </DropdownMenuItem>
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <PanelsTopLeft className="mr-2 h-4 w-4" />
+                        <span>Tab groups</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="w-80">
+                            <DropdownMenuItem>
+                                <Plus className="mr-2 h-4 w-4" />
+                                <span>Create new tab group</span>
+                                <DropdownMenuShortcut>Alt+Shift+P</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                                <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2" />
+                                <span>scaler.com</span>
+                                <ChevronRight className="ml-auto h-4 w-4" />
+                            </DropdownMenuItem>
+                             <DropdownMenuItem>
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2" />
+                                <span>fluuter</span>
+                                <ChevronRight className="ml-auto h-4 w-4" />
+                            </DropdownMenuItem>
+                             <DropdownMenuItem>
+                                <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2" />
+                                <span>free ai coarse by gov.</span>
+                                <ChevronRight className="ml-auto h-4 w-4" />
+                            </DropdownMenuItem>
+                             <DropdownMenuItem>
+                                <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2" />
+                                <span>google ai mode</span>
+                                <ChevronRight className="ml-auto h-4 w-4" />
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuItem>
                     <Sparkles className="mr-2 h-4 w-4" />
                     <span>Extensions</span>
