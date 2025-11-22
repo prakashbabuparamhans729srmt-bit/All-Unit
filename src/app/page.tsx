@@ -297,33 +297,40 @@ export default function BrowserPage() {
   return (
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
       <header className="flex-shrink-0">
-        <div className="flex items-end pt-2 px-2">
-          {tabs.map((tab) => (
-             <div key={tab.id}
-                onClick={() => setActiveTabId(tab.id)}
-                className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
-                ${activeTabId === tab.id 
-                    ? 'bg-card text-card-foreground z-10 -mb-px' 
-                    : 'bg-secondary text-secondary-foreground hover:bg-card/80'
-                }`}
-             >
-                <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-                <span className="truncate max-w-[150px]">
-                    {tab.isLoading ? "Loading..." : tab.title}
-                </span>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20"
-                    onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
-                >
-                    <X className="w-4 h-4" />
-                </Button>
+        <div className="flex items-center justify-between pt-2 px-2">
+            <div className="flex items-end">
+              {tabs.map((tab) => (
+                 <div key={tab.id}
+                    onClick={() => setActiveTabId(tab.id)}
+                    className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
+                    ${activeTabId === tab.id 
+                        ? 'bg-card text-card-foreground z-10 -mb-px' 
+                        : 'bg-secondary text-secondary-foreground hover:bg-card/80'
+                    }`}
+                 >
+                    <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <span className="truncate max-w-[150px]">
+                        {tab.isLoading ? "Loading..." : tab.title}
+                    </span>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20"
+                        onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+              ))}
+              <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
-          ))}
-          <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
-            <Plus className="w-4 h-4" />
-          </Button>
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="w-8 h-8"><Minus className="w-5 h-5"/></Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8"><RectangleHorizontal className="w-5 h-5"/></Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500"><X className="w-5 h-5"/></Button>
+            </div>
         </div>
         <Card className="flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border">
           <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
@@ -521,5 +528,3 @@ export default function BrowserPage() {
     </div>
   );
 }
-
-    
