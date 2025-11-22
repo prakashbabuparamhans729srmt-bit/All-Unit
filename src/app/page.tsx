@@ -54,6 +54,8 @@ import {
   BookCopy,
   BookUp,
   Folder,
+  Puzzle,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -593,10 +595,24 @@ export default function BrowserPage() {
                         </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
-                <DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
                     <Sparkles className="mr-2 h-4 w-4" />
                     <span>Extensions</span>
-                </DropdownMenuItem>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem>
+                        <Puzzle className="mr-2 h-4 w-4" />
+                        <span>Manage Extensions</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Store className="mr-2 h-4 w-4" />
+                        <span>Visit Chrome Web Store</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={toggleTheme}>
                   {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
