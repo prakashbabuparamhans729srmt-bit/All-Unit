@@ -149,7 +149,7 @@ export default function BrowserPage() {
   useEffect(() => {
     if (activeTab) {
       const newUrl = activeTab.history[activeTab.currentIndex];
-      if (newUrl === DEFAULT_URL) {
+      if (newUrl === DEFAULT_URL || newUrl.startsWith('about:')) {
         setInputValue("");
       } else {
         setInputValue(newUrl);
@@ -167,6 +167,18 @@ export default function BrowserPage() {
   const handleNavigation = (tabId: string, url: string) => {
     let newUrl = url.trim();
     if (!newUrl) return;
+
+    if (newUrl === 'about:settings') {
+        const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
+        newHistory.push(newUrl);
+        updateTab(activeTabId, { 
+            history: newHistory,
+            currentIndex: newHistory.length - 1,
+            isLoading: false,
+            title: "Settings"
+        });
+        return;
+    }
 
     if (!/^(https?:\/\/|about:)/i.test(newUrl)) {
       newUrl = `https://www.google.com/search?q=${encodeURIComponent(newUrl)}`;
@@ -188,19 +200,26 @@ export default function BrowserPage() {
   const goBack = () => {
     if (!activeTab) return;
     if (activeTab.currentIndex > 0) {
-      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: true });
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: activeTab.history[activeTab.currentIndex - 1] !== 'about:settings' });
     }
   };
 
   const goForward = () => {
     if (!activeTab) return;
     if (activeTab.currentIndex < activeTab.history.length - 1) {
-      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: true });
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: activeTab.history[activeTab.currentIndex + 1] !== 'about:settings' });
     }
   };
 
   const reload = () => {
-    if (activeTab && iframeRefs.current[activeTab.id]) {
+    if (!activeTab) return;
+
+    if (currentUrl === 'about:settings') {
+        // No real reload for internal page, but we can simulate it if needed
+        return;
+    }
+
+    if (iframeRefs.current[activeTab.id]) {
       updateTab(activeTabId, { isLoading: true });
       iframeRefs.current[activeTab.id]!.src = iframeRefs.current[activeTab.id]!.src;
     }
@@ -240,7 +259,8 @@ export default function BrowserPage() {
       }
     } catch (error) {
       console.warn("Could not access iframe content due to cross-origin restrictions:", error);
-      title = "Page";
+      const url = new URL(tab.history[tab.currentIndex]);
+      title = url.hostname;
     }
     updateTab(tabId, { isLoading: false, title });
   };
@@ -322,7 +342,12 @@ export default function BrowserPage() {
             ))}
         </div>
     </div>
-  )
+  );
+
+  const SettingsPage = () => {
+    const SettingsContent = require('@/app/settings/page').default;
+    return <SettingsContent />;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
@@ -402,7 +427,7 @@ export default function BrowserPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem disabled>History</DropdownMenuItem>
               <Separator />
-              {tabs.flatMap(t => t.history).filter(item => item !== DEFAULT_URL).reverse().slice(0, 10).map((item, index) => (
+              {tabs.flatMap(t => t.history).filter(item => item !== DEFAULT_URL && !item.startsWith('about:')).reverse().slice(0, 10).map((item, index) => (
                  <DropdownMenuItem key={`${item}-${index}`} onSelect={() => activeTab && handleNavigation(activeTab.id, item)}>
                    <p className="max-w-xs truncate">{item}</p>
                 </DropdownMenuItem>
@@ -431,7 +456,7 @@ export default function BrowserPage() {
                 <MoreVertical className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+            <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto">
                 <DropdownMenuItem onSelect={addTab}>
                     <FilePlus className="mr-2 h-4 w-4" />
                     <span>New tab</span>
@@ -815,7 +840,7 @@ export default function BrowserPage() {
                       </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                   </DropdownMenuSub>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => activeTab && handleNavigation(activeTab.id, 'about:settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                 </DropdownMenuItem>
@@ -833,6 +858,8 @@ export default function BrowserPage() {
             <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                 {tab.history[tab.currentIndex] === DEFAULT_URL ? (
                     <NewTabPage />
+                ) : tab.history[tab.currentIndex] === 'about:settings' ? (
+                    <SettingsPage />
                 ) : (
                     <iframe
                         ref={el => (iframeRefs.current[tab.id] = el)}
