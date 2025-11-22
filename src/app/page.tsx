@@ -59,6 +59,9 @@ import {
   Scissors,
   Copy,
   ClipboardPaste,
+  SquareArrowOutUpRight,
+  QrCode,
+  Computer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -705,10 +708,46 @@ export default function BrowserPage() {
                         </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
-                 <DropdownMenuItem>
-                    <Cast className="mr-2 h-4 w-4" />
-                    <span>Cast, save, and share</span>
-                </DropdownMenuItem>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Cast className="mr-2 h-4 w-4" />
+                      <span>Cast, save, and share</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="w-80">
+                        <DropdownMenuLabel>Cast</DropdownMenuLabel>
+                        <DropdownMenuItem>
+                            <Cast className="mr-2 h-4 w-4" />
+                            <span>Cast...</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Save</DropdownMenuLabel>
+                        <DropdownMenuItem>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Save page as...</span>
+                            <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+                            <span>Create shortcut...</span>
+                        </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Share</DropdownMenuLabel>
+                        <DropdownMenuItem>
+                            <Link className="mr-2 h-4 w-4" />
+                            <span>Copy link</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <Computer className="mr-2 h-4 w-4" />
+                            <span>Send to your devices</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                            <QrCode className="mr-2 h-4 w-4" />
+                            <span>Create QR Code</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                 </DropdownMenuSub>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Sparkles className="mr-2 h-4 w-4" />
