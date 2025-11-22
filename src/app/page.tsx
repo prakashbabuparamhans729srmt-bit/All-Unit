@@ -56,6 +56,9 @@ import {
   Folder,
   Puzzle,
   Store,
+  Scissors,
+  Copy,
+  ClipboardPaste,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -671,10 +674,37 @@ export default function BrowserPage() {
                     <Languages className="mr-2 h-4 w-4" />
                     <span>Translate...</span>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
-                    <Search className="mr-2 h-4 w-4" />
-                    <span>Find and edit</span>
-                </DropdownMenuItem>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Search className="mr-2 h-4 w-4" />
+                        <span>Find and edit</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem>
+                                <Search className="mr-2 h-4 w-4" />
+                                <span>Find...</span>
+                                <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                                <Scissors className="mr-2 h-4 w-4" />
+                                <span>Cut</span>
+                                <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Copy className="mr-2 h-4 w-4" />
+                                <span>Copy</span>
+                                <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <ClipboardPaste className="mr-2 h-4 w-4" />
+                                <span>Paste</span>
+                                <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
                  <DropdownMenuItem>
                     <Cast className="mr-2 h-4 w-4" />
                     <span>Cast, save, and share</span>
