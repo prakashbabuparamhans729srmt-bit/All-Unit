@@ -47,6 +47,8 @@ import {
   Code,
   CreditCard,
   MapPin,
+  RefreshCcw,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +65,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
   DropdownMenuSubContent,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -373,6 +376,7 @@ export default function BrowserPage() {
               <Star className="w-5 h-5 text-muted-foreground hover:text-yellow-400" />
             </Button>
           </div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -428,6 +432,87 @@ export default function BrowserPage() {
                     <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <HistoryIcon className="mr-2 h-4 w-4" />
+                    <span>History</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="w-80">
+                      <DropdownMenuItem>
+                        <HistoryIcon className="mr-2 h-4 w-4" />
+                        <span>History</span>
+                        <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <HistoryIcon className="mr-2 h-4 w-4" />
+                        <span>Grouped history</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Recent tabs</DropdownMenuLabel>
+                      <DropdownMenuItem>
+                        <PanelsTopLeft className="mr-2 h-4 w-4" />
+                        <span>7 tabs</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Globe className="mr-2 h-4 w-4" />
+                        <span>Aisha Browser</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Search className="mr-2 h-4 w-4" />
+                        <span>Google Search</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        <span>Firebase Studio</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <PanelsTopLeft className="mr-2 h-4 w-4" />
+                        <span>2 tabs</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuItem>
+                       <DropdownMenuItem>
+                        <Globe className="mr-2 h-4 w-4" />
+                        <span>YouTube</span>
+                      </DropdownMenuItem>
+                       <DropdownMenuItem>
+                        <PanelsTopLeft className="mr-2 h-4 w-4" />
+                        <span>3 tabs</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuItem>
+                       <DropdownMenuItem>
+                        <PanelsTopLeft className="mr-2 h-4 w-4" />
+                        <span>1 tab</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Your devices</DropdownMenuLabel>
+                      <DropdownMenuItem>
+                        <RefreshCcw className="mr-2 h-4 w-4" />
+                        <span>Sign in to see tabs from other devices</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                 <DropdownMenuItem>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Downloads</span>
+                    <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    <span>Bookmarks and lists</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem>
+                    <PanelsTopLeft className="mr-2 h-4 w-4" />
+                    <span>Tab groups</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    <span>Extensions</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={toggleTheme}>
                   {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                   <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
@@ -455,27 +540,6 @@ export default function BrowserPage() {
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuItem>
-                    <HistoryIcon className="mr-2 h-4 w-4" />
-                    <span>History</span>
-                </DropdownMenuItem>
-                 <DropdownMenuItem>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>Downloads</span>
-                    <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                 <DropdownMenuItem>
-                    <Bookmark className="mr-2 h-4 w-4" />
-                    <span>Bookmarks and lists</span>
-                </DropdownMenuItem>
-                 <DropdownMenuItem>
-                    <PanelsTopLeft className="mr-2 h-4 w-4" />
-                    <span>Tab groups</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    <span>Extensions</span>
-                </DropdownMenuItem>
-                 <DropdownMenuItem>
                     <Trash2 className="mr-2 h-4 w-4" />
                     <span>Delete browsing data...</span>
                     <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
@@ -588,4 +652,3 @@ export default function BrowserPage() {
       </main>
     </div>
   );
-}
