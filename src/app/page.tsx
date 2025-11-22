@@ -49,6 +49,11 @@ import {
   MapPin,
   RefreshCcw,
   ChevronRight,
+  BookmarkPlus,
+  BookMarked,
+  BookCopy,
+  BookUp,
+  Folder,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -500,10 +505,58 @@ export default function BrowserPage() {
                     <span>Downloads</span>
                     <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
+                 <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
                     <Bookmark className="mr-2 h-4 w-4" />
                     <span>Bookmarks and lists</span>
-                </DropdownMenuItem>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="w-80">
+                      <DropdownMenuItem>
+                        <BookmarkPlus className="mr-2 h-4 w-4" />
+                        <span>Bookmark this tab...</span>
+                        <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <BookCopy className="mr-2 h-4 w-4" />
+                        <span>Bookmark all tabs...</span>
+                        <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <RectangleHorizontal className="mr-2 h-4 w-4" />
+                        <span>Hide bookmarks bar</span>
+                        <DropdownMenuShortcut>Ctrl+Shift+B</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Star className="mr-2 h-4 w-4" />
+                        <span>Show all bookmarks</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <BookMarked className="mr-2 h-4 w-4" />
+                        <span>Bookmark manager</span>
+                        <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <BookUp className="mr-2 h-4 w-4" />
+                        <span>Import bookmarks and settings...</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <ListTodo className="mr-2 h-4 w-4" />
+                        <span>Reading list</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Bookmarks</DropdownMenuLabel>
+                      <DropdownMenuItem>
+                        <Folder className="mr-2 h-4 w-4" />
+                        <span>dronwall</span>
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
                  <DropdownMenuItem>
                     <PanelsTopLeft className="mr-2 h-4 w-4" />
                     <span>Tab groups</span>
@@ -652,3 +705,4 @@ export default function BrowserPage() {
       </main>
     </div>
   );
+}
