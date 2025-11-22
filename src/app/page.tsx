@@ -40,6 +40,11 @@ import {
   Moon,
   Link,
   User,
+  Pencil,
+  BookOpen,
+  Gauge,
+  ListTodo,
+  Code,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +57,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -485,10 +494,42 @@ export default function BrowserPage() {
                     <Cast className="mr-2 h-4 w-4" />
                     <span>Cast, save, and share</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
                     <Sparkles className="mr-2 h-4 w-4" />
                     <span>More tools</span>
-                </DropdownMenuItem>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem>
+                        <RectangleHorizontal className="mr-2 h-4 w-4" />
+                        <span>Name window...</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>Customize Chrome</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        <span>Reading mode</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Gauge className="mr-2 h-4 w-4" />
+                        <span>Performance</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <ListTodo className="mr-2 h-4 w-4" />
+                        <span>Task manager</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Code className="mr-2 h-4 w-4" />
+                        <span>Developer tools</span>
+                        <DropdownMenuShortcut>Ctrl+Shift+I</DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem>
                     <HelpCircle className="mr-2 h-4 w-4" />
