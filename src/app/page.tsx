@@ -45,6 +45,8 @@ import {
   Gauge,
   ListTodo,
   Code,
+  CreditCard,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -430,10 +432,28 @@ export default function BrowserPage() {
                   {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                   <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
                     <KeyRound className="mr-2 h-4 w-4" />
                     <span>Passwords and autofill</span>
-                </DropdownMenuItem>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem>
+                        <KeyRound className="mr-2 h-4 w-4" />
+                        <span>Google Password Manager</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        <span>Payment methods</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <MapPin className="mr-2 h-4 w-4" />
+                        <span>Addresses and more</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuItem>
                     <HistoryIcon className="mr-2 h-4 w-4" />
                     <span>History</span>
