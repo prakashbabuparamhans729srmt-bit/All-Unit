@@ -149,7 +149,7 @@ export default function BrowserPage() {
   useEffect(() => {
     if (activeTab) {
       const newUrl = activeTab.history[activeTab.currentIndex];
-      if (newUrl === DEFAULT_URL || newUrl.startsWith('about:')) {
+      if (newUrl === DEFAULT_URL) {
         setInputValue("");
       } else {
         setInputValue(newUrl);
@@ -167,6 +167,10 @@ export default function BrowserPage() {
   const handleNavigation = (tabId: string, url: string) => {
     let newUrl = url.trim();
     if (!newUrl) return;
+
+    if (newUrl.startsWith('aisha:')) {
+      newUrl = newUrl.replace('aisha://', 'about:');
+    }
 
     if (newUrl === 'about:settings') {
         const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
@@ -309,6 +313,8 @@ export default function BrowserPage() {
     }
   };
 
+  const isInternalPage = currentUrl.startsWith('about:');
+
   const NewTabPage = () => (
     <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Google</h1>
@@ -401,13 +407,22 @@ export default function BrowserPage() {
             <Home className="w-5 h-5" />
           </Button>
           <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
-            <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
+            {isInternalPage ? (
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Aisha</span>
+                    </div>
+                </div>
+            ) : (
+                <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
+            )}
             <Input
               type="text"
-              value={inputValue}
+              value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              className="bg-transparent border-none h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
               placeholder="Search Google or type a URL"
             />
              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
