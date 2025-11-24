@@ -23,8 +23,13 @@ import {
   CreditCard,
   MapPin,
   ListPlus,
+  Trash2,
+  BookLock,
+  Cookie,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -122,12 +127,57 @@ export default function SettingsPage() {
     </div>
   )
 
+  const PrivacyAndSecurity = () => (
+    <div className="space-y-8">
+      <h2 className="text-2xl font-semibold">Privacy and security</h2>
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold">Take the Privacy Guide</h3>
+            <p className="text-muted-foreground">Review key privacy and security controls in Chrome</p>
+            <div className="pt-2">
+              <Button>Get started</Button>
+              <Button variant="ghost" className="ml-2">No thanks</Button>
+            </div>
+          </div>
+          <Image src="https://www.gstatic.com/images/branding/product/2x/chrome_96dp.png" alt="Privacy Guide" width={120} height={120} className="opacity-50" />
+        </div>
+      </Card>
+      
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Safety Check</h3>
+        <Card className="p-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <Shield className="w-6 h-6 mr-4 text-blue-500"/>
+            <div>
+              <p className="font-semibold">Chrome found some safety recommendations for your review</p>
+              <p className="text-sm text-muted-foreground">Passwords, notifications, permissions</p>
+            </div>
+          </div>
+          <Button>Go to Safety Check</Button>
+        </Card>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Privacy and security</h3>
+        <Card className="p-0">
+            <SettingsItem icon={Trash2} title="Delete browsing data" description="Delete history, cookies, cache, and more" />
+            <SettingsItem icon={ShieldCheck} title="Privacy Guide" description="Review key privacy and security controls" />
+            <SettingsItem icon={Cookie} title="Third-party cookies" description="Third-party cookies are allowed" />
+            <SettingsItem icon={ShieldAlert} title="Ad privacy" description="Customize the info used by sites to show you ads" />
+        </Card>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'You and Google':
         return <YouAndGoogle />;
-       case 'Autofill and passwords':
+      case 'Autofill and passwords':
         return <AutofillAndPasswords />;
+      case 'Privacy and security':
+        return <PrivacyAndSecurity />;
       default:
         return (
           <div className="flex h-full items-center justify-center">
