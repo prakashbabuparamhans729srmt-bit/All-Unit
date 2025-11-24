@@ -439,6 +439,37 @@ export default function SettingsPage() {
     </div>
   )
 
+  const SearchEngine = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">Search engine</h2>
+      <Card className="p-0">
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Search engine used in the address bar</h3>
+            </div>
+            <Select defaultValue="google">
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="google">Google</SelectItem>
+                <SelectItem value="bing">Bing</SelectItem>
+                <SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
+                <SelectItem value="yahoo">Yahoo!</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <SettingsItem 
+          title="Manage search engines and site search" 
+          description="Add, edit, or remove search engines, and set defaults"
+        />
+      </Card>
+    </div>
+  );
+
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'You and Google':
@@ -453,6 +484,8 @@ export default function SettingsPage() {
         return <AiInnovations />;
       case 'Appearance':
         return <Appearance />;
+      case 'Search engine':
+        return <SearchEngine />;
       default:
         return (
           <div className="flex h-full items-center justify-center">
