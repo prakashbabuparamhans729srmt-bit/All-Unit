@@ -20,6 +20,9 @@ import {
   Info,
   ChevronRight,
   ExternalLink,
+  CreditCard,
+  MapPin,
+  ListPlus,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +49,20 @@ const menuItems = [
   { icon: Puzzle, text: 'Extensions' },
   { icon: Info, text: 'About Chrome' },
 ];
+
+const SettingsItem = ({ title, description, externalLink = false, icon: Icon, onClick }: {title: string, description?: string, externalLink?: boolean, icon?: React.ElementType, onClick?: () => void}) => (
+  <>
+    <Separator />
+    <div className="flex items-center py-4 cursor-pointer" onClick={onClick}>
+      {Icon && <Icon className="w-5 h-5 mr-4 text-muted-foreground" />}
+      <div className="flex-1">
+        <h3 className="font-medium">{title}</h3>
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      </div>
+      {externalLink ? <ExternalLink className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+    </div>
+  </>
+)
 
 export default function SettingsPage() {
   const [activeMenu, setActiveMenu] = useState('You and Google');
@@ -82,31 +99,35 @@ export default function SettingsPage() {
           </div>
         </div>
       </Card>
-
-      <SettingsItem title="Sync and Google services" description="Services for search suggestions, security, and more" />
-      <SettingsItem title="Manage your Google Account" description="Control your data, privacy, and security to make Google work better for you" externalLink />
-      <SettingsItem title="Customize your Chrome profile" description="Choose a profile name and picture" />
-      <SettingsItem title="Import bookmarks and settings" description="Get your favorites, browsing history, passwords, and more from another browser" />
+      <div className="flex flex-col">
+        <SettingsItem title="Sync and Google services" description="Services for search suggestions, security, and more" />
+        <SettingsItem title="Manage your Google Account" description="Control your data, privacy, and security to make Google work better for you" externalLink />
+        <SettingsItem title="Customize your Chrome profile" description="Choose a profile name and picture" />
+        <SettingsItem title="Import bookmarks and settings" description="Get your favorites, browsing history, passwords, and more from another browser" />
+      </div>
     </div>
   );
 
-  const SettingsItem = ({ title, description, externalLink = false }: {title: string, description: string, externalLink?: boolean}) => (
-    <>
-      <Separator />
-      <div className="flex items-center py-4">
-        <div className="flex-1">
-          <h3 className="font-medium">{title}</h3>
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
-        </div>
-        {externalLink ? <ExternalLink className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+  const AutofillAndPasswords = () => (
+     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Autofill and passwords</h2>
       </div>
-    </>
+      <Card className="p-0">
+        <SettingsItem icon={KeyRound} title="Google Password Manager" externalLink />
+        <SettingsItem icon={CreditCard} title="Payment methods" />
+        <SettingsItem icon={MapPin} title="Addresses and more" />
+        <SettingsItem icon={ListPlus} title="Enhanced autofill" description="Chrome understands forms better and can autofill them faster for you" />
+      </Card>
+    </div>
   )
 
   const renderContent = () => {
     switch (activeMenu) {
       case 'You and Google':
         return <YouAndGoogle />;
+       case 'Autofill and passwords':
+        return <AutofillAndPasswords />;
       default:
         return (
           <div className="flex h-full items-center justify-center">
@@ -142,7 +163,7 @@ export default function SettingsPage() {
         </div>
       </aside>
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           <div className="w-full max-w-lg mb-8">
             <div className="relative">
