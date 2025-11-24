@@ -37,6 +37,7 @@ import {
   Pencil,
   ScanEye,
   Leaf,
+  Home,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,13 @@ import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const menuItems = [
   { icon: User, text: 'You and Google' },
@@ -325,6 +333,111 @@ export default function SettingsPage() {
         </Card>
     </div>
   );
+  
+  const Appearance = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">Appearance</h2>
+      <Card className="p-0">
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Theme</h3>
+              <p className="text-sm text-muted-foreground">Chrome Colors</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon"><ExternalLink className="w-5 h-5 text-muted-foreground" /></Button>
+              <Button variant="outline">Reset to default</Button>
+            </div>
+          </div>
+        </div>
+        <Separator />
+        <div className="p-4">
+           <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Customize your toolbar</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon"><ExternalLink className="w-5 h-5 text-muted-foreground" /></Button>
+              <Button variant="outline">Reset to default</Button>
+            </div>
+          </div>
+        </div>
+        <Separator />
+        <div className="p-4">
+           <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Mode</h3>
+            </div>
+            <Select defaultValue="dark">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+                <SelectItem value="system">System</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <SettingsItem icon={Home} title="Show home button" description="Disabled">
+            <Switch />
+        </SettingsItem>
+        <SettingsItem title="Show bookmarks bar">
+            <Switch defaultChecked />
+        </SettingsItem>
+        <SettingsItem title="Show tab groups in bookmarks bar">
+            <Switch defaultChecked />
+        </SettingsItem>
+        <SettingsItem title="Automatically pin new tab groups created on any device to the bookmarks bar">
+            <Switch defaultChecked />
+        </SettingsItem>
+        <div className="p-4">
+           <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Side panel position</h3>
+            </div>
+            <Select defaultValue="right">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Show on left</SelectItem>
+                <SelectItem value="right">Show on right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Separator/>
+        <div className="p-4">
+            <h3 className="font-medium">Tab hover preview card</h3>
+        </div>
+        <SettingsItem title="Show tab preview images">
+            <Switch defaultChecked />
+        </SettingsItem>
+        <SettingsItem title="Show tab memory usage">
+            <Switch defaultChecked />
+        </SettingsItem>
+         <div className="p-4">
+           <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Font size</h3>
+            </div>
+            <Select defaultValue="medium">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">Small</SelectItem>
+                <SelectItem value="medium">Medium (Recommended)</SelectItem>
+                <SelectItem value="large">Large</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+    </div>
+  )
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -338,6 +451,8 @@ export default function SettingsPage() {
         return <Performance />;
       case 'AI innovations':
         return <AiInnovations />;
+      case 'Appearance':
+        return <Appearance />;
       default:
         return (
           <div className="flex h-full items-center justify-center">
