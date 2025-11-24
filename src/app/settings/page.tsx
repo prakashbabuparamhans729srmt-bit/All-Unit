@@ -271,7 +271,7 @@ export default function SettingsPage() {
             </div>
             <Switch defaultChecked/>
           </div>
-          <div className="mt-6 space-y-6">
+          <RadioGroup defaultValue="standard" className="mt-6 space-y-6">
             <div className="flex items-start">
               <RadioGroupItem value="extended" id="extended" className="mt-1"/>
               <div className="ml-3 flex-1">
@@ -288,7 +288,7 @@ export default function SettingsPage() {
               </div>
               <Button variant="ghost" size="icon"><ChevronDown className="w-5 h-5 text-muted-foreground"/></Button>
             </div>
-          </div>
+          </RadioGroup>
         </Card>
       </div>
 
@@ -354,5 +354,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
