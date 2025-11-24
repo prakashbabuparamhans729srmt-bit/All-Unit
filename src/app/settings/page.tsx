@@ -34,6 +34,9 @@ import {
   MessageSquareWarning,
   MessageSquare,
   ChevronDown,
+  Pencil,
+  ScanEye,
+  Leaf,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -271,7 +274,7 @@ export default function SettingsPage() {
             </div>
             <Switch defaultChecked/>
           </div>
-          <RadioGroup defaultValue="standard" className="mt-6 space-y-6">
+           <RadioGroup defaultValue="standard" className="mt-6 space-y-6">
             <div className="flex items-start">
               <RadioGroupItem value="extended" id="extended" className="mt-1"/>
               <div className="ml-3 flex-1">
@@ -295,6 +298,34 @@ export default function SettingsPage() {
     </div>
   );
 
+  const AiInnovations = () => (
+    <div className="space-y-6">
+        <h2 className="text-2xl font-semibold">Reimagine Chrome, supercharged with AI</h2>
+        <Card className="p-6">
+            <h3 className="font-semibold text-lg mb-4">Things to consider</h3>
+            <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                    <Leaf className="w-5 h-5 mt-0.5 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">These features use AI, are in early development, and won't always get it right</p>
+                </div>
+                <div className="flex items-start gap-4">
+                    <span className="font-bold text-lg text-muted-foreground">G</span>
+                    <p className="text-sm text-muted-foreground">When you use these features, relevant data is sent to Google in order to create AI experiences</p>
+                </div>
+                <div className="flex items-start gap-4">
+                    <ScanEye className="w-5 h-5 mt-0.5 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Data sent to Google may be seen by human reviewers to improve Chrome AI's technology</p>
+                </div>
+            </div>
+        </Card>
+        
+        <h3 className="text-lg font-semibold">AI innovations</h3>
+        <Card className="p-0">
+            <SettingsItem icon={Pencil} title="Help me write" description="Helps you write short-form text for things on the web, like reviews" />
+        </Card>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'You and Google':
@@ -305,6 +336,8 @@ export default function SettingsPage() {
         return <PrivacyAndSecurity />;
       case 'Performance':
         return <Performance />;
+      case 'AI innovations':
+        return <AiInnovations />;
       default:
         return (
           <div className="flex h-full items-center justify-center">
