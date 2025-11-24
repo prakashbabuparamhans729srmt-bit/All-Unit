@@ -657,7 +657,7 @@ export default function BrowserPage() {
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Store className="mr-2 h-4 w-4" />
-                        <span>Visit Chrome Web Store</span>
+                        <span>Visit Web Store</span>
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
@@ -676,7 +676,7 @@ export default function BrowserPage() {
                     <DropdownMenuSubContent>
                       <DropdownMenuItem>
                         <KeyRound className="mr-2 h-4 w-4" />
-                        <span>Google Password Manager</span>
+                        <span>Aisha Password Manager</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <CreditCard className="mr-2 h-4 w-4" />
@@ -804,7 +804,7 @@ export default function BrowserPage() {
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Pencil className="mr-2 h-4 w-4" />
-                        <span>Customize Chrome</span>
+                        <span>Customize Aisha</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
@@ -837,7 +837,7 @@ export default function BrowserPage() {
                       <DropdownMenuSubContent>
                         <DropdownMenuItem>
                           <Info className="mr-2 h-4 w-4" />
-                          <span>About Google Chrome</span>
+                          <span>About Aisha Browser</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <CheckCircle2 className="mr-2 h-4 w-4" />

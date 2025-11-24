@@ -72,7 +72,7 @@ const menuItems = [
   { icon: Cog, text: 'System' },
   { icon: RefreshCw, text: 'Reset settings' },
   { icon: Puzzle, text: 'Extensions' },
-  { icon: Info, text: 'About Chrome' },
+  { icon: Info, text: 'About Aisha' },
 ];
 
 const SettingsItem = ({ title, description, externalLink = false, icon: Icon, value, onClick, children }: {title: string, description?: string, externalLink?: boolean, icon?: React.ElementType, value?: string, onClick?: () => void, children?: React.ReactNode}) => (
@@ -105,8 +105,8 @@ export default function SettingsPage() {
       <Card className="p-6">
         <div className="flex items-center">
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">Get Google smarts in Chrome</h3>
-            <p className="text-muted-foreground text-sm">Sync and personalize Chrome across your devices</p>
+            <h3 className="font-semibold text-lg">Get Google smarts in Aisha</h3>
+            <p className="text-muted-foreground text-sm">Sync and personalize Aisha across your devices</p>
           </div>
           <Image src="https://www.gstatic.com/identity/boq/accountsettingsmobile/images/empty_state_desktop.svg" alt="Sync illustration" width={150} height={100} />
         </div>
@@ -123,7 +123,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">Sign out of Chrome</Button>
+            <Button variant="outline">Sign out of Aisha</Button>
             <Button>Turn on Sync</Button>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function SettingsPage() {
       <div className="flex flex-col">
         <SettingsItem title="Sync and Google services" description="Services for search suggestions, security, and more" />
         <SettingsItem title="Manage your Google Account" description="Control your data, privacy, and security to make Google work better for you" externalLink />
-        <SettingsItem title="Customize your Chrome profile" description="Choose a profile name and picture" />
+        <SettingsItem title="Customize your Aisha profile" description="Choose a profile name and picture" />
         <SettingsItem title="Import bookmarks and settings" description="Get your favorites, browsing history, passwords, and more from another browser" />
       </div>
     </div>
@@ -143,10 +143,10 @@ export default function SettingsPage() {
         <h2 className="text-2xl font-semibold">Autofill and passwords</h2>
       </div>
       <Card className="p-0">
-        <SettingsItem icon={KeyRound} title="Google Password Manager" externalLink />
+        <SettingsItem icon={KeyRound} title="Aisha Password Manager" externalLink />
         <SettingsItem icon={CreditCard} title="Payment methods" />
         <SettingsItem icon={MapPin} title="Addresses and more" />
-        <SettingsItem icon={ListPlus} title="Enhanced autofill" description="Chrome understands forms better and can autofill them faster for you" />
+        <SettingsItem icon={ListPlus} title="Enhanced autofill" description="Aisha understands forms better and can autofill them faster for you" />
       </Card>
     </div>
   )
@@ -158,7 +158,7 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <h3 className="text-xl font-semibold">Take the Privacy Guide</h3>
-            <p className="text-muted-foreground">Review key privacy and security controls in Chrome</p>
+            <p className="text-muted-foreground">Review key privacy and security controls in Aisha</p>
             <div className="pt-2">
               <Button>Get started</Button>
               <Button variant="ghost" className="ml-2">No thanks</Button>
@@ -174,7 +174,7 @@ export default function SettingsPage() {
           <div className="flex items-center">
             <Shield className="w-6 h-6 mr-4 text-blue-500"/>
             <div>
-              <p className="font-semibold">Chrome found some safety recommendations for your review</p>
+              <p className="font-semibold">Aisha found some safety recommendations for your review</p>
               <p className="text-sm text-muted-foreground">Passwords, notifications, permissions</p>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function SettingsPage() {
             <div>
               <h4 className="font-medium">Memory Saver</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Chrome frees up memory from inactive tabs. This gives active tabs and other apps more computer resources and keeps Chrome fast. Your inactive tabs automatically become active again when you go back to them. <a href="#" className="text-blue-500">Learn more about Memory Saver</a>
+                Aisha frees up memory from inactive tabs. This gives active tabs and other apps more computer resources and keeps Aisha fast. Your inactive tabs automatically become active again when you go back to them. <a href="#" className="text-blue-500">Learn more about Memory Saver</a>
               </p>
             </div>
             <Switch />
@@ -249,7 +249,7 @@ export default function SettingsPage() {
             <div>
               <h4 className="font-medium">Energy Saver</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Chrome conserves battery power by limiting background activity and visual effects, such as smooth scrolling and video frame rates. <a href="#" className="text-blue-500">Learn more about Energy Saver</a>
+                Aisha conserves battery power by limiting background activity and visual effects, such as smooth scrolling and video frame rates. <a href="#" className="text-blue-500">Learn more about Energy Saver</a>
               </p>
             </div>
             <Switch defaultChecked/>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
             <div>
               <h4 className="font-medium">Preload pages</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                Chrome preloads pages which makes browsing and searching faster. <a href="#" className="text-blue-500">Learn more about preload pages</a>
+                Aisha preloads pages which makes browsing and searching faster. <a href="#" className="text-blue-500">Learn more about preload pages</a>
               </p>
             </div>
             <Switch defaultChecked/>
@@ -308,7 +308,7 @@ export default function SettingsPage() {
 
   const AiInnovations = () => (
     <div className="space-y-6">
-        <h2 className="text-2xl font-semibold">Reimagine Chrome, supercharged with AI</h2>
+        <h2 className="text-2xl font-semibold">Reimagine Aisha, supercharged with AI</h2>
         <Card className="p-6">
             <h3 className="font-semibold text-lg mb-4">Things to consider</h3>
             <div className="space-y-4">
@@ -322,7 +322,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-start gap-4">
                     <ScanEye className="w-5 h-5 mt-0.5 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Data sent to Google may be seen by human reviewers to improve Chrome AI's technology</p>
+                    <p className="text-sm text-muted-foreground">Data sent to Google may be seen by human reviewers to improve Aisha AI's technology</p>
                 </div>
             </div>
         </Card>
@@ -342,7 +342,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium">Theme</h3>
-              <p className="text-sm text-muted-foreground">Chrome Colors</p>
+              <p className="text-sm text-muted-foreground">Aisha Colors</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon"><ExternalLink className="w-5 h-5 text-muted-foreground" /></Button>
@@ -486,6 +486,14 @@ export default function SettingsPage() {
         return <Appearance />;
       case 'Search engine':
         return <SearchEngine />;
+      case 'About Aisha':
+        return (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-muted-foreground">
+              Aisha Browser. Version 1.0.
+            </p>
+          </div>
+        );
       default:
         return (
           <div className="flex h-full items-center justify-center">
