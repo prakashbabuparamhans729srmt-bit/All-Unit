@@ -32,6 +32,8 @@ import {
   FileKey2,
   Settings2,
   MessageSquareWarning,
+  MessageSquare,
+  ChevronDown,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,8 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 const menuItems = [
   { icon: User, text: 'You and Google' },
@@ -199,43 +203,95 @@ export default function SettingsPage() {
         </Button>
       </div>
       <div>
-        <h3 className="text-lg font-medium mb-2">General</h3>
-        <Card className="p-0 divide-y divide-border">
-            <div className="p-6 flex items-center justify-between">
+        <Card className="p-6 divide-y divide-border">
+          <div className="flex items-center justify-between pb-6">
+            <div>
+              <h4 className="font-medium">Memory Saver</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Chrome frees up memory from inactive tabs. This gives active tabs and other apps more computer resources and keeps Chrome fast. Your inactive tabs automatically become active again when you go back to them. <a href="#" className="text-blue-500">Learn more about Memory Saver</a>
+              </p>
+            </div>
+            <Switch />
+          </div>
+          <div className="pt-6">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h4 className="font-medium">Performance issue alerts</h4>
-                    <p className="text-sm text-muted-foreground">Get notifications that suggest ways to improve detected performance issues. <a href="#" className="text-blue-500">Learn more about performance issue alerts</a></p>
+                    <h4 className="font-medium">Always keep these sites active</h4>
+                    <p className="text-sm text-muted-foreground">Sites you add will always stay active and memory won't be freed up from them</p>
                 </div>
-                <Switch defaultChecked />
+                <Button variant="outline">Add</Button>
             </div>
-            <div className="p-6 flex items-center justify-between">
-                <div>
-                    <h4 className="font-medium">Inactive tabs appearance</h4>
-                    <p className="text-sm text-muted-foreground">A dotted circle appears around site icons. <a href="#" className="text-blue-500">Learn more about inactive tabs</a></p>
-                </div>
-                <Switch />
+            <div className="text-center py-6 text-sm text-muted-foreground">
+                No sites added
             </div>
-            <div className="p-6 flex items-center justify-between">
-                <div>
-                    <h4 className="font-medium">Tab hover preview card appearance</h4>
-                    <p className="text-sm text-muted-foreground">Choose to show memory usage and images in the tab hover preview card</p>
-                </div>
-                <Button variant="ghost" size="icon"><ExternalLink className="w-5 h-5 text-muted-foreground" /></Button>
-            </div>
-             <div className="p-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h4 className="font-medium">Always keep these sites active</h4>
-                        <p className="text-sm text-muted-foreground">Sites you add will always stay active and memory won't be freed up from them</p>
-                    </div>
-                    <Button variant="outline">Add</Button>
-                </div>
-                <div className="text-center py-6 text-sm text-muted-foreground">
-                    No sites added
-                </div>
-            </div>
+          </div>
         </Card>
       </div>
+      
+      <div>
+        <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold">Power</h3>
+            <Button variant="ghost" size="icon"><MessageSquare className="w-5 h-5 text-muted-foreground"/></Button>
+        </div>
+        <Card className="p-6">
+           <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Energy Saver</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Chrome conserves battery power by limiting background activity and visual effects, such as smooth scrolling and video frame rates. <a href="#" className="text-blue-500">Learn more about Energy Saver</a>
+              </p>
+            </div>
+            <Switch defaultChecked/>
+          </div>
+          <RadioGroup defaultValue="battery" className="mt-4 space-y-2">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="battery" id="battery" />
+              <Label htmlFor="battery">Turn on only when your battery is at 20% or lower</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="unplugged" id="unplugged" />
+              <Label htmlFor="unplugged">Turn on when your computer is unplugged</Label>
+            </div>
+          </RadioGroup>
+        </Card>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold">Speed</h3>
+            <Button variant="ghost" size="icon"><MessageSquare className="w-5 h-5 text-muted-foreground"/></Button>
+        </div>
+        <Card className="p-6">
+           <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Preload pages</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Chrome preloads pages which makes browsing and searching faster. <a href="#" className="text-blue-500">Learn more about preload pages</a>
+              </p>
+            </div>
+            <Switch defaultChecked/>
+          </div>
+          <div className="mt-6 space-y-6">
+            <div className="flex items-start">
+              <RadioGroupItem value="extended" id="extended" className="mt-1"/>
+              <div className="ml-3 flex-1">
+                <Label htmlFor="extended" className="font-medium">Extended preloading</Label>
+                <p className="text-sm text-muted-foreground">More pages are preloaded. Pages may be preloaded through Google servers when requested by other sites.</p>
+              </div>
+              <Button variant="ghost" size="icon"><ChevronDown className="w-5 h-5 text-muted-foreground"/></Button>
+            </div>
+             <div className="flex items-start">
+              <RadioGroupItem value="standard" id="standard" className="mt-1"/>
+              <div className="ml-3 flex-1">
+                <Label htmlFor="standard" className="font-medium">Standard preloading</Label>
+                <p className="text-sm text-muted-foreground">Some of the pages you visit are preloaded</p>
+              </div>
+              <Button variant="ghost" size="icon"><ChevronDown className="w-5 h-5 text-muted-foreground"/></Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+
     </div>
   );
 
@@ -298,3 +354,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
