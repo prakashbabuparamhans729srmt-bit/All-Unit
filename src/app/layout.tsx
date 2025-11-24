@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'Aisha Browser',
   description: 'A browser experience built with Next.js',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
