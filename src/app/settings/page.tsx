@@ -28,6 +28,9 @@ import {
   Cookie,
   ShieldAlert,
   ShieldCheck,
+  Lock,
+  FileKey2,
+  Settings2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,7 +58,7 @@ const menuItems = [
   { icon: Info, text: 'About Chrome' },
 ];
 
-const SettingsItem = ({ title, description, externalLink = false, icon: Icon, onClick }: {title: string, description?: string, externalLink?: boolean, icon?: React.ElementType, onClick?: () => void}) => (
+const SettingsItem = ({ title, description, externalLink = false, icon: Icon, value, onClick }: {title: string, description?: string, externalLink?: boolean, icon?: React.ElementType, value?: string, onClick?: () => void}) => (
   <>
     <Separator />
     <div className="flex items-center py-4 cursor-pointer" onClick={onClick}>
@@ -64,7 +67,10 @@ const SettingsItem = ({ title, description, externalLink = false, icon: Icon, on
         <h3 className="font-medium">{title}</h3>
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
-      {externalLink ? <ExternalLink className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+      <div className="flex items-center">
+        {value && <p className="text-sm text-muted-foreground mr-2">{value}</p>}
+        {externalLink ? <ExternalLink className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+      </div>
     </div>
   </>
 )
@@ -159,12 +165,23 @@ export default function SettingsPage() {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-2">Privacy and security</h3>
+        <h3 className="text-lg font-semibold mb-2">Privacy</h3>
         <Card className="p-0">
             <SettingsItem icon={Trash2} title="Delete browsing data" description="Delete history, cookies, cache, and more" />
             <SettingsItem icon={ShieldCheck} title="Privacy Guide" description="Review key privacy and security controls" />
             <SettingsItem icon={Cookie} title="Third-party cookies" description="Third-party cookies are allowed" />
             <SettingsItem icon={ShieldAlert} title="Ad privacy" description="Customize the info used by sites to show you ads" />
+        </Card>
+      </div>
+
+       <div>
+        <h3 className="text-lg font-semibold mb-2">Security</h3>
+        <Card className="p-0">
+            <SettingsItem icon={ShieldCheck} title="Safe Browsing" description="Protection from dangerous sites" value="Enhanced protection" />
+            <SettingsItem icon={Lock} title="Use secure DNS" description="Determines how to connect to sites over a secure connection" value="With your current service provider" />
+            <SettingsItem icon={FileKey2} title="Manage phone as a security key" description="Use your phone to sign in" />
+            <SettingsItem icon={CreditCard} title="Manage certificates" />
+            <SettingsItem icon={Settings2} title="Advanced" />
         </Card>
       </div>
     </div>
@@ -227,3 +244,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
