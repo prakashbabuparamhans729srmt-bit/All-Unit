@@ -31,12 +31,14 @@ import {
   Lock,
   FileKey2,
   Settings2,
+  MessageSquareWarning,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
 
 const menuItems = [
@@ -58,7 +60,7 @@ const menuItems = [
   { icon: Info, text: 'About Chrome' },
 ];
 
-const SettingsItem = ({ title, description, externalLink = false, icon: Icon, value, onClick }: {title: string, description?: string, externalLink?: boolean, icon?: React.ElementType, value?: string, onClick?: () => void}) => (
+const SettingsItem = ({ title, description, externalLink = false, icon: Icon, value, onClick, children }: {title: string, description?: string, externalLink?: boolean, icon?: React.ElementType, value?: string, onClick?: () => void, children?: React.ReactNode}) => (
   <>
     <Separator />
     <div className="flex items-center py-4 cursor-pointer" onClick={onClick}>
@@ -69,7 +71,8 @@ const SettingsItem = ({ title, description, externalLink = false, icon: Icon, va
       </div>
       <div className="flex items-center">
         {value && <p className="text-sm text-muted-foreground mr-2">{value}</p>}
-        {externalLink ? <ExternalLink className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+        {children}
+        {!children && (externalLink ? <ExternalLink className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />)}
       </div>
     </div>
   </>
@@ -187,6 +190,55 @@ export default function SettingsPage() {
     </div>
   );
 
+  const Performance = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Performance</h2>
+        <Button variant="ghost" size="icon">
+            <MessageSquareWarning className="w-5 h-5 text-muted-foreground"/>
+        </Button>
+      </div>
+      <div>
+        <h3 className="text-lg font-medium mb-2">General</h3>
+        <Card className="p-0 divide-y divide-border">
+            <div className="p-6 flex items-center justify-between">
+                <div>
+                    <h4 className="font-medium">Performance issue alerts</h4>
+                    <p className="text-sm text-muted-foreground">Get notifications that suggest ways to improve detected performance issues. <a href="#" className="text-blue-500">Learn more about performance issue alerts</a></p>
+                </div>
+                <Switch defaultChecked />
+            </div>
+            <div className="p-6 flex items-center justify-between">
+                <div>
+                    <h4 className="font-medium">Inactive tabs appearance</h4>
+                    <p className="text-sm text-muted-foreground">A dotted circle appears around site icons. <a href="#" className="text-blue-500">Learn more about inactive tabs</a></p>
+                </div>
+                <Switch />
+            </div>
+            <div className="p-6 flex items-center justify-between">
+                <div>
+                    <h4 className="font-medium">Tab hover preview card appearance</h4>
+                    <p className="text-sm text-muted-foreground">Choose to show memory usage and images in the tab hover preview card</p>
+                </div>
+                <Button variant="ghost" size="icon"><ExternalLink className="w-5 h-5 text-muted-foreground" /></Button>
+            </div>
+             <div className="p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h4 className="font-medium">Always keep these sites active</h4>
+                        <p className="text-sm text-muted-foreground">Sites you add will always stay active and memory won't be freed up from them</p>
+                    </div>
+                    <Button variant="outline">Add</Button>
+                </div>
+                <div className="text-center py-6 text-sm text-muted-foreground">
+                    No sites added
+                </div>
+            </div>
+        </Card>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeMenu) {
       case 'You and Google':
@@ -195,6 +247,8 @@ export default function SettingsPage() {
         return <AutofillAndPasswords />;
       case 'Privacy and security':
         return <PrivacyAndSecurity />;
+      case 'Performance':
+        return <Performance />;
       default:
         return (
           <div className="flex h-full items-center justify-center">
@@ -244,5 +298,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
