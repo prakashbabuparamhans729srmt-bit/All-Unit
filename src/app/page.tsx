@@ -65,6 +65,8 @@ import {
   Info,
   CheckCircle2,
   MessageSquareWarning,
+  Terminal,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +88,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -123,6 +126,10 @@ export default function BrowserPage() {
   const [activeTabId, setActiveTabId] = useState("tab-1");
   const [inputValue, setInputValue] = useState("");
   const [theme, setTheme] = useState('dark');
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [consoleInput, setConsoleInput] = useState('');
+  const [consoleHistory, setConsoleHistory] = useState<{type: 'input' | 'output', content: string}[]>([]);
+
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
 
@@ -286,13 +293,11 @@ export default function BrowserPage() {
     const tabIndex = tabs.findIndex(t => t.id === tabIdToClose);
     if (tabIndex === -1) return;
 
-    // Prevent closing the last tab
     if (tabs.length === 1) return;
 
     const newTabs = tabs.filter(t => t.id !== tabIdToClose);
     setTabs(newTabs);
 
-    // If the closed tab was active, switch to another tab
     if (activeTabId === tabIdToClose) {
       if (newTabs[tabIndex]) {
         setActiveTabId(newTabs[tabIndex].id);
@@ -313,16 +318,55 @@ export default function BrowserPage() {
     }
   };
 
+  const handleConsoleCommand = () => {
+    if (!consoleInput.trim() || !activeTab) return;
+  
+    setConsoleHistory(h => [...h, { type: 'input', content: consoleInput }]);
+  
+    const iframe = iframeRefs.current[activeTab.id];
+    let output;
+  
+    try {
+      if (!iframe || !iframe.contentWindow) {
+        throw new Error("Cannot access the content of the current tab.");
+      }
+      // Check for cross-origin restrictions
+      if (iframe.contentWindow.location.origin !== window.location.origin) {
+         throw new Error("Cannot execute JavaScript on a cross-origin page. This is a security restriction.");
+      }
+  
+      // The 'controller' object is not defined in this context. 
+      // We will use the iframe's window object.
+      // This is the closest we can get to a 'controller'.
+      const controller = iframe.contentWindow;
+  
+      // 'eval' can be dangerous, but it's necessary for a console.
+      // We are evaluating within the context of the iframe's window.
+      output = controller.eval(consoleInput);
+  
+      if (output === undefined) {
+        output = 'undefined';
+      } else {
+        output = JSON.stringify(output, null, 2);
+      }
+    } catch (error: any) {
+      output = `Error: ${error.message}`;
+    }
+    
+    setConsoleHistory(h => [...h, { type: 'output', content: output }]);
+    setConsoleInput('');
+  };
+
   const isInternalPage = currentUrl.startsWith('about:');
 
   const NewTabPage = () => (
     <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4">
-        <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Google</h1>
+        <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div className="w-full max-w-2xl relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 
                 type="text"
-                placeholder="Search Google or type a URL"
+                placeholder="Search Aisha or type a URL"
                 className="w-full h-12 pl-12 pr-32 rounded-full bg-secondary border-none focus-visible:ring-0"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -354,6 +398,48 @@ export default function BrowserPage() {
     const SettingsContent = require('@/app/settings/page').default;
     return <SettingsContent />;
   }
+
+  const DeveloperConsole = () => (
+    <Sheet open={isConsoleOpen} onOpenChange={setIsConsoleOpen}>
+      <SheetContent side="bottom" className="h-1/2 flex flex-col p-0">
+        <div className="flex items-center justify-between p-2 border-b">
+          <h3 className="font-semibold text-lg px-2">Developer Console</h3>
+          <Button variant="ghost" size="icon" onClick={() => setIsConsoleOpen(false)}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 bg-secondary/30 font-mono text-sm">
+          {consoleHistory.map((entry, index) => (
+            <div key={index} className="mb-2">
+              {entry.type === 'input' && (
+                <div className="flex items-start">
+                  <ChevronRight className="w-4 h-4 mr-2 mt-0.5 text-muted-foreground" />
+                  <pre className="whitespace-pre-wrap">{entry.content}</pre>
+                </div>
+              )}
+              {entry.type === 'output' && (
+                <div className="flex items-start">
+                  <ArrowLeft className="w-4 h-4 mr-2 mt-0.5 text-muted-foreground/50" />
+                  <pre className="whitespace-pre-wrap text-muted-foreground">{entry.content}</pre>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="p-2 border-t flex items-center gap-2">
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          <Input
+            placeholder="Run JavaScript in the current tab context..."
+            className="flex-1 bg-transparent border-none focus-visible:ring-0"
+            value={consoleInput}
+            onChange={(e) => setConsoleInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleConsoleCommand()}
+          />
+          <Button onClick={handleConsoleCommand}>Run</Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 
   return (
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
@@ -423,7 +509,7 @@ export default function BrowserPage() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleInputKeyDown}
               className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
-              placeholder="Search Google or type a URL"
+              placeholder="Search Aisha or type a URL"
             />
              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
               <Link className="w-5 h-5 text-muted-foreground" />
@@ -824,6 +910,10 @@ export default function BrowserPage() {
                         <span>Developer tools</span>
                         <DropdownMenuShortcut>Ctrl+Shift+I</DropdownMenuShortcut>
                       </DropdownMenuItem>
+                       <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
+                        <Terminal className="mr-2 h-4 w-4" />
+                        <span>Developer Console</span>
+                      </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
@@ -888,6 +978,7 @@ export default function BrowserPage() {
             </div>
         ))}
       </main>
+      <DeveloperConsole />
     </div>
   );
 }
