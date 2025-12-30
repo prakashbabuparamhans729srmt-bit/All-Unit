@@ -113,6 +113,12 @@ type Tab = {
   isLoading: boolean;
 };
 
+type BookmarkItem = {
+  url: string;
+  title: string;
+  favicon?: string;
+};
+
 export default function BrowserPage() {
   const [tabs, setTabs] = useState<Tab[]>([
     {
@@ -129,6 +135,8 @@ export default function BrowserPage() {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [consoleInput, setConsoleInput] = useState('');
   const [consoleHistory, setConsoleHistory] = useState<{type: 'input' | 'output', content: string}[]>([]);
+  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const [zoomLevel, setZoomLevel] = useState(100);
 
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -136,8 +144,23 @@ export default function BrowserPage() {
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
+    
+    // Load bookmarks from localStorage
+    const savedBookmarks = localStorage.getItem('aisha-bookmarks');
+    if (savedBookmarks) {
+      setBookmarks(JSON.parse(savedBookmarks));
+    }
   }, []);
 
+  useEffect(() => {
+    // Apply zoom level to the content area
+    const activeContent = document.getElementById('browser-content-area');
+    if (activeContent) {
+      activeContent.style.transform = `scale(${zoomLevel / 100})`;
+      activeContent.style.transformOrigin = 'top left';
+    }
+  }, [zoomLevel, activeTabId]);
+  
   const toggleTheme = () => {
     if (theme === 'light') {
         document.documentElement.classList.add('dark');
@@ -178,15 +201,17 @@ export default function BrowserPage() {
     if (newUrl.startsWith('aisha:')) {
       newUrl = newUrl.replace('aisha://', 'about:');
     }
-
-    if (newUrl === 'about:settings') {
+    
+    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank'];
+    if (internalPages.includes(newUrl)) {
         const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
         newHistory.push(newUrl);
+        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1);
         updateTab(activeTabId, { 
             history: newHistory,
             currentIndex: newHistory.length - 1,
             isLoading: false,
-            title: "Settings"
+            title: pageTitle
         });
         return;
     }
@@ -211,22 +236,22 @@ export default function BrowserPage() {
   const goBack = () => {
     if (!activeTab) return;
     if (activeTab.currentIndex > 0) {
-      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: activeTab.history[activeTab.currentIndex - 1] !== 'about:settings' });
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: !activeTab.history[activeTab.currentIndex - 1].startsWith('about:') });
     }
   };
 
   const goForward = () => {
     if (!activeTab) return;
     if (activeTab.currentIndex < activeTab.history.length - 1) {
-      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: activeTab.history[activeTab.currentIndex + 1] !== 'about:settings' });
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: !activeTab.history[activeTab.currentIndex + 1].startsWith('about:') });
     }
   };
 
   const reload = () => {
     if (!activeTab) return;
 
-    if (currentUrl === 'about:settings') {
-        // No real reload for internal page, but we can simulate it if needed
+    if (currentUrl.startsWith('about:')) {
+        toast({ title: "Internal pages don't need to be reloaded." });
         return;
     }
 
@@ -270,8 +295,12 @@ export default function BrowserPage() {
       }
     } catch (error) {
       console.warn("Could not access iframe content due to cross-origin restrictions:", error);
-      const url = new URL(tab.history[tab.currentIndex]);
-      title = url.hostname;
+      try {
+        const url = new URL(tab.history[tab.currentIndex]);
+        title = url.hostname;
+      } catch {
+        title = "Invalid URL";
+      }
     }
     updateTab(tabId, { isLoading: false, title });
   };
@@ -293,7 +322,10 @@ export default function BrowserPage() {
     const tabIndex = tabs.findIndex(t => t.id === tabIdToClose);
     if (tabIndex === -1) return;
 
-    if (tabs.length === 1) return;
+    if (tabs.length === 1) {
+      toast({title: "You can't close the last tab.", variant: "destructive"});
+      return;
+    };
 
     const newTabs = tabs.filter(t => t.id !== tabIdToClose);
     setTabs(newTabs);
@@ -317,6 +349,30 @@ export default function BrowserPage() {
       });
     }
   };
+  
+  const toggleBookmark = () => {
+    if (!activeTab || currentUrl === DEFAULT_URL || currentUrl.startsWith("about:")) {
+        toast({title: "Can't bookmark internal pages.", variant: "destructive"});
+        return;
+    }
+    const existingIndex = bookmarks.findIndex(b => b.url === currentUrl);
+    let newBookmarks;
+    if (existingIndex > -1) {
+        newBookmarks = bookmarks.filter((_, index) => index !== existingIndex);
+        toast({title: "Bookmark removed."});
+    } else {
+        const newBookmark: BookmarkItem = {
+            url: currentUrl,
+            title: activeTab.title,
+        };
+        newBookmarks = [...bookmarks, newBookmark];
+        toast({title: "Bookmark added!"});
+    }
+    setBookmarks(newBookmarks);
+    localStorage.setItem('aisha-bookmarks', JSON.stringify(newBookmarks));
+  };
+  
+  const isBookmarked = activeTab ? bookmarks.some(b => b.url === currentUrl) : false;
 
   const handleConsoleCommand = () => {
     if (!consoleInput.trim() || !activeTab) return;
@@ -327,22 +383,19 @@ export default function BrowserPage() {
     let output;
   
     try {
-      if (!iframe || !iframe.contentWindow) {
-        throw new Error("Cannot access the content of the current tab.");
+      if (currentUrl.startsWith("about:")) {
+        // For internal pages, eval in the main window context. Be careful!
+        output = window.eval(consoleInput);
+      } else {
+         if (!iframe || !iframe.contentWindow) {
+            throw new Error("Cannot access the content of the current tab.");
+         }
+         // Check for cross-origin restrictions
+         if (iframe.contentWindow.location.origin !== window.location.origin) {
+            throw new Error("Cannot execute JavaScript on a cross-origin page. This is a security restriction.");
+         }
+         output = iframe.contentWindow.eval(consoleInput);
       }
-      // Check for cross-origin restrictions
-      if (iframe.contentWindow.location.origin !== window.location.origin) {
-         throw new Error("Cannot execute JavaScript on a cross-origin page. This is a security restriction.");
-      }
-  
-      // The 'controller' object is not defined in this context. 
-      // We will use the iframe's window object.
-      // This is the closest we can get to a 'controller'.
-      const controller = iframe.contentWindow;
-  
-      // 'eval' can be dangerous, but it's necessary for a console.
-      // We are evaluating within the context of the iframe's window.
-      output = controller.eval(consoleInput);
   
       if (output === undefined) {
         output = 'undefined';
@@ -371,11 +424,12 @@ export default function BrowserPage() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
+                autoFocus
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="w-8 h-8"><Mic className="w-5 h-5" /></Button>
-                <Button variant="ghost" size="icon" className="w-8 h-8"><Camera className="w-5 h-5" /></Button>
-                <Button variant="outline" size="sm" className="rounded-full">
+                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Voice search is not implemented yet.'})}><Mic className="w-5 h-5" /></Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Image search is not implemented yet.'})}><Camera className="w-5 h-5" /></Button>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => toast({ title: 'AI Mode is not implemented yet.'})}>
                     <Sparkles className="w-4 h-4 mr-2"/>
                     AI Mode
                 </Button>
@@ -383,7 +437,7 @@ export default function BrowserPage() {
         </div>
         <div className="grid grid-cols-5 gap-x-8 gap-y-4 mt-8">
             {shortcuts.map(shortcut => (
-                <div key={shortcut.name} className="flex flex-col items-center gap-2 text-center">
+                <div key={shortcut.name} className="flex flex-col items-center gap-2 text-center cursor-pointer" onClick={() => handleNavigation(activeTabId, shortcut.name)}>
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
                         {typeof shortcut.icon === 'string' ? shortcut.icon : shortcut.icon}
                     </div>
@@ -398,6 +452,66 @@ export default function BrowserPage() {
     const SettingsContent = require('@/app/settings/page').default;
     return <SettingsContent />;
   }
+
+  const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
+    <div className="flex-1 flex flex-col bg-background text-foreground p-8">
+      <div className="flex items-center gap-4 mb-8">
+        <Icon className="w-8 h-8 text-muted-foreground"/>
+        <h1 className="text-3xl font-bold">{title}</h1>
+      </div>
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+  
+  const HistoryPage = () => {
+    const historyItems = tabs.flatMap(t => t.history).filter(item => item !== DEFAULT_URL && !item.startsWith('about:'));
+    const uniqueHistory = [...new Set(historyItems)].reverse();
+    return (
+        <GenericInternalPage title="History" icon={HistoryIcon}>
+          {uniqueHistory.length > 0 ? (
+            <div className="space-y-2">
+              {uniqueHistory.map((item, index) => (
+                <Card key={`${item}-${index}`} className="p-3 flex items-center justify-between">
+                  <span className="truncate cursor-pointer hover:underline" onClick={() => handleNavigation(activeTabId, item)}>{item}</span>
+                  <Button variant="ghost" size="icon" onClick={() => toast({title: "Clearing specific history item is not implemented."})}>
+                    <Trash2 className="w-4 h-4 text-muted-foreground"/>
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p>Your browsing history is empty.</p>
+          )}
+        </GenericInternalPage>
+    );
+  };
+  
+  const BookmarksPage = () => (
+      <GenericInternalPage title="Bookmarks" icon={BookMarked}>
+        {bookmarks.length > 0 ? (
+           <div className="space-y-2">
+           {bookmarks.map((bookmark, index) => (
+             <Card key={`${bookmark.url}-${index}`} className="p-3 flex items-center justify-between">
+               <div>
+                  <p className="font-semibold truncate cursor-pointer hover:underline" onClick={() => handleNavigation(activeTabId, bookmark.url)}>{bookmark.title}</p>
+                  <p className="text-sm text-muted-foreground truncate">{bookmark.url}</p>
+               </div>
+               <Button variant="ghost" size="icon" onClick={() => {
+                  const newBookmarks = bookmarks.filter(b => b.url !== bookmark.url);
+                  setBookmarks(newBookmarks);
+                  localStorage.setItem('aisha-bookmarks', JSON.stringify(newBookmarks));
+                  toast({title: "Bookmark removed"});
+               }}>
+                 <Trash2 className="w-4 h-4 text-muted-foreground"/>
+               </Button>
+             </Card>
+           ))}
+         </div>
+        ) : (
+          <p>You have no bookmarks.</p>
+        )}
+      </GenericInternalPage>
+  );
 
   const DeveloperConsole = () => (
     <Sheet open={isConsoleOpen} onOpenChange={setIsConsoleOpen}>
@@ -474,9 +588,9 @@ export default function BrowserPage() {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="w-8 h-8"><Minus className="w-5 h-5"/></Button>
-                <Button variant="ghost" size="icon" className="w-8 h-8"><RectangleHorizontal className="w-5 h-5"/></Button>
-                <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500"><X className="w-5 h-5"/></Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><Minus className="w-5 h-5"/></Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><RectangleHorizontal className="w-5 h-5"/></Button>
+                <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
             </div>
         </div>
         <Card className="flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border">
@@ -514,29 +628,20 @@ export default function BrowserPage() {
              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
               <Link className="w-5 h-5 text-muted-foreground" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <Star className="w-5 h-5 text-muted-foreground hover:text-yellow-400" />
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+              <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
             </Button>
           </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, 'about:history')}>
                 <HistoryIcon className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled>History</DropdownMenuItem>
-              <Separator />
-              {tabs.flatMap(t => t.history).filter(item => item !== DEFAULT_URL && !item.startsWith('about:')).reverse().slice(0, 10).map((item, index) => (
-                 <DropdownMenuItem key={`${item}-${index}`} onSelect={() => activeTab && handleNavigation(activeTab.id, item)}>
-                   <p className="max-w-xs truncate">{item}</p>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, 'about:downloads')}>
             <Download className="w-5 h-5" />
           </Button>
 
@@ -549,6 +654,16 @@ export default function BrowserPage() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => toast({title: 'Profile management not implemented.'})}>
+                    <User className="mr-2 h-4 w-4"/>
+                    <span>Manage Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented.'})}>
+                    <LogOut className="mr-2 h-4 w-4"/>
+                    <span>Sign Out</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu>
           
           <DropdownMenu>
@@ -563,134 +678,60 @@ export default function BrowserPage() {
                     <span>New tab</span>
                     <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
                     <PlusSquare className="mr-2 h-4 w-4" />
                     <span>New window</span>
                     <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => toast({title: "Incognito mode is not available."})}>
                     <ShieldOff className="mr-2 h-4 w-4" />
                     <span>New Incognito window</span>
                     <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:history')}>
                     <HistoryIcon className="mr-2 h-4 w-4" />
                     <span>History</span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent className="w-80">
-                      <DropdownMenuItem>
-                        <HistoryIcon className="mr-2 h-4 w-4" />
-                        <span>History</span>
-                        <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <HistoryIcon className="mr-2 h-4 w-4" />
-                        <span>Grouped history</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel>Recent tabs</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <PanelsTopLeft className="mr-2 h-4 w-4" />
-                        <span>7 tabs</span>
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Globe className="mr-2 h-4 w-4" />
-                        <span>Aisha Browser</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Search className="mr-2 h-4 w-4" />
-                        <span>Google Search</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        <span>Firebase Studio</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <PanelsTopLeft className="mr-2 h-4 w-4" />
-                        <span>2 tabs</span>
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      </DropdownMenuItem>
-                       <DropdownMenuItem>
-                        <Globe className="mr-2 h-4 w-4" />
-                        <span>YouTube</span>
-                      </DropdownMenuItem>
-                       <DropdownMenuItem>
-                        <PanelsTopLeft className="mr-2 h-4 w-4" />
-                        <span>3 tabs</span>
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      </DropdownMenuItem>
-                       <DropdownMenuItem>
-                        <PanelsTopLeft className="mr-2 h-4 w-4" />
-                        <span>1 tab</span>
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel>Your devices</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        <span>Sign in to see tabs from other devices</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
                 </DropdownMenuSub>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
                     <Download className="mr-2 h-4 w-4" />
                     <span>Downloads</span>
                     <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
                 </DropdownMenuItem>
                  <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
                     <Bookmark className="mr-2 h-4 w-4" />
                     <span>Bookmarks and lists</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent className="w-80">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={toggleBookmark}>
                         <BookmarkPlus className="mr-2 h-4 w-4" />
                         <span>Bookmark this tab...</span>
                         <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
                         <BookCopy className="mr-2 h-4 w-4" />
                         <span>Bookmark all tabs...</span>
                         <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <RectangleHorizontal className="mr-2 h-4 w-4" />
-                        <span>Hide bookmarks bar</span>
-                        <DropdownMenuShortcut>Ctrl+Shift+B</DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Star className="mr-2 h-4 w-4" />
-                        <span>Show all bookmarks</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
                         <BookMarked className="mr-2 h-4 w-4" />
                         <span>Bookmark manager</span>
                         <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <BookUp className="mr-2 h-4 w-4" />
-                        <span>Import bookmarks and settings...</span>
-                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <ListTodo className="mr-2 h-4 w-4" />
-                        <span>Reading list</span>
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel>Bookmarks</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <Folder className="mr-2 h-4 w-4" />
-                        <span>dronwall</span>
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      </DropdownMenuItem>
+                      <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
+                      {bookmarks.slice(0, 5).map(b => (
+                         <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
+                            <Star className="mr-2 h-4 w-4 text-yellow-500"/>
+                            <span className="truncate">{b.title}</span>
+                         </DropdownMenuItem>
+                      ))}
+                      {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
@@ -699,34 +740,12 @@ export default function BrowserPage() {
                         <PanelsTopLeft className="mr-2 h-4 w-4" />
                         <span>Tab groups</span>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="w-80">
-                            <DropdownMenuItem>
-                                <Plus className="mr-2 h-4 w-4" />
-                                <span>Create new tab group</span>
-                                <DropdownMenuShortcut>Alt+Shift+P</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                                <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2" />
-                                <span>scaler.com</span>
-                                <ChevronRight className="ml-auto h-4 w-4" />
-                            </DropdownMenuItem>
-                             <DropdownMenuItem>
-                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2" />
-                                <span>fluuter</span>
-                                <ChevronRight className="ml-auto h-4 w-4" />
-                            </DropdownMenuItem>
-                             <DropdownMenuItem>
-                                <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2" />
-                                <span>free ai coarse by gov.</span>
-                                <ChevronRight className="ml-auto h-4 w-4" />
-                            </DropdownMenuItem>
-                             <DropdownMenuItem>
-                                <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2" />
-                                <span>google ai mode</span>
-                                <ChevronRight className="ml-auto h-4 w-4" />
-                            </DropdownMenuItem>
+                     <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                           <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            <span>Create new tab group</span>
+                           </DropdownMenuItem>
                         </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
@@ -737,13 +756,9 @@ export default function BrowserPage() {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported."})}>
                         <Puzzle className="mr-2 h-4 w-4" />
                         <span>Manage Extensions</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Store className="mr-2 h-4 w-4" />
-                        <span>Visit Web Store</span>
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
@@ -753,56 +768,38 @@ export default function BrowserPage() {
                   {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                   <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                 </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
+                <DropdownMenuItem onSelect={() => toast({title: "Password manager is not available."})}>
                     <KeyRound className="mr-2 h-4 w-4" />
                     <span>Passwords and autofill</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem>
-                        <KeyRound className="mr-2 h-4 w-4" />
-                        <span>Aisha Password Manager</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        <span>Payment methods</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <MapPin className="mr-2 h-4 w-4" />
-                        <span>Addresses and more</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuItem>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => toast({title: "Clearing browsing data is not implemented."})}>
                     <Trash2 className="mr-2 h-4 w-4" />
                     <span>Delete browsing data...</span>
                     <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <ZoomIn className="mr-2 h-4 w-4" />
                         <span>Zoom</span>
                          <div className="ml-auto flex items-center gap-2">
-                            <Button variant="ghost" size="icon" className="h-6 w-6"><Minus className="w-4 h-4"/></Button>
-                            <span>100%</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6"><Plus className="w-4 h-4"/></Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6"><RectangleHorizontal className="w-4 h-4"/></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
+                            <span>{zoomLevel}%</span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><RectangleHorizontal className="w-4 h-4"/></Button>
                         </div>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => window.print()}>
                     <Printer className="mr-2 h-4 w-4" />
                     <span>Print...</span>
                     <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
                     <Search className="mr-2 h-4 w-4" />
                     <span>Search with Google Lens</span>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
                     <Languages className="mr-2 h-4 w-4" />
                     <span>Translate...</span>
                 </DropdownMenuItem>
@@ -813,23 +810,28 @@ export default function BrowserPage() {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => toast({title: "Find is not implemented."})}>
                                 <Search className="mr-2 h-4 w-4" />
                                 <span>Find...</span>
                                 <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
                                 <Scissors className="mr-2 h-4 w-4" />
                                 <span>Cut</span>
                                 <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
                                 <Copy className="mr-2 h-4 w-4" />
                                 <span>Copy</span>
                                 <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
+                                const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
+                                if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                                    activeElement.value += text;
+                                }
+                            })}>
                                 <ClipboardPaste className="mr-2 h-4 w-4" />
                                 <span>Paste</span>
                                 <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
@@ -844,33 +846,30 @@ export default function BrowserPage() {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent className="w-80">
-                        <DropdownMenuLabel>Cast</DropdownMenuLabel>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "Casting is not available in this browser."})}>
                             <Cast className="mr-2 h-4 w-4" />
                             <span>Cast...</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Save</DropdownMenuLabel>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "Saving pages is not implemented."})}>
                             <Download className="mr-2 h-4 w-4" />
                             <span>Save page as...</span>
                             <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "Creating shortcuts is not implemented."})}>
                             <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
                             <span>Create shortcut...</span>
                         </DropdownMenuItem>
                          <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Share</DropdownMenuLabel>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={copyLink}>
                             <Link className="mr-2 h-4 w-4" />
                             <span>Copy link</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
                             <Computer className="mr-2 h-4 w-4" />
                             <span>Send to your devices</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "QR Code generation is not implemented."})}>
                             <QrCode className="mr-2 h-4 w-4" />
                             <span>Create QR Code</span>
                         </DropdownMenuItem>
@@ -884,31 +883,14 @@ export default function BrowserPage() {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      <DropdownMenuItem>
-                        <RectangleHorizontal className="mr-2 h-4 w-4" />
-                        <span>Name window...</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
                         <Pencil className="mr-2 h-4 w-4" />
                         <span>Customize Aisha</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        <span>Reading mode</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
                         <Gauge className="mr-2 h-4 w-4" />
                         <span>Performance</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <ListTodo className="mr-2 h-4 w-4" />
-                        <span>Task manager</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Code className="mr-2 h-4 w-4" />
-                        <span>Developer tools</span>
-                        <DropdownMenuShortcut>Ctrl+Shift+I</DropdownMenuShortcut>
                       </DropdownMenuItem>
                        <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
                         <Terminal className="mr-2 h-4 w-4" />
@@ -918,38 +900,11 @@ export default function BrowserPage() {
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
-                 <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuItem>
-                          <Info className="mr-2 h-4 w-4" />
-                          <span>About Aisha Browser</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          <span>What's New</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <HelpCircle className="mr-2 h-4 w-4" />
-                          <span>Help center</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <MessageSquareWarning className="mr-2 h-4 w-4" />
-                          <span>Report an issue...</span>
-                          <DropdownMenuShortcut>Alt+Shift+I</DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                 <DropdownMenuItem onSelect={() => activeTab && handleNavigation(activeTab.id, 'about:settings')}>
+                 <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Exit</span>
                 </DropdownMenuItem>
@@ -958,13 +913,19 @@ export default function BrowserPage() {
 
         </Card>
       </header>
-      <main className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-hidden relative">
+      <main id="browser-content-area" className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-auto relative">
         {tabs.map(tab => (
             <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                 {tab.history[tab.currentIndex] === DEFAULT_URL ? (
                     <NewTabPage />
                 ) : tab.history[tab.currentIndex] === 'about:settings' ? (
                     <SettingsPage />
+                ) : tab.history[tab.currentIndex] === 'about:history' ? (
+                    <HistoryPage />
+                ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
+                    <BookmarksPage />
+                ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
+                    <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
                 ) : (
                     <iframe
                         ref={el => (iframeRefs.current[tab.id] = el)}
@@ -982,3 +943,5 @@ export default function BrowserPage() {
     </div>
   );
 }
+
+    
