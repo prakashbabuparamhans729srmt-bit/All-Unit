@@ -67,6 +67,7 @@ import {
   MessageSquareWarning,
   Terminal,
   ChevronUp,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +89,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -133,6 +136,9 @@ export default function BrowserPage() {
   const [inputValue, setInputValue] = useState("");
   const [theme, setTheme] = useState('dark');
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackContent, setFeedbackContent] = useState('');
+  const [feedbackEmail, setFeedbackEmail] = useState('');
   const [consoleInput, setConsoleInput] = useState('');
   const [consoleHistory, setConsoleHistory] = useState<{type: 'input' | 'output', content: string}[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
@@ -202,11 +208,11 @@ export default function BrowserPage() {
       newUrl = newUrl.replace('aisha://', 'about:');
     }
     
-    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank'];
+    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist'];
     if (internalPages.includes(newUrl)) {
         const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
         newHistory.push(newUrl);
-        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1);
+        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
         updateTab(activeTabId, { 
             history: newHistory,
             currentIndex: newHistory.length - 1,
@@ -409,6 +415,19 @@ export default function BrowserPage() {
     setConsoleHistory(h => [...h, { type: 'output', content: output }]);
     setConsoleInput('');
   };
+  
+  const handleFeedbackSubmit = () => {
+    if (!feedbackContent.trim()) {
+      toast({title: "Please enter your feedback.", variant: 'destructive'});
+      return;
+    }
+    console.log("Feedback Submitted:", {email: feedbackEmail, content: feedbackContent});
+    toast({title: "Thank you for your feedback!"});
+    setIsFeedbackOpen(false);
+    setFeedbackContent('');
+    setFeedbackEmail('');
+  };
+
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -451,6 +470,15 @@ export default function BrowserPage() {
   const SettingsPage = () => {
     const SettingsContent = require('@/app/settings/page').default;
     return <SettingsContent />;
+  }
+
+  const StartupChecklistPage = () => {
+    try {
+      const ChecklistContent = require('@/app/startup-checklist/page').default;
+      return <ChecklistContent />;
+    } catch (error) {
+      return <GenericInternalPage title="Startup Checklist" icon={ListTodo}><p>Could not load the startup checklist page.</p></GenericInternalPage>
+    }
   }
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
@@ -554,6 +582,50 @@ export default function BrowserPage() {
       </SheetContent>
     </Sheet>
   );
+  
+  const FeedbackSheet = () => (
+    <Sheet open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Send Feedback</SheetTitle>
+          <SheetDescription>
+            Have an idea or found a bug? Let us know!
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="feedback-content" className="text-right">
+              Feedback
+            </Label>
+            <Textarea
+              id="feedback-content"
+              value={feedbackContent}
+              onChange={(e) => setFeedbackContent(e.target.value)}
+              className="col-span-3"
+              placeholder="Tell us what you think..."
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="feedback-email" className="text-right">
+              Email (Optional)
+            </Label>
+            <Input
+              id="feedback-email"
+              type="email"
+              value={feedbackEmail}
+              onChange={(e) => setFeedbackEmail(e.target.value)}
+              className="col-span-3"
+              placeholder="So we can get back to you"
+            />
+          </div>
+        </div>
+        <SheetFooter>
+          <Button onClick={handleFeedbackSubmit}>Submit Feedback</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+
 
   return (
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
@@ -904,6 +976,25 @@ export default function BrowserPage() {
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                 </DropdownMenuItem>
+                <DropdownMenuSub>
+                   <DropdownMenuSubTrigger>
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    <span>Help</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                     <DropdownMenuSubContent>
+                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                           <Info className="mr-2 h-4 w-4"/>
+                           <span>About Aisha</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
+                           <MessageSquare className="mr-2 h-4 w-4"/>
+                           <span>Send Feedback</span>
+                        </DropdownMenuItem>
+                     </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+
                  <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Exit</span>
@@ -920,6 +1011,8 @@ export default function BrowserPage() {
                     <NewTabPage />
                 ) : tab.history[tab.currentIndex] === 'about:settings' ? (
                     <SettingsPage />
+                ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
+                  <StartupChecklistPage />
                 ) : tab.history[tab.currentIndex] === 'about:history' ? (
                     <HistoryPage />
                 ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
@@ -940,8 +1033,7 @@ export default function BrowserPage() {
         ))}
       </main>
       <DeveloperConsole />
+      <FeedbackSheet />
     </div>
   );
 }
-
-    
