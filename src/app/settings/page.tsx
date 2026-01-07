@@ -37,7 +37,8 @@ import {
   ScanEye,
   Leaf,
   Home,
-  BookMarked
+  BookMarked,
+  ListTodo
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const menuItems = [
   { icon: Shield, text: 'Privacy and security' },
   { icon: Gauge, text: 'Performance' },
   { icon: Sparkles, text: 'AI innovations' },
+  { icon: ListTodo, text: 'Startup Checklist' },
   { icon: Palette, text: 'Appearance' },
   { icon: SearchIcon, text: 'Search engine' },
   { icon: Laptop, text: 'Default browser' },
@@ -408,6 +410,21 @@ export default function SettingsPage() {
     </div>
   );
 
+  const StartupChecklistPage = () => {
+    try {
+      const ChecklistContent = require('@/app/startup-checklist/page').default;
+      return <ChecklistContent />;
+    } catch (error) {
+      return (
+         <div className="flex h-full items-center justify-center">
+            <p className="text-muted-foreground">
+              Could not load Startup Checklist.
+            </p>
+          </div>
+      )
+    }
+  }
+
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -421,6 +438,8 @@ export default function SettingsPage() {
         return <Performance />;
       case 'AI innovations':
         return <AiInnovations />;
+      case 'Startup Checklist':
+        return <StartupChecklistPage />;
       case 'Appearance':
         return <Appearance />;
       case 'Search engine':
