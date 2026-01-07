@@ -92,6 +92,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { summarizeText } from "@/ai/flows/summarize-flow";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -208,7 +209,7 @@ export default function BrowserPage() {
       newUrl = newUrl.replace('aisha://', 'about:');
     }
     
-    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist'];
+    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist', 'about:ai-hub'];
     if (internalPages.includes(newUrl)) {
         const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
         newHistory.push(newUrl);
@@ -448,7 +449,7 @@ export default function BrowserPage() {
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Voice search is not implemented yet.'})}><Mic className="w-5 h-5" /></Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Image search is not implemented yet.'})}><Camera className="w-5 h-5" /></Button>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => toast({ title: 'AI Mode is not implemented yet.'})}>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, 'about:ai-hub')}>
                     <Sparkles className="w-4 h-4 mr-2"/>
                     AI Mode
                 </Button>
@@ -480,9 +481,80 @@ export default function BrowserPage() {
       return <GenericInternalPage title="Startup Checklist" icon={ListTodo}><p>Could not load the startup checklist page.</p></GenericInternalPage>
     }
   }
+  
+  const AiHubPage = () => {
+    const [textToSummarize, setTextToSummarize] = useState('');
+    const [summary, setSummary] = useState('');
+    const [isSummarizing, setIsSummarizing] = useState(false);
+  
+    const handleSummarize = async () => {
+      if (!textToSummarize.trim()) {
+        toast({ title: 'Please enter text to summarize.', variant: 'destructive' });
+        return;
+      }
+      setIsSummarizing(true);
+      setSummary('');
+      try {
+        const result = await summarizeText({ text: textToSummarize });
+        setSummary(result.summary);
+      } catch (error) {
+        console.error('Summarization failed:', error);
+        toast({ title: 'Failed to generate summary.', description: 'Please try again later.', variant: 'destructive' });
+      } finally {
+        setIsSummarizing(false);
+      }
+    };
+  
+    return (
+      <GenericInternalPage title="AI Hub" icon={Sparkles}>
+        <div className="flex flex-col gap-8 max-w-4xl mx-auto">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Text Summarizer</h3>
+              <div className="grid gap-4">
+                <Label htmlFor="text-to-summarize">Paste your text here</Label>
+                <Textarea
+                  id="text-to-summarize"
+                  placeholder="Enter a long article or any text you want to summarize..."
+                  className="min-h-[200px]"
+                  value={textToSummarize}
+                  onChange={(e) => setTextToSummarize(e.target.value)}
+                  disabled={isSummarizing}
+                />
+                <Button onClick={handleSummarize} disabled={isSummarizing}>
+                  {isSummarizing ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Summarizing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Summarize
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+  
+          {summary && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Summary</h3>
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                  {summary}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </GenericInternalPage>
+    );
+  };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
-    <div className="flex-1 flex flex-col bg-background text-foreground p-8">
+    <div className="flex-1 flex flex-col bg-background text-foreground p-8 overflow-y-auto">
       <div className="flex items-center gap-4 mb-8">
         <Icon className="w-8 h-8 text-muted-foreground"/>
         <h1 className="text-3xl font-bold">{title}</h1>
@@ -1013,6 +1085,8 @@ export default function BrowserPage() {
                     <SettingsPage />
                 ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
                   <StartupChecklistPage />
+                ) : tab.history[tab.currentIndex] === 'about:ai-hub' ? (
+                  <AiHubPage />
                 ) : tab.history[tab.currentIndex] === 'about:history' ? (
                     <HistoryPage />
                 ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
