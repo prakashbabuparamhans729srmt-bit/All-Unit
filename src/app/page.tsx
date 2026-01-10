@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
@@ -103,20 +104,22 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
-import { SidebarProvider, Sidebar, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarInset, useSidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const DEFAULT_URL = "about:newtab";
 
 const initialShortcuts = [
     { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com' },
     { name: "YouTube", icon: 'Y', color: 'bg-red-500', url: 'https://youtube.com'  },
-    { name: "ChatGPT", icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500', url: 'https://chatgpt.com' },
+    { name: "ChatGPT", icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500', url: 'https://chat.openai.com' },
     { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com' },
     { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com' },
     { name: "Canvas", icon: 'C', color: 'bg-cyan-500', url: 'https://canvas.instructure.com/' },
     { name: "IDX", icon: <Sparkles className="w-5 h-5" />, color: 'bg-orange-500', url: 'https://idx.dev' },
-    { name: "AdMob", icon: 'A', color: 'bg-yellow-500', url: 'https://admob.google.com/' },
+    { name: "AdMob", icon: 'A', color: 'bg-yellow-500', url: 'https://admob.google.com' },
     { name: "Flutter", icon: <Book className="w-5 h-5" />, color: 'bg-sky-500', url: 'https://flutter.dev' },
 ];
 
@@ -142,7 +145,7 @@ type BookmarkItem = {
 };
 
 const BrowserApp = () => {
-    const [tabs, setTabs] = useState<Tab[]>([
+  const [tabs, setTabs] = useState<Tab[]>([
     {
       id: "tab-1",
       history: [DEFAULT_URL],
@@ -168,37 +171,11 @@ const BrowserApp = () => {
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
   
-  const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar();
-  const [isHoverSidebarEnabled, setIsHoverSidebarEnabled] = useState(false);
+  const { open: isAiPanelOpen, setOpen: setIsAiPanelOpen } = useSidebar();
 
 
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isHoverSidebarEnabled) return;
-
-      const hoverAreaWidth = 20; // in pixels
-      const isOnRightEdge = window.innerWidth - e.clientX < hoverAreaWidth;
-      
-      if (isOnRightEdge) {
-        setSidebarOpen(true);
-      } else {
-        // A small delay before closing to prevent accidental closes
-        setTimeout(() => {
-            if (window.innerWidth - e.clientX > hoverAreaWidth + 10) {
-                 setSidebarOpen(false);
-            }
-        }, 100);
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [isHoverSidebarEnabled, setSidebarOpen]);
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -518,17 +495,6 @@ const BrowserApp = () => {
     setIsAddShortcutOpen(false);
   };
   
-  const toggleSidebarBehavior = () => {
-    if (isHoverSidebarEnabled) {
-      setIsHoverSidebarEnabled(false);
-      setSidebarOpen(false); // Ensure sidebar is closed when disabling hover
-      toast({ title: "AI Assistant hover disabled." });
-    } else {
-      setIsHoverSidebarEnabled(true);
-      toast({ title: "AI Assistant hover enabled.", description: "Move your mouse to the right edge to open." });
-    }
-  };
-
   const isInternalPage = currentUrl.startsWith('about:');
 
   const NewTabPage = () => (
@@ -580,10 +546,6 @@ const BrowserApp = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
-                    <Sparkles className="w-4 h-4 mr-2"/>
-                    AI Assistant
-                </Button>
             </div>
         </div>
         <ScrollArea className="max-w-3xl mt-8 h-[140px] pr-4">
@@ -869,429 +831,463 @@ const BrowserApp = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
-      <header className="flex-shrink-0">
-        <div className="flex items-center justify-between pt-2 px-2">
-            <div className="flex items-end">
-              {tabs.map((tab) => (
-                 <div key={tab.id}
-                    onClick={() => setActiveTabId(tab.id)}
-                    className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
-                    ${activeTabId === tab.id 
-                        ? 'bg-card text-card-foreground z-10 -mb-px' 
-                        : 'bg-secondary text-secondary-foreground hover:bg-card/80'
-                    }`}
-                 >
-                    <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-                    <span className="truncate max-w-[150px]">
-                        {tab.isLoading ? "Loading..." : tab.title}
-                    </span>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20"
-                        onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
-                    >
-                        <X className="w-4 h-4" />
-                    </Button>
-                </div>
-              ))}
-              <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><Minus className="w-5 h-5"/></Button>
-                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><RectangleHorizontal className="w-5 h-5"/></Button>
-                <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
-            </div>
-        </div>
-        <Card className="flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border">
-          <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
-            <ArrowRight className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={reload}>
-            {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={goHome}>
-            <Home className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
-            {isInternalPage ? (
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
-                        <Globe className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Aisha</span>
-                    </div>
-                </div>
-            ) : (
-                <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
-            )}
-            <Input
-              type="text"
-              value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
-              placeholder="Search Aisha or type a URL"
-            />
-             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-              <LinkIcon className="w-5 h-5 text-muted-foreground" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-              <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-            </Button>
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      <Sidebar collapsible="icon" className="group-data-[variant=sidebar]:-translate-x-full">
+        <SidebarContent className="p-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Home"
+                onClick={() => handleNavigation(activeTabId, DEFAULT_URL)}
+                isActive={currentUrl === DEFAULT_URL}
+              >
+                <Home />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarTrigger asChild>
+                 <SidebarMenuButton tooltip="AI Assistant" isActive={isAiPanelOpen}>
+                    <Sparkles />
+                  </SidebarMenuButton>
+              </SidebarTrigger>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                tooltip="History"
+                onClick={() => handleNavigation(activeTabId, 'about:history')}
+                isActive={currentUrl === 'about:history'}
+              >
+                <HistoryIcon />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton 
+                tooltip="Bookmarks"
+                onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}
+                isActive={currentUrl === 'about:bookmarks'}
+              >
+                <BookMarked />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                tooltip="Settings"
+                onClick={() => handleNavigation(activeTabId, 'about:settings')}
+                isActive={currentUrl === 'about:settings'}
+              >
+                <Settings />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex-shrink-0">
+          <div className="flex items-center justify-between pt-2 px-2">
+              <div className="flex items-end">
+                {tabs.map((tab) => (
+                   <div key={tab.id}
+                      onClick={() => setActiveTabId(tab.id)}
+                      className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
+                      ${activeTabId === tab.id 
+                          ? 'bg-card text-card-foreground z-10 -mb-px' 
+                          : 'bg-secondary text-secondary-foreground hover:bg-card/80'
+                      }`}
+                   >
+                      <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
+                      <span className="truncate max-w-[150px]">
+                          {tab.isLoading ? "Loading..." : tab.title}
+                      </span>
+                      <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20"
+                          onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
+                      >
+                          <X className="w-4 h-4" />
+                      </Button>
+                  </div>
+                ))}
+                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><Minus className="w-5 h-5"/></Button>
+                  <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><RectangleHorizontal className="w-5 h-5"/></Button>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
+              </div>
           </div>
-          
-          <Button variant="ghost" size="icon" onClick={toggleSidebarBehavior}>
-              <Sparkles className="w-5 h-5" />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, 'about:history')}>
-                <HistoryIcon className="w-5 h-5" />
+          <Card className="flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border">
+            <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={reload}>
+              {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={goHome}>
+              <Home className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
+              {isInternalPage ? (
+                  <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
+                          <Globe className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">Aisha</span>
+                      </div>
+                  </div>
+              ) : (
+                  <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
+              )}
+              <Input
+                type="text"
+                value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
+                placeholder="Search Aisha or type a URL"
+              />
+               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                <LinkIcon className="w-5 h-5 text-muted-foreground" />
               </Button>
-            </DropdownMenuTrigger>
-          </DropdownMenu>
-
-          <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, 'about:downloads')}>
-            <Download className="w-5 h-5" />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="w-7 h-7">
-                  <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
-                  <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                </Avatar>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => toast({title: 'Profile management not implemented.'})}>
-                    <User className="mr-2 h-4 w-4"/>
-                    <span>Manage Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented.'})}>
-                    <LogOut className="mr-2 h-4 w-4"/>
-                    <span>Sign Out</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-5 h-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto">
-                <DropdownMenuItem onSelect={addTab}>
-                    <FilePlus className="mr-2 h-4 w-4" />
-                    <span>New tab</span>
-                    <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                 <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
-                    <PlusSquare className="mr-2 h-4 w-4" />
-                    <span>New window</span>
-                    <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => toast({title: "Incognito mode is not available."})}>
-                    <ShieldOff className="mr-2 h-4 w-4" />
-                    <span>New Incognito window</span>
-                    <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:history')}>
-                    <HistoryIcon className="mr-2 h-4 w-4" />
-                    <span>History</span>
-                  </DropdownMenuSubTrigger>
-                </DropdownMenuSub>
-                 <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>Downloads</span>
-                    <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
-                    <Bookmark className="mr-2 h-4 w-4" />
-                    <span>Bookmarks and lists</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent className="w-80">
-                      <DropdownMenuItem onSelect={toggleBookmark}>
-                        <BookmarkPlus className="mr-2 h-4 w-4" />
-                        <span>Bookmark this tab...</span>
-                        <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                        <BookCopy className="mr-2 h-4 w-4" />
-                        <span>Bookmark all tabs...</span>
-                        <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
-                        <BookMarked className="mr-2 h-4 w-4" />
-                        <span>Bookmark manager</span>
-                        <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
-                      {bookmarks.slice(0, 5).map(b => (
-                         <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
-                            <Star className="mr-2 h-4 w-4 text-yellow-500"/>
-                            <span className="truncate">{b.title}</span>
-                         </DropdownMenuItem>
-                      ))}
-                      {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        <PanelsTopLeft className="mr-2 h-4 w-4" />
-                        <span>Tab groups</span>
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="w-7 h-7">
+                    <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
+                    <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => toast({title: 'Profile management not implemented.'})}>
+                      <User className="mr-2 h-4 w-4"/>
+                      <span>Manage Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented.'})}>
+                      <LogOut className="mr-2 h-4 w-4"/>
+                      <span>Sign Out</span>
+                  </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto">
+                  <DropdownMenuItem onSelect={addTab}>
+                      <FilePlus className="mr-2 h-4 w-4" />
+                      <span>New tab</span>
+                      <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
+                      <PlusSquare className="mr-2 h-4 w-4" />
+                      <span>New window</span>
+                      <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => toast({title: "Incognito mode is not available."})}>
+                      <ShieldOff className="mr-2 h-4 w-4" />
+                      <span>New Incognito window</span>
+                      <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:history')}>
+                      <HistoryIcon className="mr-2 h-4 w-4" />
+                      <span>History</span>
                     </DropdownMenuSubTrigger>
-                     <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                           <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            <span>Create new tab group</span>
-                           </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    <span>Extensions</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported."})}>
-                        <Puzzle className="mr-2 h-4 w-4" />
-                        <span>Manage Extensions</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={toggleTheme}>
-                  {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
-                  <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => toast({title: "Password manager is not available."})}>
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    <span>Passwords and autofill</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => toast({title: "Clearing browsing data is not implemented."})}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Delete browsing data...</span>
-                    <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <ZoomIn className="mr-2 h-4 w-4" />
-                        <span>Zoom</span>
-                         <div className="ml-auto flex items-center gap-2">
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
-                            <span>{zoomLevel}%</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><RectangleHorizontal className="w-4 h-4"/></Button>
-                        </div>
-                    </DropdownMenuItem>
-                </DropdownMenuGroup>
-                 <DropdownMenuItem onSelect={() => window.print()}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    <span>Print...</span>
-                    <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                 <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                    <Search className="mr-2 h-4 w-4" />
-                    <span>Search with Google Lens</span>
-                </DropdownMenuItem>
-                 <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                    <Languages className="mr-2 h-4 w-4" />
-                    <span>Translate...</span>
-                </DropdownMenuItem>
-                 <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        <Search className="mr-2 h-4 w-4" />
-                        <span>Find and edit</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                            <DropdownMenuItem onSelect={() => toast({title: "Find is not implemented."})}>
-                                <Search className="mr-2 h-4 w-4" />
-                                <span>Find...</span>
-                                <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
-                                <Scissors className="mr-2 h-4 w-4" />
-                                <span>Cut</span>
-                                <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
-                                <Copy className="mr-2 h-4 w-4" />
-                                <span>Copy</span>
-                                <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
-                                const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
-                                if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-                                    activeElement.value += text;
-                                }
-                            })}>
-                                <ClipboardPaste className="mr-2 h-4 w-4" />
-                                <span>Paste</span>
-                                <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                </DropdownMenuSub>
-                 <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Cast className="mr-2 h-4 w-4" />
-                      <span>Cast, save, and share</span>
+                  </DropdownMenuSub>
+                   <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
+                      <Download className="mr-2 h-4 w-4" />
+                      <span>Downloads</span>
+                      <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                   <DropdownMenuSub>
+                    <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
+                      <Bookmark className="mr-2 h-4 w-4" />
+                      <span>Bookmarks and lists</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent className="w-80">
-                        <DropdownMenuItem onSelect={() => toast({title: "Casting is not available in this browser."})}>
-                            <Cast className="mr-2 h-4 w-4" />
-                            <span>Cast...</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => toast({title: "Saving pages is not implemented."})}>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Save page as...</span>
-                            <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => toast({title: "Creating shortcuts is not implemented."})}>
-                            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
-                            <span>Create shortcut...</span>
-                        </DropdownMenuItem>
-                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={copyLink}>
-                            <LinkIcon className="mr-2 h-4 w-4" />
-                            <span>Copy link</span>
+                        <DropdownMenuItem onSelect={toggleBookmark}>
+                          <BookmarkPlus className="mr-2 h-4 w-4" />
+                          <span>Bookmark this tab...</span>
+                          <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                            <Computer className="mr-2 h-4 w-4" />
-                            <span>Send to your devices</span>
+                          <BookCopy className="mr-2 h-4 w-4" />
+                          <span>Bookmark all tabs...</span>
+                          <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => toast({title: "QR Code generation is not implemented."})}>
-                            <QrCode className="mr-2 h-4 w-4" />
-                            <span>Create QR Code</span>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
+                          <BookMarked className="mr-2 h-4 w-4" />
+                          <span>Bookmark manager</span>
+                          <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
+                        {bookmarks.slice(0, 5).map(b => (
+                           <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
+                              <Star className="mr-2 h-4 w-4 text-yellow-500"/>
+                              <span className="truncate">{b.title}</span>
+                           </DropdownMenuItem>
+                        ))}
+                        {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                          <PanelsTopLeft className="mr-2 h-4 w-4" />
+                          <span>Tab groups</span>
+                      </DropdownMenuSubTrigger>
+                       <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                             <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                              <Plus className="mr-2 h-4 w-4" />
+                              <span>Create new tab group</span>
+                             </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      <span>Extensions</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported."})}>
+                          <Puzzle className="mr-2 h-4 w-4" />
+                          <span>Manage Extensions</span>
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
                     </DropdownMenuPortal>
-                 </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    <span>More tools</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Customize Aisha</span>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={toggleTheme}>
+                    {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                    <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => toast({title: "Password manager is not available."})}>
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      <span>Passwords and autofill</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => toast({title: "Clearing browsing data is not implemented."})}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Delete browsing data...</span>
+                      <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <ZoomIn className="mr-2 h-4 w-4" />
+                          <span>Zoom</span>
+                           <div className="ml-auto flex items-center gap-2">
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
+                              <span>{zoomLevel}%</span>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><RectangleHorizontal className="w-4 h-4"/></Button>
+                          </div>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                        <Gauge className="mr-2 h-4 w-4" />
-                        <span>Performance</span>
-                      </DropdownMenuItem>
-                       <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
-                        <Terminal className="mr-2 h-4 w-4" />
-                        <span>Developer Console</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                   <DropdownMenuSubTrigger>
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    <span>Help</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                     <DropdownMenuSubContent>
+                  </DropdownMenuGroup>
+                   <DropdownMenuItem onSelect={() => window.print()}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      <span>Print...</span>
+                      <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                      <Search className="mr-2 h-4 w-4" />
+                      <span>Search with Google Lens</span>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                      <Languages className="mr-2 h-4 w-4" />
+                      <span>Translate...</span>
+                  </DropdownMenuItem>
+                   <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                          <Search className="mr-2 h-4 w-4" />
+                          <span>Find and edit</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                              <DropdownMenuItem onSelect={() => toast({title: "Find is not implemented."})}>
+                                  <Search className="mr-2 h-4 w-4" />
+                                  <span>Find...</span>
+                                  <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
+                                  <Scissors className="mr-2 h-4 w-4" />
+                                  <span>Cut</span>
+                                  <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  <span>Copy</span>
+                                  <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
+                                  const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
+                                  if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                                      activeElement.value += text;
+                                  }
+                              })}>
+                                  <ClipboardPaste className="mr-2 h-4 w-4" />
+                                  <span>Paste</span>
+                                  <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                   <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Cast className="mr-2 h-4 w-4" />
+                        <span>Cast, save, and share</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="w-80">
+                          <DropdownMenuItem onSelect={() => toast({title: "Casting is not available in this browser."})}>
+                              <Cast className="mr-2 h-4 w-4" />
+                              <span>Cast...</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => toast({title: "Saving pages is not implemented."})}>
+                              <Download className="mr-2 h-4 w-4" />
+                              <span>Save page as...</span>
+                              <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => toast({title: "Creating shortcuts is not implemented."})}>
+                              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+                              <span>Create shortcut...</span>
+                          </DropdownMenuItem>
+                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={copyLink}>
+                              <LinkIcon className="mr-2 h-4 w-4" />
+                              <span>Copy link</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                              <Computer className="mr-2 h-4 w-4" />
+                              <span>Send to your devices</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => toast({title: "QR Code generation is not implemented."})}>
+                              <QrCode className="mr-2 h-4 w-4" />
+                              <span>Create QR Code</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                   </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      <span>More tools</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
                         <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                           <Info className="mr-2 h-4 w-4"/>
-                           <span>About Aisha</span>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Customize Aisha</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
-                           <MessageSquare className="mr-2 h-4 w-4"/>
-                           <span>Send Feedback</span>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                          <Gauge className="mr-2 h-4 w-4" />
+                          <span>Performance</span>
                         </DropdownMenuItem>
-                     </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
+                         <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
+                          <Terminal className="mr-2 h-4 w-4" />
+                          <span>Developer Console</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                   <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                     <DropdownMenuSubTrigger>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                       <DropdownMenuSubContent>
+                          <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                             <Info className="mr-2 h-4 w-4"/>
+                             <span>About Aisha</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
+                             <MessageSquare className="mr-2 h-4 w-4"/>
+                             <span>Send Feedback</span>
+                          </DropdownMenuItem>
+                       </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
 
-                 <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Exit</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                   <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Exit</span>
+                  </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-        </Card>
-      </header>
-      <div className="flex-1 flex overflow-hidden">
-        <main id="browser-content-area" className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-auto relative">
-            {tabs.map(tab => (
-                <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
-                    {tab.history[tab.currentIndex] === DEFAULT_URL ? (
-                        <NewTabPage />
-                    ) : tab.history[tab.currentIndex] === 'about:settings' ? (
-                        <SettingsPage />
-                    ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
-                        <StartupChecklistPage />
-                    ) : tab.history[tab.currentIndex] === aiAssistantUrl ? (
-                        <AiHubPage />
-                    ) : tab.history[tab.currentIndex] === 'about:history' ? (
-                        <HistoryPage />
-                    ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
-                        <BookmarksPage />
-                    ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
-                        <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
-                    ) : (
-                        <iframe
-                            ref={el => (iframeRefs.current[tab.id] = el)}
-                            src={tab.history[tab.currentIndex]}
-                            onLoad={() => handleIframeLoad(tab.id)}
-                            className="w-full h-full border-0"
-                            title="Browser Content"
-                            sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                        />
-                    )}
-                </div>
-            ))}
-        </main>
-        {sidebarOpen && (
-             <Sidebar side="right" className="w-[400px]" variant="sidebar" collapsible="offcanvas">
-                <div className="flex h-full flex-col p-2 bg-background/80 backdrop-blur-sm">
-                    <iframe
-                        src={aiAssistantUrl}
-                        className="w-full h-full border-0 rounded-lg"
-                        title="AI Assistant"
-                    />
-                </div>
-            </Sidebar>
-        )}
+          </Card>
+        </header>
+        <div className="flex-1 flex overflow-hidden">
+          <SidebarInset>
+            <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative">
+                {tabs.map(tab => (
+                    <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                        {tab.history[tab.currentIndex] === DEFAULT_URL ? (
+                            <NewTabPage />
+                        ) : tab.history[tab.currentIndex] === 'about:settings' ? (
+                            <SettingsPage />
+                        ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
+                            <StartupChecklistPage />
+                        ) : tab.history[tab.currentIndex] === 'about:history' ? (
+                            <HistoryPage />
+                        ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
+                            <BookmarksPage />
+                        ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
+                            <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
+                        ) : (
+                            <iframe
+                                ref={el => (iframeRefs.current[tab.id] = el)}
+                                src={tab.history[tab.currentIndex]}
+                                onLoad={() => handleIframeLoad(tab.id)}
+                                className="w-full h-full border-0"
+                                title="Browser Content"
+                                sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                            />
+                        )}
+                    </div>
+                ))}
+            </main>
+          </SidebarInset>
+          <Sidebar side="left" className="w-[400px]" collapsible="offcanvas" variant="sidebar">
+              <div className="flex h-full flex-col p-2 bg-background/80 backdrop-blur-sm">
+                  <iframe
+                      src={aiAssistantUrl}
+                      className="w-full h-full border-0 rounded-lg"
+                      title="AI Assistant"
+                  />
+              </div>
+          </Sidebar>
+        </div>
       </div>
+
 
       <DeveloperConsole />
       <FeedbackSheet />
@@ -1301,10 +1297,8 @@ const BrowserApp = () => {
 
 export default function BrowserPage() {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <BrowserApp />
     </SidebarProvider>
   )
 }
-
-    
