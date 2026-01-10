@@ -104,19 +104,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
 import { SidebarProvider, Sidebar, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DEFAULT_URL = "about:newtab";
 
 const initialShortcuts = [
-    { name: "Tools < utru.in...", icon: 'U', color: 'bg-green-500' },
-    { name: "utru", icon: 'U', color: 'bg-blue-500'  },
-    { name: "https://utru.c...", icon: 'U', color: 'bg-green-500'  },
-    { name: "chatgpt", icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
-    { name: "deesheek", icon: <Sparkles className="w-5 h-5" />, color: 'bg-blue-500' },
-    { name: "Canvas", icon: 'C', color: 'bg-cyan-500' },
-    { name: "IDX Firebase", icon: <Sparkles className="w-5 h-5" />, color: 'bg-orange-500' },
-    { name: "google admob", icon: 'A', color: 'bg-yellow-500' },
-    { name: "flutter full co...", icon: <Book className="w-5 h-5" />, color: 'bg-red-500' },
+    { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com' },
+    { name: "YouTube", icon: 'Y', color: 'bg-red-500', url: 'https://youtube.com'  },
+    { name: "ChatGPT", icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500', url: 'https://chatgpt.com' },
+    { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com' },
+    { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com' },
+    { name: "Canvas", icon: 'C', color: 'bg-cyan-500', url: 'https://canvas.instructure.com/' },
+    { name: "IDX", icon: <Sparkles className="w-5 h-5" />, color: 'bg-orange-500', url: 'https://idx.dev' },
+    { name: "AdMob", icon: 'A', color: 'bg-yellow-500', url: 'https://admob.google.com/' },
+    { name: "Flutter", icon: <Book className="w-5 h-5" />, color: 'bg-sky-500', url: 'https://flutter.dev' },
 ];
 
 type Shortcut = {
@@ -483,6 +484,10 @@ const BrowserApp = () => {
   };
   
   const handleAddShortcut = () => {
+    if (shortcuts.length >= 100) {
+      toast({ title: 'You have reached the shortcut limit of 100.', variant: 'destructive' });
+      return;
+    }
     if (!newShortcutName.trim() || !newShortcutUrl.trim()) {
       toast({ title: 'Please fill out both name and URL.', variant: 'destructive' });
       return;
@@ -574,51 +579,55 @@ const BrowserApp = () => {
                 </Button>
             </div>
         </div>
-        <div className="grid grid-cols-5 gap-x-8 gap-y-4 mt-8 max-w-3xl">
-            {shortcuts.map((shortcut, index) => (
-                <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                        {typeof shortcut.icon === 'string' ? shortcut.icon : shortcut.icon}
+        <ScrollArea className="max-w-3xl mt-8 h-[140px] pr-4">
+            <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                {shortcuts.map((shortcut, index) => (
+                    <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+                            {typeof shortcut.icon === 'string' ? shortcut.icon : shortcut.icon}
+                        </div>
+                        <span className="text-xs truncate w-20">{shortcut.name}</span>
                     </div>
-                    <span className="text-xs truncate w-20">{shortcut.name}</span>
-                </div>
-            ))}
-            <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
-              <DialogTrigger asChild>
-                <div className="flex flex-col items-center gap-2 text-center cursor-pointer group">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary hover:bg-muted">
-                        <Plus className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <span className="text-xs truncate w-20">Add New</span>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add shortcut</DialogTitle>
-                  <DialogDescription>
-                    Enter a name and URL for your new shortcut.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="url" className="text-right">
-                      URL
-                    </Label>
-                    <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleAddShortcut}>Add Shortcut</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-        </div>
+                ))}
+                {shortcuts.length < 100 && (
+                    <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
+                      <DialogTrigger asChild>
+                        <div className="flex flex-col items-center gap-2 text-center cursor-pointer group">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary hover:bg-muted">
+                                <Plus className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                            <span className="text-xs truncate w-20">Add New</span>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Add shortcut</DialogTitle>
+                          <DialogDescription>
+                            Enter a name and URL for your new shortcut.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                              Name
+                            </Label>
+                            <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="url" className="text-right">
+                              URL
+                            </Label>
+                            <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button onClick={handleAddShortcut}>Add Shortcut</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                )}
+            </div>
+        </ScrollArea>
     </div>
   );
 
@@ -1290,3 +1299,5 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
+    
