@@ -900,7 +900,7 @@ const BrowserApp = () => {
         <div className="p-2 space-y-4">
           {assistantMessages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
-              <MessageSquare className="w-16 h-16 text-muted-foreground/50 mb-4" />
+              <Sparkles className="w-16 h-16 text-muted-foreground/50 mb-4" />
               <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
               <p className="text-sm text-muted-foreground mt-2">Ask me anything to get started.</p>
             </div>
@@ -1421,6 +1421,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
