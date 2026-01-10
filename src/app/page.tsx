@@ -209,11 +209,17 @@ const BrowserApp = () => {
       setBookmarks(JSON.parse(savedBookmarks));
     }
 
-    const savedShortcuts = localStorage.getItem('aisha-shortcuts');
-    if (savedShortcuts) {
+    const savedShortcutsString = localStorage.getItem('aisha-shortcuts');
+    if (savedShortcutsString) {
         try {
-          const parsedShortcuts = JSON.parse(savedShortcuts);
-          setShortcuts(parsedShortcuts);
+          const savedShortcuts = JSON.parse(savedShortcutsString);
+          // Merge with initial to ensure URLs are preserved for defaults
+          const mergedShortcuts = initialShortcuts.map(is => {
+            const saved = savedShortcuts.find((ss: Shortcut) => ss.name === is.name);
+            return saved ? { ...is, ...saved } : is;
+          });
+          const userAddedShortcuts = savedShortcuts.filter((ss: Shortcut) => !initialShortcuts.some(is => is.name === ss.name));
+          setShortcuts([...mergedShortcuts, ...userAddedShortcuts]);
         } catch (e) {
           console.error("Failed to parse shortcuts from localStorage", e);
           setShortcuts(initialShortcuts);
