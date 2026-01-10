@@ -114,18 +114,29 @@ const DEFAULT_URL = "about:newtab";
 const initialShortcuts = [
     { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com' },
     { name: "YouTube", icon: 'Y', color: 'bg-red-500', url: 'https://youtube.com'  },
-    { name: "ChatGPT", icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500', url: 'https://chat.openai.com' },
+    { name: "ChatGPT", icon: 'Sparkles', color: 'bg-purple-500', url: 'https://chat.openai.com' },
     { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com' },
     { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com' },
     { name: "Canvas", icon: 'C', color: 'bg-cyan-500', url: 'https://canvas.instructure.com/' },
-    { name: "IDX", icon: <Sparkles className="w-5 h-5" />, color: 'bg-orange-500', url: 'https://idx.dev' },
+    { name: "IDX", icon: 'Sparkles', color: 'bg-orange-500', url: 'https://idx.dev' },
     { name: "AdMob", icon: 'A', color: 'bg-yellow-500', url: 'https://admob.google.com' },
-    { name: "Flutter", icon: <Book className="w-5 h-5" />, color: 'bg-sky-500', url: 'https://flutter.dev' },
+    { name: "Flutter", icon: 'Book', color: 'bg-sky-500', url: 'https://flutter.dev' },
 ];
+
+const renderShortcutIcon = (icon: string) => {
+  switch (icon) {
+    case 'Sparkles':
+      return <Sparkles className="w-5 h-5" />;
+    case 'Book':
+      return <Book className="w-5 h-5" />;
+    default:
+      return icon;
+  }
+};
 
 type Shortcut = {
     name: string;
-    icon: React.ReactNode | string;
+    icon: string;
     color: string;
     url?: string;
 };
@@ -198,7 +209,13 @@ const BrowserApp = () => {
 
     const savedShortcuts = localStorage.getItem('aisha-shortcuts');
     if (savedShortcuts) {
-        setShortcuts(JSON.parse(savedShortcuts));
+        try {
+          const parsedShortcuts = JSON.parse(savedShortcuts);
+          setShortcuts(parsedShortcuts);
+        } catch (e) {
+          console.error("Failed to parse shortcuts from localStorage", e);
+          setShortcuts(initialShortcuts);
+        }
     } else {
         setShortcuts(initialShortcuts);
     }
@@ -274,7 +291,7 @@ const BrowserApp = () => {
         return;
     }
 
-    if (!/^(https?:\/\/|about:)/i.test(newUrl)) {
+    if (!/^(https?:\/\/)/i.test(newUrl)) {
       newUrl = `https://www.google.com/search?q=${encodeURIComponent(newUrl)}`;
     }
     
@@ -565,7 +582,7 @@ const BrowserApp = () => {
                 {shortcuts.slice(0, 10).map((shortcut, index) => (
                     <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                            {typeof shortcut.icon === 'string' ? shortcut.icon : shortcut.icon}
+                            {renderShortcutIcon(shortcut.icon)}
                         </div>
                         <span className="text-xs truncate w-20">{shortcut.name}</span>
                     </div>
@@ -613,8 +630,13 @@ const BrowserApp = () => {
   );
 
   const SettingsPage = () => {
-    const SettingsContent = require('@/app/settings/page').default;
-    return <SettingsContent />;
+    try {
+      const SettingsContent = require('@/app/settings/page').default;
+      return <SettingsContent />;
+    } catch (error) {
+       console.error("Failed to load settings page:", error);
+       return <GenericInternalPage title="Settings" icon={Settings}><p>Could not load the settings page. This might be due to a compilation error.</p></GenericInternalPage>;
+    }
   };
 
   const StartupChecklistPage = () => {
@@ -622,9 +644,9 @@ const BrowserApp = () => {
       const ChecklistContent = require('@/app/startup-checklist/page').default;
       return <ChecklistContent />;
     } catch (error) {
-      return <GenericInternalPage title="Startup Checklist" icon={ListTodo}><p>Could not load the startup checklist page.</p></GenericInternalPage>
+      return <GenericInternalPage title="Startup Checklist" icon={ListTodo}><p>Could not load the startup checklist page.</p></GenericInternalPage>;
     }
-  }
+  };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
     <div className="flex-1 flex flex-col bg-background text-foreground p-8 overflow-y-auto">
@@ -1224,5 +1246,6 @@ export default function BrowserPage() {
     <BrowserApp />
   )
 }
+    
 
     
