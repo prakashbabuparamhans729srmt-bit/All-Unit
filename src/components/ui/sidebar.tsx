@@ -58,7 +58,7 @@ const SidebarProvider = React.forwardRef<
 >(
   (
     {
-      defaultOpen = true,
+      defaultOpen = false,
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -176,7 +176,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile, open, setOpen } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
     if (collapsible === "none") {
       return (
@@ -218,7 +218,7 @@ const Sidebar = React.forwardRef<
         ref={ref}
         className={cn(
           "group peer hidden md:block text-sidebar-foreground",
-           !open && 'hidden'
+          state === 'collapsed' && 'hidden'
         )}
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
@@ -263,9 +263,11 @@ Sidebar.displayName = "Sidebar"
 const SidebarTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & { asChild?: boolean }
->(({ className, asChild = false, onClick, ...props }, ref) => {
+>(({ className, asChild = false, onClick, children, ...props }, ref) => {
   const { toggleSidebar } = useSidebar()
   const Comp = asChild ? Slot : "button"
+  const child = children ? React.Children.only(children) : <PanelLeft />;
+
   return (
     <Comp
       ref={ref}
@@ -276,7 +278,9 @@ const SidebarTrigger = React.forwardRef<
         toggleSidebar()
       }}
       {...props}
-    />
+    >
+      {child}
+    </Comp>
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"

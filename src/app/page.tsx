@@ -103,7 +103,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
-import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarInset, useSidebar } from "@/components/ui/sidebar";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -140,8 +140,8 @@ type BookmarkItem = {
   favicon?: string;
 };
 
-export default function BrowserPage() {
-  const [tabs, setTabs] = useState<Tab[]>([
+const BrowserApp = () => {
+    const [tabs, setTabs] = useState<Tab[]>([
     {
       id: "tab-1",
       history: [DEFAULT_URL],
@@ -166,9 +166,33 @@ export default function BrowserPage() {
   const [isAddShortcutOpen, setIsAddShortcutOpen] = useState(false);
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
+  
+  const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar();
+  const [isHoverSidebarEnabled, setIsHoverSidebarEnabled] = useState(false);
+
 
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isHoverSidebarEnabled) return;
+
+      const hoverAreaWidth = 20; // in pixels
+      const isOnRightEdge = window.innerWidth - e.clientX < hoverAreaWidth;
+      
+      if (isOnRightEdge) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [isHoverSidebarEnabled, setSidebarOpen]);
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -483,7 +507,15 @@ export default function BrowserPage() {
     setNewShortcutUrl('');
     setIsAddShortcutOpen(false);
   };
-
+  
+  const toggleSidebarBehavior = () => {
+    if (isHoverSidebarEnabled) {
+      setIsHoverSidebarEnabled(false);
+      setSidebarOpen(false);
+    } else {
+      setIsHoverSidebarEnabled(true);
+    }
+  };
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -821,7 +853,6 @@ export default function BrowserPage() {
   );
 
   return (
-    <SidebarProvider>
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
       <header className="flex-shrink-0">
         <div className="flex items-center justify-between pt-2 px-2">
@@ -899,11 +930,9 @@ export default function BrowserPage() {
             </Button>
           </div>
           
-          <SidebarTrigger asChild>
-            <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={toggleSidebarBehavior}>
               <Sparkles className="w-5 h-5" />
-            </Button>
-          </SidebarTrigger>
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1237,8 +1266,8 @@ export default function BrowserPage() {
                 ))}
             </main>
         </SidebarInset>
-        <Sidebar side="right" className="w-[400px] border-l" variant="sidebar" collapsible="offcanvas">
-            <div className="flex h-full flex-col p-2">
+        <Sidebar side="right" className="w-[400px]" variant="sidebar" collapsible="offcanvas">
+            <div className="flex h-full flex-col p-2 bg-background/80 backdrop-blur-sm">
                 <iframe
                     src={aiAssistantUrl}
                     className="w-full h-full border-0 rounded-lg"
@@ -1251,6 +1280,13 @@ export default function BrowserPage() {
       <DeveloperConsole />
       <FeedbackSheet />
     </div>
-    </SidebarProvider>
   );
+}
+
+export default function BrowserPage() {
+  return (
+    <SidebarProvider>
+      <BrowserApp />
+    </SidebarProvider>
+  )
 }
