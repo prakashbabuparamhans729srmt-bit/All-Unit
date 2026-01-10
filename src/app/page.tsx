@@ -170,10 +170,8 @@ const BrowserApp = () => {
   const [isAddShortcutOpen, setIsAddShortcutOpen] = useState(false);
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   
-  const { open: isAiPanelOpen, setOpen: setIsAiPanelOpen } = useSidebar();
-
-
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
 
@@ -613,77 +611,6 @@ const BrowserApp = () => {
       return <GenericInternalPage title="Startup Checklist" icon={ListTodo}><p>Could not load the startup checklist page.</p></GenericInternalPage>
     }
   }
-  
-  const AiHubPage = () => {
-    const [textToSummarize, setTextToSummarize] = useState('');
-    const [summary, setSummary] = useState('');
-    const [isSummarizing, setIsSummarizing] = useState(false);
-  
-    const handleSummarize = async () => {
-      if (!textToSummarize.trim()) {
-        toast({ title: 'Please enter text to summarize.', variant: 'destructive' });
-        return;
-      }
-      setIsSummarizing(true);
-      setSummary('');
-      try {
-        const result = await summarizeText({ text: textToSummarize });
-        setSummary(result.summary);
-      } catch (error) {
-        console.error('Summarization failed:', error);
-        toast({ title: 'Failed to generate summary.', description: 'Please try again later.', variant: 'destructive' });
-      } finally {
-        setIsSummarizing(false);
-      }
-    };
-  
-    return (
-      <GenericInternalPage title="AI Hub" icon={Sparkles}>
-        <div className="flex flex-col gap-8 max-w-4xl mx-auto">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Text Summarizer</h3>
-              <div className="grid gap-4">
-                <Label htmlFor="text-to-summarize">Paste your text here</Label>
-                <Textarea
-                  id="text-to-summarize"
-                  placeholder="Enter a long article or any text you want to summarize..."
-                  className="min-h-[200px]"
-                  value={textToSummarize}
-                  onChange={(e) => setTextToSummarize(e.target.value)}
-                  disabled={isSummarizing}
-                />
-                <Button onClick={handleSummarize} disabled={isSummarizing}>
-                  {isSummarizing ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Summarizing...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Summarize
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-  
-          {summary && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Summary</h3>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                  {summary}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </GenericInternalPage>
-    );
-  };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
     <div className="flex-1 flex flex-col bg-background text-foreground p-8 overflow-y-auto">
@@ -832,55 +759,6 @@ const BrowserApp = () => {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      <Sidebar collapsible="icon" className="group-data-[variant=sidebar]:-translate-x-full">
-        <SidebarContent className="p-2">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="Home"
-                onClick={() => handleNavigation(activeTabId, DEFAULT_URL)}
-                isActive={currentUrl === DEFAULT_URL}
-              >
-                <Home />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarTrigger asChild>
-                 <SidebarMenuButton tooltip="AI Assistant" isActive={isAiPanelOpen}>
-                    <Sparkles />
-                  </SidebarMenuButton>
-              </SidebarTrigger>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                tooltip="History"
-                onClick={() => handleNavigation(activeTabId, 'about:history')}
-                isActive={currentUrl === 'about:history'}
-              >
-                <HistoryIcon />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton 
-                tooltip="Bookmarks"
-                onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}
-                isActive={currentUrl === 'about:bookmarks'}
-              >
-                <BookMarked />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                tooltip="Settings"
-                onClick={() => handleNavigation(activeTabId, 'about:settings')}
-                isActive={currentUrl === 'about:settings'}
-              >
-                <Settings />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
           <div className="flex items-center justify-between pt-2 px-2">
@@ -948,13 +826,18 @@ const BrowserApp = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
                 className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
-                placeholder="Search Aisha or type a URL"
+                placeholder="Ask anything or navigate..."
               />
                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
                 <LinkIcon className="w-5 h-5 text-muted-foreground" />
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
                 <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+              </Button>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                {isAssistantOpen ? <X className="w-4 h-4 mr-2"/> : <Sparkles className="w-4 h-4 mr-2" />}
+                Assistant
               </Button>
             </div>
             
@@ -1002,12 +885,11 @@ const BrowserApp = () => {
                       <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger onSelect={() => handleNavigation(activeTabId, 'about:history')}>
+                   <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
                       <HistoryIcon className="mr-2 h-4 w-4" />
                       <span>History</span>
-                    </DropdownMenuSubTrigger>
-                  </DropdownMenuSub>
+                       <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
+                    </DropdownMenuItem>
                    <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
                       <Download className="mr-2 h-4 w-4" />
                       <span>Downloads</span>
@@ -1196,7 +1078,7 @@ const BrowserApp = () => {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
-                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
                           <Pencil className="mr-2 h-4 w-4" />
                           <span>Customize Aisha</span>
                         </DropdownMenuItem>
@@ -1224,7 +1106,7 @@ const BrowserApp = () => {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                        <DropdownMenuSubContent>
-                          <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
                              <Info className="mr-2 h-4 w-4"/>
                              <span>About Aisha</span>
                           </DropdownMenuItem>
@@ -1246,45 +1128,51 @@ const BrowserApp = () => {
           </Card>
         </header>
         <div className="flex-1 flex overflow-hidden">
-          <SidebarInset>
-            <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative">
-                {tabs.map(tab => (
-                    <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
-                        {tab.history[tab.currentIndex] === DEFAULT_URL ? (
-                            <NewTabPage />
-                        ) : tab.history[tab.currentIndex] === 'about:settings' ? (
-                            <SettingsPage />
-                        ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
-                            <StartupChecklistPage />
-                        ) : tab.history[tab.currentIndex] === 'about:history' ? (
-                            <HistoryPage />
-                        ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
-                            <BookmarksPage />
-                        ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
-                            <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
-                        ) : (
-                            <iframe
-                                ref={el => (iframeRefs.current[tab.id] = el)}
-                                src={tab.history[tab.currentIndex]}
-                                onLoad={() => handleIframeLoad(tab.id)}
-                                className="w-full h-full border-0"
-                                title="Browser Content"
-                                sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                            />
-                        )}
-                    </div>
-                ))}
-            </main>
-          </SidebarInset>
-          <Sidebar side="left" className="w-[400px]" collapsible="offcanvas" variant="sidebar">
-              <div className="flex h-full flex-col p-2 bg-background/80 backdrop-blur-sm">
-                  <iframe
-                      src={aiAssistantUrl}
-                      className="w-full h-full border-0 rounded-lg"
-                      title="AI Assistant"
-                  />
-              </div>
-          </Sidebar>
+          <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
+              {tabs.map(tab => (
+                  <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                      {tab.history[tab.currentIndex] === DEFAULT_URL ? (
+                          <NewTabPage />
+                      ) : tab.history[tab.currentIndex] === 'about:settings' ? (
+                          <SettingsPage />
+                      ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
+                          <StartupChecklistPage />
+                      ) : tab.history[tab.currentIndex] === 'about:history' ? (
+                          <HistoryPage />
+                      ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
+                          <BookmarksPage />
+                      ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
+                          <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
+                      ) : tab.history[tab.currentIndex] === 'about:about' ? (
+                         <GenericInternalPage title="About Aisha" icon={Info}>
+                           <div className="flex flex-col h-full items-center justify-center text-center">
+                              <h1 className="text-6xl font-bold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
+                              <p className="text-muted-foreground">Version 1.0 (Prototype)</p>
+                              <p className="text-muted-foreground mt-2">Copyright © 2024. All rights reserved.</p>
+                            </div>
+                         </GenericInternalPage>
+                      ) : (
+                          <iframe
+                              ref={el => (iframeRefs.current[tab.id] = el)}
+                              src={tab.history[tab.currentIndex]}
+                              onLoad={() => handleIframeLoad(tab.id)}
+                              className="w-full h-full border-0"
+                              title="Browser Content"
+                              sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                          />
+                      )}
+                  </div>
+              ))}
+          </main>
+          {isAssistantOpen && (
+            <aside className="w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm p-2 transition-all duration-300">
+                <iframe
+                    src={aiAssistantUrl}
+                    className="w-full h-full border-0 rounded-lg"
+                    title="AI Assistant"
+                />
+            </aside>
+          )}
         </div>
       </div>
 
@@ -1297,8 +1185,6 @@ const BrowserApp = () => {
 
 export default function BrowserPage() {
   return (
-    <SidebarProvider defaultOpen={false}>
-      <BrowserApp />
-    </SidebarProvider>
+    <BrowserApp />
   )
 }
