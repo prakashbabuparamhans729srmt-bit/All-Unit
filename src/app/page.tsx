@@ -113,7 +113,7 @@ const DEFAULT_URL = "about:newtab";
 
 const initialShortcuts = [
     { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com' },
-    { name: "YouTube", icon: 'Y', color: 'bg-red-500', url: 'https://youtube.com'  },
+    { name: "YouTube", icon: 'Y', color: 'bg-red-500', url: 'https://youtube.com' },
     { name: "ChatGPT", icon: 'Sparkles', color: 'bg-purple-500', url: 'https://chat.openai.com' },
     { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com' },
     { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com' },
@@ -140,7 +140,7 @@ type Shortcut = {
     name: string;
     icon: string;
     color: string;
-    url?: string;
+    url: string;
 };
 
 type Tab = {
@@ -212,17 +212,19 @@ const BrowserApp = () => {
     const savedShortcutsString = localStorage.getItem('aisha-shortcuts');
     if (savedShortcutsString) {
         try {
-          const savedShortcuts = JSON.parse(savedShortcutsString);
-          // Merge with initial to ensure URLs are preserved for defaults
-          const mergedShortcuts = initialShortcuts.map(is => {
-            const saved = savedShortcuts.find((ss: Shortcut) => ss.name === is.name);
-            return saved ? { ...is, ...saved } : is;
-          });
-          const userAddedShortcuts = savedShortcuts.filter((ss: Shortcut) => !initialShortcuts.some(is => is.name === ss.name));
-          setShortcuts([...mergedShortcuts, ...userAddedShortcuts]);
+            const savedShortcuts: Shortcut[] = JSON.parse(savedShortcutsString);
+            const savedShortcutsMap = new Map(savedShortcuts.map(s => [s.name, s]));
+            
+            const mergedShortcuts = initialShortcuts.map(is => 
+                savedShortcutsMap.has(is.name) ? savedShortcutsMap.get(is.name)! : is
+            );
+
+            const userAddedShortcuts = savedShortcuts.filter(ss => !initialShortcuts.some(is => is.name === ss.name));
+            
+            setShortcuts([...mergedShortcuts, ...userAddedShortcuts]);
         } catch (e) {
-          console.error("Failed to parse shortcuts from localStorage", e);
-          setShortcuts(initialShortcuts);
+            console.error("Failed to parse shortcuts from localStorage", e);
+            setShortcuts(initialShortcuts);
         }
     } else {
         setShortcuts(initialShortcuts);
