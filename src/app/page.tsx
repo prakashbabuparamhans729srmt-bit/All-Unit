@@ -502,8 +502,40 @@ export default function BrowserPage() {
                 autoFocus
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Voice search is not implemented yet.'})}><Mic className="w-5 h-5" /></Button>
-                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Image search is not implemented yet.'})}><Camera className="w-5 h-5" /></Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-8 h-8"><Mic className="w-5 h-5" /></Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2"><Mic className="w-5 h-5" /> Voice Search</DialogTitle>
+                      <DialogDescription>
+                        Voice search is coming soon. When available, you'll be able to speak your search query.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 text-center">
+                      <p className="text-sm text-muted-foreground">Aisha will ask for microphone permission.</p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="w-8 h-8"><Camera className="w-5 h-5" /></Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                       <DialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5" /> Search by Image</DialogTitle>
+                      <DialogDescription>
+                        Image search is coming soon. You'll be able to search using an image instead of text.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg h-40 flex flex-col justify-center items-center">
+                      <p className="text-sm text-muted-foreground">Drag and drop an image here</p>
+                      <p className="text-xs text-muted-foreground my-2">or</p>
+                      <Button variant="outline" size="sm">Upload a file</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, 'about:ai-hub')}>
                     <Sparkles className="w-4 h-4 mr-2"/>
                     AI Hub
@@ -787,7 +819,6 @@ export default function BrowserPage() {
       </SheetContent>
     </Sheet>
   );
-
 
   return (
     <SidebarProvider>
@@ -1223,5 +1254,3 @@ export default function BrowserPage() {
     </SidebarProvider>
   );
 }
-
-    
