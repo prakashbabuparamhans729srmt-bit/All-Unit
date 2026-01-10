@@ -189,6 +189,7 @@ const BrowserApp = () => {
   const [assistantInput, setAssistantInput] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const [isIncognito, setIsIncognito] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -202,6 +203,15 @@ const BrowserApp = () => {
       }
     };
     window.addEventListener('message', handleMessage);
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    const incognitoParam = searchParams.get('incognito');
+    if (incognitoParam === 'true') {
+        setIsIncognito(true);
+        setShortcuts([]);
+        setBookmarks([]);
+    }
+
     return () => {
       window.removeEventListener('message', handleMessage);
     };
@@ -211,6 +221,8 @@ const BrowserApp = () => {
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
     
+    if (isIncognito) return;
+
     const savedBookmarks = localStorage.getItem('aisha-bookmarks');
     if (savedBookmarks) {
       setBookmarks(JSON.parse(savedBookmarks));
@@ -237,7 +249,7 @@ const BrowserApp = () => {
     } else {
         setShortcuts(initialShortcuts);
     }
-  }, []);
+  }, [isIncognito]);
 
   useEffect(() => {
     const activeContent = document.getElementById('browser-content-area');
@@ -290,10 +302,15 @@ const BrowserApp = () => {
     
     const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist', 'about:about'];
     if (internalPages.includes(newUrl)) {
+        if (isIncognito && (newUrl === 'about:history' || newUrl === 'about:bookmarks')) {
+             toast({ title: "History and Bookmarks are disabled in Incognito mode." });
+             return;
+        }
         const currentTab = tabs.find(t => t.id === tabId);
         if (!currentTab) return;
-        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
-        newHistory.push(newUrl);
+        const newHistory = isIncognito ? [DEFAULT_URL, newUrl] : currentTab.history.slice(0, currentTab.currentIndex + 1);
+        if (!isIncognito) newHistory.push(newUrl);
+
         const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
         updateTab(tabId, { 
             history: newHistory,
@@ -311,8 +328,8 @@ const BrowserApp = () => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
     
-    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
-    newHistory.push(newUrl);
+    const newHistory = isIncognito ? [DEFAULT_URL, newUrl] : tab.history.slice(0, tab.currentIndex + 1);
+    if(!isIncognito) newHistory.push(newUrl);
     
     updateTab(tabId, { 
         history: newHistory,
@@ -372,7 +389,7 @@ const BrowserApp = () => {
         title = iframe.contentWindow.document.title || "Untitled";
 
         const realUrl = iframe.contentWindow.location.href;
-        if (realUrl !== 'about:blank' && realUrl !== tab.history[tab.currentIndex]) {
+        if (realUrl !== 'about:blank' && realUrl !== tab.history[tab.currentIndex] && !isIncognito) {
            const newHistory = [...tab.history];
            newHistory[tab.currentIndex] = realUrl;
            updateTab(tabId, {history: newHistory});
@@ -411,6 +428,10 @@ const BrowserApp = () => {
     if (tabIndex === -1) return;
 
     if (tabs.length === 1) {
+      if (isIncognito) {
+          window.close();
+          return;
+      }
       toast({title: "You can't close the last tab.", variant: "destructive"});
       return;
     };
@@ -439,6 +460,10 @@ const BrowserApp = () => {
   };
   
   const toggleBookmark = () => {
+    if (isIncognito) {
+        toast({ title: "Can't add bookmarks in Incognito mode." });
+        return;
+    }
     if (!activeTab || currentUrl === DEFAULT_URL || currentUrl.startsWith("about:")) {
         toast({title: "Can't bookmark internal pages.", variant: "destructive"});
         return;
@@ -508,6 +533,10 @@ const BrowserApp = () => {
   };
   
   const handleAddShortcut = () => {
+    if (isIncognito) {
+        toast({ title: "Can't add shortcuts in Incognito mode." });
+        return;
+    }
     if (shortcuts.length >= 100) {
       toast({ title: 'You have reached the shortcut limit of 100.', variant: 'destructive' });
       return;
@@ -586,6 +615,8 @@ const BrowserApp = () => {
         description: `${file.name} - Image search is not yet implemented.`,
       });
     }
+    // clear the input value so the same file can be selected again
+    event.target.value = '';
   };
 
   const handleAssistantSubmit = async () => {
@@ -681,7 +712,7 @@ const BrowserApp = () => {
               ))}
           </div>
         </ScrollArea>
-        {shortcuts.length < 100 && (
+        {shortcuts.length < 100 && !isIncognito && (
             <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
               <DialogTrigger asChild>
                 <Button variant="ghost" className="mt-4">
@@ -1030,11 +1061,11 @@ const BrowserApp = () => {
                         onClick={() => setActiveTabId(tab.id)}
                         className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
                         ${activeTabId === tab.id 
-                            ? 'bg-card text-card-foreground z-10 -mb-px' 
-                            : 'bg-secondary text-secondary-foreground hover:bg-card/80'
+                            ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
+                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
                         }`}
                      >
-                        <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
+                        {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
                         <span className="truncate max-w-[150px]">
                             {tab.isLoading ? "Loading..." : tab.title}
                         </span>
@@ -1058,7 +1089,7 @@ const BrowserApp = () => {
                     <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
                 </div>
             </div>
-            <Card className="flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border">
+            <Card className={`flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -1080,7 +1111,7 @@ const BrowserApp = () => {
                         </div>
                     </div>
                 ) : (
-                    <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
+                    isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-muted-foreground" /> : <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
                 )}
                 <Input
                   type="text"
@@ -1130,7 +1161,7 @@ const BrowserApp = () => {
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toast({title: "Incognito mode is not available."})}><ShieldOff className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => window.open(window.location.href + '?incognito=true')}><ShieldOff className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>New Incognito Window</p>
@@ -1185,7 +1216,7 @@ const BrowserApp = () => {
                         <span>New window</span>
                         <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => toast({title: "Incognito mode is not available."})}>
+                    <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
                         <ShieldOff className="mr-2 h-4 w-4" />
                         <span>New Incognito window</span>
                         <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
@@ -1465,6 +1496,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
