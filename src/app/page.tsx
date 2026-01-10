@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
@@ -71,7 +72,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -144,6 +145,7 @@ export default function BrowserPage() {
   const [consoleHistory, setConsoleHistory] = useState<{type: 'input' | 'output', content: string}[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [aiAssistantUrl, setAiAssistantUrl] = useState('https://www.perplexity.ai');
 
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -156,6 +158,12 @@ export default function BrowserPage() {
     const savedBookmarks = localStorage.getItem('aisha-bookmarks');
     if (savedBookmarks) {
       setBookmarks(JSON.parse(savedBookmarks));
+    }
+    
+    // Load AI Assistant URL from localStorage
+    const savedAiUrl = localStorage.getItem('aisha-ai-assistant-url');
+    if (savedAiUrl) {
+      setAiAssistantUrl(savedAiUrl);
     }
   }, []);
 
@@ -449,9 +457,9 @@ export default function BrowserPage() {
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Voice search is not implemented yet.'})}><Mic className="w-5 h-5" /></Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Image search is not implemented yet.'})}><Camera className="w-5 h-5" /></Button>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, 'about:ai-hub')}>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
                     <Sparkles className="w-4 h-4 mr-2"/>
-                    AI Mode
+                    AI Assistant
                 </Button>
             </div>
         </div>
@@ -777,6 +785,10 @@ export default function BrowserPage() {
             </Button>
           </div>
           
+          <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
+            <Sparkles className="w-5 h-5" />
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, 'about:history')}>
@@ -1111,3 +1123,5 @@ export default function BrowserPage() {
     </div>
   );
 }
+
+    

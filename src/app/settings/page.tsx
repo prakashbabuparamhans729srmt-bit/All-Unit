@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -379,36 +380,107 @@ export default function SettingsPage() {
     )
   };
 
-  const SearchEngine = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Search engine</h2>
-      <Card className="p-0">
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Search engine used in the address bar</h3>
+  const SearchEngine = () => {
+    const [aiAssistant, setAiAssistant] = useState('perplexity');
+    const [customAiUrl, setCustomAiUrl] = useState('');
+  
+    useEffect(() => {
+      const savedUrl = localStorage.getItem('aisha-ai-assistant-url') || 'https://www.perplexity.ai';
+      if (savedUrl === 'https://www.perplexity.ai') setAiAssistant('perplexity');
+      else if (savedUrl === 'https://gemini.google.com') setAiAssistant('gemini');
+      else if (savedUrl === 'https://chat.openai.com') setAiAssistant('chatgpt');
+      else {
+        setAiAssistant('custom');
+        setCustomAiUrl(savedUrl);
+      }
+    }, []);
+  
+    const handleAiAssistantChange = (value: string) => {
+      setAiAssistant(value);
+      let url = '';
+      if (value === 'perplexity') url = 'https://www.perplexity.ai';
+      else if (value === 'gemini') url = 'https://gemini.google.com';
+      else if (value === 'chatgpt') url = 'https://chat.openai.com';
+      
+      if (url) {
+        localStorage.setItem('aisha-ai-assistant-url', url);
+        toast({ title: 'AI Assistant Updated' });
+      }
+    };
+  
+    const handleCustomUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newUrl = e.target.value;
+      setCustomAiUrl(newUrl);
+      if (aiAssistant === 'custom' && newUrl.trim().startsWith('https://')) {
+        localStorage.setItem('aisha-ai-assistant-url', newUrl.trim());
+      }
+    };
+  
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold">Search engine & AI</h2>
+        <Card className="p-0">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">Search engine used in the address bar</h3>
+              </div>
+              <Select defaultValue="google">
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="google">Google</SelectItem>
+                  <SelectItem value="bing">Bing</SelectItem>
+                  <SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
+                  <SelectItem value="yahoo">Yahoo!</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select defaultValue="google">
-              <SelectTrigger className="w-[220px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="google">Google</SelectItem>
-                <SelectItem value="bing">Bing</SelectItem>
-                <SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
-                <SelectItem value="yahoo">Yahoo!</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
-        </div>
-        <SettingsItem 
-          title="Manage search engines and site search" 
-          description="Add, edit, or remove search engines"
-          onClick={() => toast({title: "This feature is not implemented."})}
-        />
-      </Card>
-    </div>
-  );
+          <SettingsItem 
+            title="Manage search engines and site search" 
+            description="Add, edit, or remove search engines"
+            onClick={() => toast({title: "This feature is not implemented."})}
+          />
+        </Card>
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">AI Assistant</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Choose which AI assistant opens when you click the AI button in the toolbar.
+          </p>
+          <RadioGroup value={aiAssistant} onValueChange={handleAiAssistantChange} className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="perplexity" id="perplexity" />
+              <Label htmlFor="perplexity">Perplexity AI</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="gemini" id="gemini" />
+              <Label htmlFor="gemini">Google Gemini</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="chatgpt" id="chatgpt" />
+              <Label htmlFor="chatgpt">ChatGPT</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="custom" id="custom" />
+              <Label htmlFor="custom">Custom URL</Label>
+            </div>
+          </RadioGroup>
+          {aiAssistant === 'custom' && (
+            <div className="mt-4 pl-6">
+              <Input 
+                placeholder="https://example.com"
+                value={customAiUrl}
+                onChange={handleCustomUrlChange}
+              />
+              <p className="text-xs text-muted-foreground mt-2">Enter the full URL (including https://) of your custom AI assistant.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  };
 
   const StartupChecklistPage = () => {
     try {
