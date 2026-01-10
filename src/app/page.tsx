@@ -190,6 +190,7 @@ const BrowserApp = () => {
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -579,6 +580,17 @@ const BrowserApp = () => {
     recognitionRef.current.start();
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // For now, just show a toast. Later, this can be used for actual image search.
+      toast({
+        title: "Image selected",
+        description: `${file.name} - Image search is not yet implemented.`,
+      });
+    }
+  };
+
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -608,21 +620,29 @@ const BrowserApp = () => {
                     <DialogHeader>
                        <DialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5" /> Search by Image</DialogTitle>
                       <DialogDescription>
-                        Image search is coming soon. You'll be able to search using an image instead of text.
+                        Search using an image instead of text.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg h-40 flex flex-col justify-center items-center">
                       <p className="text-sm text-muted-foreground">Drag and drop an image here</p>
                       <p className="text-xs text-muted-foreground my-2">or</p>
-                      <Button variant="outline" size="sm">Upload a file</Button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        accept="image/*"
+                      />
+                      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>Upload a file</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
             </div>
         </div>
         <div className="max-w-3xl w-full mt-8 flex flex-col items-center">
+        <ScrollArea className="w-full max-w-lg">
           <div className="grid grid-cols-5 gap-x-8 gap-y-4">
-              {shortcuts.slice(0, 10).map((shortcut, index) => (
+              {shortcuts.map((shortcut, index) => (
                   <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
                           {renderShortcutIcon(shortcut.icon)}
@@ -630,44 +650,43 @@ const BrowserApp = () => {
                       <span className="text-xs truncate w-20">{shortcut.name}</span>
                   </div>
               ))}
-              {shortcuts.length < 100 && (
-                <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary hover:bg-muted">
-                            <Plus className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                        <span className="text-xs truncate w-20">Add New</span>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Add shortcut</DialogTitle>
-                      <DialogDescription>
-                        Enter a name and URL for your new shortcut.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">
-                          Name
-                        </Label>
-                        <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="url" className="text-right">
-                          URL
-                        </Label>
-                        <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleAddShortcut}>Add Shortcut</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
           </div>
+        </ScrollArea>
+        {shortcuts.length < 100 && (
+            <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" className="mt-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Shortcut
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add shortcut</DialogTitle>
+                  <DialogDescription>
+                    Enter a name and URL for your new shortcut.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="url" className="text-right">
+                      URL
+                    </Label>
+                    <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleAddShortcut}>Add Shortcut</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
     </div>
   );
@@ -1296,3 +1315,4 @@ export default function BrowserPage() {
     
 
     
+
