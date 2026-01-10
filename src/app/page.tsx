@@ -603,9 +603,10 @@ const BrowserApp = () => {
         const SettingsContent = require('@/app/settings/page').default;
         return <SettingsContent />;
     } catch (e) {
+        console.error("Failed to load settings page", e);
         return <GenericInternalPage title="Settings" icon={Settings}><p>Error loading settings.</p></GenericInternalPage>;
     }
-  }
+  };
 
   const StartupChecklistPage = () => {
     try {
