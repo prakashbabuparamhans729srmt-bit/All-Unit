@@ -154,6 +154,11 @@ type BookmarkItem = {
   favicon?: string;
 };
 
+type AssistantMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const BrowserApp = () => {
   const [tabs, setTabs] = useState<Tab[]>([
     {
@@ -181,6 +186,9 @@ const BrowserApp = () => {
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [assistantInput, setAssistantInput] = useState('');
+  const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
+  const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -580,6 +588,38 @@ const BrowserApp = () => {
     }
   };
 
+  const handleAssistantSubmit = async () => {
+    if (!assistantInput.trim()) return;
+
+    const newMessages: AssistantMessage[] = [
+      ...assistantMessages,
+      { role: 'user', content: assistantInput },
+    ];
+    setAssistantMessages(newMessages);
+    setAssistantInput('');
+    setIsAssistantLoading(true);
+
+    try {
+      // Using summarizeText as a proxy for a general assistant flow
+      const result = await summarizeText({ text: assistantInput });
+      setAssistantMessages([
+        ...newMessages,
+        { role: 'assistant', content: result.summary },
+      ]);
+    } catch (error) {
+      console.error("Assistant error:", error);
+      toast({
+        title: "Assistant Error",
+        description: "Could not get a response from the assistant.",
+        variant: "destructive",
+      });
+      // remove the user's message if the call fails
+      setAssistantMessages(assistantMessages);
+    } finally {
+      setIsAssistantLoading(false);
+    }
+  };
+
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -629,7 +669,7 @@ const BrowserApp = () => {
             </div>
         </div>
         <div className="max-w-3xl w-full mt-8 flex flex-col items-center">
-        <ScrollArea className="w-full max-w-lg">
+        <ScrollArea className="w-full max-w-lg h-40">
           <div className="grid grid-cols-5 gap-x-8 gap-y-4">
               {shortcuts.map((shortcut, index) => (
                   <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
@@ -856,25 +896,83 @@ const BrowserApp = () => {
 
   const AishaAssistant = () => (
     <aside className="w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm p-2 flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <MessageSquare className="w-16 h-16 text-muted-foreground/50 mb-4" />
-        <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
-      </div>
-      <div className="p-2 bg-background/70 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-           <MessageSquare className="w-5 h-5 text-muted-foreground"/>
-           <span className="text-sm font-medium">New Tab</span>
+       <ScrollArea className="flex-1 pr-2">
+        <div className="p-2 space-y-4">
+          {assistantMessages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
+              <MessageSquare className="w-16 h-16 text-muted-foreground/50 mb-4" />
+              <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
+              <p className="text-sm text-muted-foreground mt-2">Ask me anything to get started.</p>
+            </div>
+          ) : (
+            assistantMessages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex items-start gap-3 ${
+                  message.role === 'user' ? 'justify-end' : ''
+                }`}
+              >
+                {message.role === 'assistant' && (
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback><Sparkles /></AvatarFallback>
+                  </Avatar>
+                )}
+                <div
+                  className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary'
+                  }`}
+                >
+                  {message.content}
+                </div>
+                 {message.role === 'user' && (
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
+                    <AvatarFallback><User/></AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            ))
+          )}
+          {isAssistantLoading && (
+            <div className="flex items-start gap-3">
+              <Avatar className="w-8 h-8">
+                 <AvatarFallback><Sparkles /></AvatarFallback>
+              </Avatar>
+              <div className="bg-secondary rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-0"></div>
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-150"></div>
+                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-300"></div>
+              </div>
+            </div>
+          )}
         </div>
+      </ScrollArea>
+      <div className="p-2 bg-background/70 rounded-lg mt-2">
         <div className="relative">
           <Textarea 
             placeholder="Ask anything..."
-            className="bg-secondary border-none rounded-lg p-3 pr-24 h-auto min-h-[48px] resize-none"
+            className="bg-secondary border-none rounded-lg p-3 pr-12 h-auto min-h-[48px] resize-none"
+            value={assistantInput}
+            onChange={e => setAssistantInput(e.target.value)}
+            onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAssistantSubmit();
+                }
+            }}
+            disabled={isAssistantLoading}
           />
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="w-8 h-8"><Plus className="w-5 h-5"/></Button>
-            <Button variant="ghost" size="icon" className="w-8 h-8"><LinkIcon className="w-5 h-5"/></Button>
-            <Button variant="ghost" size="icon" className="w-8 h-8"><Mic className="w-5 h-5"/></Button>
-            <Button size="icon" className="w-8 h-8 bg-cyan-500 hover:bg-cyan-600"><Sparkles className="w-5 h-5"/></Button>
+            <Button 
+                size="icon" 
+                className="w-8 h-8 bg-cyan-500 hover:bg-cyan-600"
+                onClick={handleAssistantSubmit}
+                disabled={isAssistantLoading || !assistantInput.trim()}
+            >
+              <Sparkles className="w-5 h-5"/>
+            </Button>
           </div>
         </div>
       </div>
@@ -1323,6 +1421,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
