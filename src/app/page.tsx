@@ -184,9 +184,11 @@ const BrowserApp = () => {
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -535,6 +537,48 @@ const BrowserApp = () => {
     setIsAddShortcutOpen(false);
   };
   
+  const handleVoiceSearch = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
+      return;
+    }
+
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.lang = 'en-US';
+
+    recognitionRef.current.onstart = () => {
+      setIsListening(true);
+      toast({ title: "Listening...", description: "Speak your search query now." });
+    };
+
+    recognitionRef.current.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current.onerror = (event: any) => {
+      toast({ title: "Voice search error", description: event.error, variant: "destructive" });
+    };
+
+    recognitionRef.current.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue(transcript);
+      if (activeTab) {
+        handleNavigation(activeTab.id, transcript);
+      }
+    };
+
+    recognitionRef.current.start();
+  };
+
+
   const isInternalPage = currentUrl.startsWith('about:');
 
   const NewTabPage = () => (
@@ -552,22 +596,9 @@ const BrowserApp = () => {
                 autoFocus
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8"><Mic className="w-5 h-5" /></Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><Mic className="w-5 h-5" /> Voice Search</DialogTitle>
-                      <DialogDescription>
-                        Voice search is coming soon. When available, you'll be able to speak your search query.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4 text-center">
-                      <p className="text-sm text-muted-foreground">Aisha will ask for microphone permission.</p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button variant="ghost" size="icon" className={`w-8 h-8 ${isListening ? 'bg-red-500/20 text-red-500' : ''}`} onClick={handleVoiceSearch}>
+                  <Mic className="w-5 h-5" />
+                </Button>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="ghost" size="icon" className="w-8 h-8"><Camera className="w-5 h-5" /></Button>
@@ -1259,6 +1290,8 @@ export default function BrowserPage() {
     <BrowserApp />
   )
 }
+    
+
     
 
     
