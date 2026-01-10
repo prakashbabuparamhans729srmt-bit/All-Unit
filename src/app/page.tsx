@@ -271,7 +271,7 @@ const BrowserApp = () => {
       newUrl = newUrl.replace('aisha://', 'about:');
     }
     
-    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist', 'about:ai-hub'];
+    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist'];
     if (internalPages.includes(newUrl)) {
         const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
         newHistory.push(newUrl);
@@ -582,13 +582,13 @@ const BrowserApp = () => {
                 </Dialog>
                 <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
                     <Sparkles className="w-4 h-4 mr-2"/>
-                    AI Hub
+                    AI Assistant
                 </Button>
             </div>
         </div>
         <ScrollArea className="max-w-3xl mt-8 h-[140px] pr-4">
             <div className="grid grid-cols-5 gap-x-8 gap-y-4">
-                {shortcuts.map((shortcut, index) => (
+                {shortcuts.slice(0, 10).map((shortcut, index) => (
                     <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
                             {typeof shortcut.icon === 'string' ? shortcut.icon : shortcut.icon}
@@ -1258,8 +1258,8 @@ const BrowserApp = () => {
                     ) : tab.history[tab.currentIndex] === 'about:settings' ? (
                         <SettingsPage />
                     ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
-                    <StartupChecklistPage />
-                    ) : tab.history[tab.currentIndex].startsWith(aiAssistantUrl) ? (
+                        <StartupChecklistPage />
+                    ) : tab.history[tab.currentIndex] === aiAssistantUrl ? (
                         <AiHubPage />
                     ) : tab.history[tab.currentIndex] === 'about:history' ? (
                         <HistoryPage />
