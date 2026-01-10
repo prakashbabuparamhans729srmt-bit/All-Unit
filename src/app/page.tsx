@@ -176,6 +176,18 @@ const BrowserApp = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'navigate' && event.data.url) {
+        handleNavigation(activeTabId, event.data.url);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [activeTabId]);
+
+  useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
     
@@ -246,12 +258,14 @@ const BrowserApp = () => {
       newUrl = newUrl.replace('aisha://', 'about:');
     }
     
-    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist'];
+    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist', 'about:about'];
     if (internalPages.includes(newUrl)) {
-        const newHistory = activeTab!.history.slice(0, activeTab!.currentIndex + 1);
+        const currentTab = tabs.find(t => t.id === tabId);
+        if (!currentTab) return;
+        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
         newHistory.push(newUrl);
         const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
-        updateTab(activeTabId, { 
+        updateTab(tabId, { 
             history: newHistory,
             currentIndex: newHistory.length - 1,
             isLoading: false,
@@ -599,13 +613,8 @@ const BrowserApp = () => {
   );
 
   const SettingsPage = () => {
-    try {
-        const SettingsContent = require('@/app/settings/page').default;
-        return <SettingsContent />;
-    } catch (e) {
-        console.error("Failed to load settings page", e);
-        return <GenericInternalPage title="Settings" icon={Settings}><p>Error loading settings.</p></GenericInternalPage>;
-    }
+    const SettingsContent = require('@/app/settings/page').default;
+    return <SettingsContent />;
   };
 
   const StartupChecklistPage = () => {
@@ -771,6 +780,45 @@ const BrowserApp = () => {
       </SheetContent>
     </Sheet>
   );
+
+  const renderCurrentPage = () => {
+    if (!activeTab) return <NewTabPage />;
+    const url = activeTab.history[activeTab.currentIndex];
+
+    switch (url) {
+        case DEFAULT_URL:
+            return <NewTabPage />;
+        case 'about:settings':
+            return <SettingsPage />;
+        case 'about:startup-checklist':
+            return <StartupChecklistPage />;
+        case 'about:history':
+            return <HistoryPage />;
+        case 'about:bookmarks':
+            return <BookmarksPage />;
+        case 'about:downloads':
+            return <GenericInternalPage title="Downloads" icon={Download}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Download className="w-16 h-16 mb-4"/><p>There are no downloads to show.</p></div></GenericInternalPage>;
+        case 'about:about':
+            return <GenericInternalPage title="About Aisha" icon={Info}>
+                <div className="flex flex-col h-full items-center justify-center text-center">
+                    <h1 className="text-6xl font-bold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
+                    <p className="text-muted-foreground">Version 1.0 (Prototype)</p>
+                    <p className="text-muted-foreground mt-2">Copyright © 2024. All rights reserved.</p>
+                </div>
+            </GenericInternalPage>;
+        default:
+            return (
+                <iframe
+                    ref={el => { if(activeTab) iframeRefs.current[activeTab.id] = el }}
+                    src={url}
+                    onLoad={() => { if(activeTab) handleIframeLoad(activeTab.id) }}
+                    className="w-full h-full border-0"
+                    title="Browser Content"
+                    sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                />
+            );
+    }
+  };
 
   return (
     <TooltipProvider>
@@ -1147,36 +1195,7 @@ const BrowserApp = () => {
             <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
                 {tabs.map(tab => (
                     <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
-                        {tab.history[tab.currentIndex] === DEFAULT_URL ? (
-                            <NewTabPage />
-                        ) : tab.history[tab.currentIndex] === 'about:settings' ? (
-                            <SettingsPage />
-                        ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
-                            <StartupChecklistPage />
-                        ) : tab.history[tab.currentIndex] === 'about:history' ? (
-                            <HistoryPage />
-                        ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
-                            <BookmarksPage />
-                        ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
-                            <GenericInternalPage title="Downloads" icon={Download}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Download className="w-16 h-16 mb-4"/><p>There are no downloads to show.</p></div></GenericInternalPage>
-                        ) : tab.history[tab.currentIndex] === 'about:about' ? (
-                           <GenericInternalPage title="About Aisha" icon={Info}>
-                             <div className="flex flex-col h-full items-center justify-center text-center">
-                                <h1 className="text-6xl font-bold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
-                                <p className="text-muted-foreground">Version 1.0 (Prototype)</p>
-                                <p className="text-muted-foreground mt-2">Copyright © 2024. All rights reserved.</p>
-                              </div>
-                           </GenericInternalPage>
-                        ) : (
-                            <iframe
-                                ref={el => (iframeRefs.current[tab.id] = el)}
-                                src={tab.history[tab.currentIndex]}
-                                onLoad={() => handleIframeLoad(tab.id)}
-                                className="w-full h-full border-0"
-                                title="Browser Content"
-                                sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                            />
-                        )}
+                        {renderCurrentPage()}
                     </div>
                 ))}
             </main>
@@ -1205,3 +1224,5 @@ export default function BrowserPage() {
     <BrowserApp />
   )
 }
+
+    

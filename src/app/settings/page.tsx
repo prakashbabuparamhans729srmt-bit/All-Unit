@@ -93,6 +93,10 @@ const SettingsItem = ({ title, description, externalLink = false, icon: Icon, va
 export default function SettingsPage() {
   const [activeMenu, setActiveMenu] = useState('you-and-aisha');
   const { toast } = useToast();
+
+  const handleNavigate = (url: string) => {
+    window.parent.postMessage({ type: 'navigate', url }, '*');
+  };
   
   const YouAndAisha = () => (
     <div className="space-y-6">
@@ -142,7 +146,7 @@ export default function SettingsPage() {
           <SettingsItem icon={KeyRound} title="Aisha Password Manager" onClick={() => toast({title: "Password manager is not available."})} />
           <SettingsItem icon={CreditCard} title="Payment methods" onClick={() => toast({title: "Payment methods are not saved."})} />
           <SettingsItem icon={MapPin} title="Addresses and more" onClick={() => toast({title: "Address management is not implemented."})} />
-          <SettingsItem icon={BookMarked} title="Bookmarks" description="Your saved bookmarks" onClick={() => window.parent.postMessage({ type: 'navigate', url: 'about:bookmarks' }, '*')}/>
+          <SettingsItem icon={BookMarked} title="Bookmarks" description="Your saved bookmarks" onClick={() => handleNavigate('about:bookmarks')}/>
         </CardContent>
       </Card>
     </div>
@@ -561,3 +565,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
