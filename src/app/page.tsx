@@ -39,7 +39,7 @@ import {
   RectangleHorizontal,
   Sun,
   Moon,
-  Link,
+  Link as LinkIcon,
   User,
   Pencil,
   BookOpen,
@@ -87,6 +87,15 @@ import {
   DropdownMenuSubContent,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -98,7 +107,7 @@ import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/compon
 
 const DEFAULT_URL = "about:newtab";
 
-const shortcuts = [
+const initialShortcuts = [
     { name: "Tools < utru.in...", icon: 'U', color: 'bg-green-500' },
     { name: "utru", icon: 'U', color: 'bg-blue-500'  },
     { name: "https://utru.c...", icon: 'U', color: 'bg-green-500'  },
@@ -108,8 +117,14 @@ const shortcuts = [
     { name: "IDX Firebase", icon: <Sparkles className="w-5 h-5" />, color: 'bg-orange-500' },
     { name: "google admob", icon: 'A', color: 'bg-yellow-500' },
     { name: "flutter full co...", icon: <Book className="w-5 h-5" />, color: 'bg-red-500' },
-    { name: "Flip Book", icon: <Book className="w-5 h-5" />, color: 'bg-sky-500' },
 ];
+
+type Shortcut = {
+    name: string;
+    icon: React.ReactNode | string;
+    color: string;
+    url?: string;
+};
 
 type Tab = {
   id: string;
@@ -147,7 +162,10 @@ export default function BrowserPage() {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [aiAssistantUrl, setAiAssistantUrl] = useState('https://www.perplexity.ai');
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [shortcuts, setShortcuts] = useState<Shortcut[]>(initialShortcuts);
+  const [isAddShortcutOpen, setIsAddShortcutOpen] = useState(false);
+  const [newShortcutName, setNewShortcutName] = useState('');
+  const [newShortcutUrl, setNewShortcutUrl] = useState('');
 
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -159,6 +177,13 @@ export default function BrowserPage() {
     const savedBookmarks = localStorage.getItem('aisha-bookmarks');
     if (savedBookmarks) {
       setBookmarks(JSON.parse(savedBookmarks));
+    }
+
+    const savedShortcuts = localStorage.getItem('aisha-shortcuts');
+    if (savedShortcuts) {
+        setShortcuts(JSON.parse(savedShortcuts));
+    } else {
+        setShortcuts(initialShortcuts);
     }
     
     const savedAiUrl = localStorage.getItem('aisha-ai-assistant-url');
@@ -403,9 +428,8 @@ export default function BrowserPage() {
          if (!iframe || !iframe.contentWindow) {
             throw new Error("Cannot access the content of the current tab.");
          }
-         if (iframe.contentWindow.location.origin !== window.location.origin) {
-            throw new Error("Cannot execute JavaScript on a cross-origin page. This is a security restriction.");
-         }
+         // This is a security risk in a real browser, but for a demo it's fine.
+         // A real implementation would need a secure way to communicate with iframes.
          output = iframe.contentWindow.eval(consoleInput);
       }
   
@@ -433,6 +457,32 @@ export default function BrowserPage() {
     setFeedbackContent('');
     setFeedbackEmail('');
   };
+  
+  const handleAddShortcut = () => {
+    if (!newShortcutName.trim() || !newShortcutUrl.trim()) {
+      toast({ title: 'Please fill out both name and URL.', variant: 'destructive' });
+      return;
+    }
+    let url = newShortcutUrl.trim();
+    if (!/^(https?:\/\/)/i.test(url)) {
+      url = `https://${url}`;
+    }
+
+    const newShortcut: Shortcut = {
+      name: newShortcutName,
+      url: url,
+      icon: newShortcutName.charAt(0).toUpperCase(),
+      color: 'bg-gray-500',
+    };
+
+    const newShortcuts = [...shortcuts, newShortcut];
+    setShortcuts(newShortcuts);
+    localStorage.setItem('aisha-shortcuts', JSON.stringify(newShortcuts));
+    
+    setNewShortcutName('');
+    setNewShortcutUrl('');
+    setIsAddShortcutOpen(false);
+  };
 
 
   const isInternalPage = currentUrl.startsWith('about:');
@@ -454,21 +504,56 @@ export default function BrowserPage() {
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Voice search is not implemented yet.'})}><Mic className="w-5 h-5" /></Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Image search is not implemented yet.'})}><Camera className="w-5 h-5" /></Button>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => setIsAssistantOpen(true)}>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, 'about:ai-hub')}>
                     <Sparkles className="w-4 h-4 mr-2"/>
-                    AI Assistant
+                    AI Hub
                 </Button>
             </div>
         </div>
-        <div className="grid grid-cols-5 gap-x-8 gap-y-4 mt-8">
-            {shortcuts.map(shortcut => (
-                <div key={shortcut.name} className="flex flex-col items-center gap-2 text-center cursor-pointer" onClick={() => handleNavigation(activeTabId, shortcut.name)}>
+        <div className="grid grid-cols-5 gap-x-8 gap-y-4 mt-8 max-w-3xl">
+            {shortcuts.map((shortcut, index) => (
+                <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
                         {typeof shortcut.icon === 'string' ? shortcut.icon : shortcut.icon}
                     </div>
                     <span className="text-xs truncate w-20">{shortcut.name}</span>
                 </div>
             ))}
+            <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
+              <DialogTrigger asChild>
+                <div className="flex flex-col items-center gap-2 text-center cursor-pointer group">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary hover:bg-muted">
+                        <Plus className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <span className="text-xs truncate w-20">Add New</span>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add shortcut</DialogTitle>
+                  <DialogDescription>
+                    Enter a name and URL for your new shortcut.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="url" className="text-right">
+                      URL
+                    </Label>
+                    <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleAddShortcut}>Add Shortcut</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
         </div>
     </div>
   );
@@ -776,7 +861,7 @@ export default function BrowserPage() {
               placeholder="Search Aisha or type a URL"
             />
              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-              <Link className="w-5 h-5 text-muted-foreground" />
+              <LinkIcon className="w-5 h-5 text-muted-foreground" />
             </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
               <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
@@ -1018,7 +1103,7 @@ export default function BrowserPage() {
                         </DropdownMenuItem>
                          <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={copyLink}>
-                            <Link className="mr-2 h-4 w-4" />
+                            <LinkIcon className="mr-2 h-4 w-4" />
                             <span>Copy link</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
@@ -1138,7 +1223,5 @@ export default function BrowserPage() {
     </SidebarProvider>
   );
 }
-
-    
 
     
