@@ -213,21 +213,16 @@ const BrowserApp = () => {
     if (savedShortcutsString) {
         try {
             const savedShortcuts: Shortcut[] = JSON.parse(savedShortcutsString);
-            
             const initialShortcutMap = new Map(initialShortcuts.map(s => [s.name, s]));
             
-            const mergedShortcuts = savedShortcuts.map(saved => {
-                if (initialShortcutMap.has(saved.name)) {
-                    return { ...initialShortcutMap.get(saved.name)!, ...saved };
-                }
-                return saved;
+            const finalShortcuts = initialShortcuts.map(is => {
+                const savedVersion = savedShortcuts.find(ss => ss.name === is.name);
+                return savedVersion ? { ...is, ...savedVersion } : is;
             });
             
-            const userAddedShortcuts = savedShortcuts.filter(ss => !initialShortcuts.some(is => is.name === ss.name));
-            
-            const finalShortcuts = [...initialShortcuts.filter(is => !savedShortcuts.some(ss => ss.name === is.name)), ...mergedShortcuts];
+            const userAddedShortcuts = savedShortcuts.filter(ss => !initialShortcutMap.has(ss.name));
 
-            setShortcuts(finalShortcuts);
+            setShortcuts([...finalShortcuts, ...userAddedShortcuts]);
         } catch (e) {
             console.error("Failed to parse shortcuts from localStorage", e);
             setShortcuts(initialShortcuts);
