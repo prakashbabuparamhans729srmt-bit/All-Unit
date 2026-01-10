@@ -124,6 +124,8 @@ const initialShortcuts = [
 ];
 
 const renderShortcutIcon = (icon: string) => {
+  if (typeof icon !== 'string') return null;
+
   switch (icon) {
     case 'Sparkles':
       return <Sparkles className="w-5 h-5" />;
