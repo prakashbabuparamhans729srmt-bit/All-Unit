@@ -37,7 +37,7 @@ import {
   HelpCircle,
   LogOut,
   Minus,
-  RectangleHorizontal,
+  Square,
   Sun,
   Moon,
   Link as LinkIcon,
@@ -70,7 +70,6 @@ import {
   Terminal,
   ChevronUp,
   MessageSquare,
-  Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,16 +124,13 @@ const initialShortcuts: Shortcut[] = [
 ];
 
 const renderShortcutIcon = (icon: string) => {
-    if (typeof icon !== 'string') return null;
-  
-    switch (icon) {
-      case 'Sparkles':
+    if (icon === 'Sparkles') {
         return <Sparkles className="w-5 h-5" />;
-      case 'Book':
-        return <Book className="w-5 h-5" />;
-      default:
-        return icon;
     }
+    if (icon === 'Book') {
+        return <Book className="w-5 h-5" />;
+    }
+    return icon;
 };
 
 type Shortcut = {
@@ -179,7 +175,6 @@ const BrowserApp = () => {
   const [consoleHistory, setConsoleHistory] = useState<{type: 'input' | 'output', content: string}[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [zoomLevel, setZoomLevel] = useState(100);
-  const [aiAssistantUrl, setAiAssistantUrl] = useState('https://www.perplexity.ai');
   const [shortcuts, setShortcuts] = useState<Shortcut[]>(initialShortcuts);
   const [isAddShortcutOpen, setIsAddShortcutOpen] = useState(false);
   const [newShortcutName, setNewShortcutName] = useState('');
@@ -233,11 +228,6 @@ const BrowserApp = () => {
         }
     } else {
         setShortcuts(initialShortcuts);
-    }
-    
-    const savedAiUrl = localStorage.getItem('aisha-ai-assistant-url');
-    if (savedAiUrl) {
-      setAiAssistantUrl(savedAiUrl);
     }
   }, []);
 
@@ -583,7 +573,6 @@ const BrowserApp = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // For now, just show a toast. Later, this can be used for actual image search.
       toast({
         title: "Image selected",
         description: `${file.name} - Image search is not yet implemented.`,
@@ -865,6 +854,33 @@ const BrowserApp = () => {
     </Sheet>
   );
 
+  const AishaAssistant = () => (
+    <aside className="w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm p-2 flex flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <MessageSquare className="w-16 h-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
+      </div>
+      <div className="p-2 bg-background/70 rounded-lg">
+        <div className="flex items-center gap-2 mb-2">
+           <MessageSquare className="w-5 h-5 text-muted-foreground"/>
+           <span className="text-sm font-medium">New Tab</span>
+        </div>
+        <div className="relative">
+          <Textarea 
+            placeholder="Ask anything..."
+            className="bg-secondary border-none rounded-lg p-3 pr-24 h-auto min-h-[48px] resize-none"
+          />
+          <div className="absolute bottom-2 right-2 flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="w-8 h-8"><Plus className="w-5 h-5"/></Button>
+            <Button variant="ghost" size="icon" className="w-8 h-8"><LinkIcon className="w-5 h-5"/></Button>
+            <Button variant="ghost" size="icon" className="w-8 h-8"><Mic className="w-5 h-5"/></Button>
+            <Button size="icon" className="w-8 h-8 bg-cyan-500 hover:bg-cyan-600"><Sparkles className="w-5 h-5"/></Button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+
   const renderCurrentPage = () => {
     if (!activeTab) return <NewTabPage />;
     const url = activeTab.history[activeTab.currentIndex];
@@ -1129,7 +1145,7 @@ const BrowserApp = () => {
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
                                 <span>{zoomLevel}%</span>
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><RectangleHorizontal className="w-4 h-4"/></Button>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
                             </div>
                         </DropdownMenuItem>
                     </DropdownMenuGroup>
@@ -1283,15 +1299,7 @@ const BrowserApp = () => {
                     </div>
                 ))}
             </main>
-            {isAssistantOpen && (
-              <aside className="w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm p-2 transition-all duration-300">
-                  <iframe
-                      src={aiAssistantUrl}
-                      className="w-full h-full border-0 rounded-lg"
-                      title="AI Assistant"
-                  />
-              </aside>
-            )}
+            {isAssistantOpen && <AishaAssistant />}
           </div>
         </div>
 
@@ -1315,5 +1323,6 @@ export default function BrowserPage() {
     
 
     
+
 
 

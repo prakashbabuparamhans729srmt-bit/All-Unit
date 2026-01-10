@@ -276,41 +276,7 @@ export default function SettingsPage() {
   
   const AiSettings = () => {
     const [helpMeWrite, setHelpMeWrite] = useState(true);
-    const [aiAssistant, setAiAssistant] = useState('perplexity');
-    const [customAiUrl, setCustomAiUrl] = useState('');
-  
-    useEffect(() => {
-      const savedUrl = localStorage.getItem('aisha-ai-assistant-url') || 'https://www.perplexity.ai';
-      if (savedUrl === 'https://www.perplexity.ai') setAiAssistant('perplexity');
-      else if (savedUrl === 'https://gemini.google.com') setAiAssistant('gemini');
-      else if (savedUrl === 'https://chat.openai.com') setAiAssistant('chatgpt');
-      else {
-        setAiAssistant('custom');
-        setCustomAiUrl(savedUrl);
-      }
-    }, []);
-  
-    const handleAiAssistantChange = (value: string) => {
-      setAiAssistant(value);
-      let url = '';
-      if (value === 'perplexity') url = 'https://www.perplexity.ai';
-      else if (value === 'gemini') url = 'https://gemini.google.com';
-      else if (value === 'chatgpt') url = 'https://chat.openai.com';
-      
-      if (url) {
-        localStorage.setItem('aisha-ai-assistant-url', url);
-        toast({ title: 'AI Assistant Updated' });
-      }
-    };
-  
-    const handleCustomUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newUrl = e.target.value;
-      setCustomAiUrl(newUrl);
-      if (aiAssistant === 'custom' && newUrl.trim().startsWith('https://')) {
-        localStorage.setItem('aisha-ai-assistant-url', newUrl.trim());
-      }
-    };
-
+    
     return (
         <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Reimagine Aisha, supercharged with AI</h2>
@@ -335,43 +301,6 @@ export default function SettingsPage() {
                 <SettingsItem icon={Pencil} title="Help me write" description="Helps you write short-form text on the web">
                   <Switch checked={helpMeWrite} onCheckedChange={setHelpMeWrite} />
                 </SettingsItem>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Assistant</CardTitle>
-                <CardDescription>Choose which AI assistant to use in the browser.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={aiAssistant} onValueChange={handleAiAssistantChange} className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="perplexity" id="perplexity" />
-                    <Label htmlFor="perplexity">Perplexity AI</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="gemini" id="gemini" />
-                    <Label htmlFor="gemini">Google Gemini</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="chatgpt" id="chatgpt" />
-                    <Label htmlFor="chatgpt">ChatGPT</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="custom" id="custom" />
-                    <Label htmlFor="custom">Custom URL</Label>
-                  </div>
-                </RadioGroup>
-                {aiAssistant === 'custom' && (
-                  <div className="mt-4 pl-6">
-                    <Input 
-                      placeholder="https://example.com"
-                      value={customAiUrl}
-                      onChange={handleCustomUrlChange}
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">Enter the full URL (including https://) of your custom AI assistant.</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
         </div>
