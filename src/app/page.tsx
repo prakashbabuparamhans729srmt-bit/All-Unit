@@ -1103,6 +1103,50 @@ const BrowserApp = () => {
                 </Button>
               </div>
               
+              <div className="flex items-center gap-1 ml-2">
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Bookmarks</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Downloads</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => window.open(window.location.href)}><PlusSquare className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>New Window</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toast({title: "Incognito mode is not available."})}><ShieldOff className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>New Incognito Window</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>History</p>
+                    </TooltipContent>
+                </Tooltip>
+              </div>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
@@ -1421,6 +1465,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
