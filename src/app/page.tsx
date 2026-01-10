@@ -185,7 +185,12 @@ const BrowserApp = () => {
       if (isOnRightEdge) {
         setSidebarOpen(true);
       } else {
-        setSidebarOpen(false);
+        // A small delay before closing to prevent accidental closes
+        setTimeout(() => {
+            if (window.innerWidth - e.clientX > hoverAreaWidth + 10) {
+                 setSidebarOpen(false);
+            }
+        }, 100);
       }
     };
 
@@ -516,9 +521,11 @@ const BrowserApp = () => {
   const toggleSidebarBehavior = () => {
     if (isHoverSidebarEnabled) {
       setIsHoverSidebarEnabled(false);
-      setSidebarOpen(false);
+      setSidebarOpen(false); // Ensure sidebar is closed when disabling hover
+      toast({ title: "AI Assistant hover disabled." });
     } else {
       setIsHoverSidebarEnabled(true);
+      toast({ title: "AI Assistant hover enabled.", description: "Move your mouse to the right edge to open." });
     }
   };
 
@@ -573,7 +580,7 @@ const BrowserApp = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, 'about:ai-hub')}>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
                     <Sparkles className="w-4 h-4 mr-2"/>
                     AI Hub
                 </Button>
@@ -1243,47 +1250,47 @@ const BrowserApp = () => {
         </Card>
       </header>
       <div className="flex-1 flex overflow-hidden">
-        <SidebarInset>
-            <main id="browser-content-area" className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-auto relative">
-                {tabs.map(tab => (
-                    <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
-                        {tab.history[tab.currentIndex] === DEFAULT_URL ? (
-                            <NewTabPage />
-                        ) : tab.history[tab.currentIndex] === 'about:settings' ? (
-                            <SettingsPage />
-                        ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
-                        <StartupChecklistPage />
-                        ) : tab.history[tab.currentIndex] === 'about:ai-hub' ? (
+        <main id="browser-content-area" className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-auto relative">
+            {tabs.map(tab => (
+                <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                    {tab.history[tab.currentIndex] === DEFAULT_URL ? (
+                        <NewTabPage />
+                    ) : tab.history[tab.currentIndex] === 'about:settings' ? (
+                        <SettingsPage />
+                    ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
+                    <StartupChecklistPage />
+                    ) : tab.history[tab.currentIndex].startsWith(aiAssistantUrl) ? (
                         <AiHubPage />
-                        ) : tab.history[tab.currentIndex] === 'about:history' ? (
-                            <HistoryPage />
-                        ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
-                            <BookmarksPage />
-                        ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
-                            <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
-                        ) : (
-                            <iframe
-                                ref={el => (iframeRefs.current[tab.id] = el)}
-                                src={tab.history[tab.currentIndex]}
-                                onLoad={() => handleIframeLoad(tab.id)}
-                                className="w-full h-full border-0"
-                                title="Browser Content"
-                                sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                            />
-                        )}
-                    </div>
-                ))}
-            </main>
-        </SidebarInset>
-        <Sidebar side="right" className="w-[400px]" variant="sidebar" collapsible="offcanvas">
-            <div className="flex h-full flex-col p-2 bg-background/80 backdrop-blur-sm">
-                <iframe
-                    src={aiAssistantUrl}
-                    className="w-full h-full border-0 rounded-lg"
-                    title="AI Assistant"
-                />
-            </div>
-        </Sidebar>
+                    ) : tab.history[tab.currentIndex] === 'about:history' ? (
+                        <HistoryPage />
+                    ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
+                        <BookmarksPage />
+                    ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
+                        <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
+                    ) : (
+                        <iframe
+                            ref={el => (iframeRefs.current[tab.id] = el)}
+                            src={tab.history[tab.currentIndex]}
+                            onLoad={() => handleIframeLoad(tab.id)}
+                            className="w-full h-full border-0"
+                            title="Browser Content"
+                            sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                        />
+                    )}
+                </div>
+            ))}
+        </main>
+        {sidebarOpen && (
+             <Sidebar side="right" className="w-[400px]" variant="sidebar" collapsible="offcanvas">
+                <div className="flex h-full flex-col p-2 bg-background/80 backdrop-blur-sm">
+                    <iframe
+                        src={aiAssistantUrl}
+                        className="w-full h-full border-0 rounded-lg"
+                        title="AI Assistant"
+                    />
+                </div>
+            </Sidebar>
+        )}
       </div>
 
       <DeveloperConsole />
