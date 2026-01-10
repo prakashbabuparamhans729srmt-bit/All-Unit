@@ -94,6 +94,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
+import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 
 const DEFAULT_URL = "about:newtab";
 
@@ -146,6 +147,7 @@ export default function BrowserPage() {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [aiAssistantUrl, setAiAssistantUrl] = useState('https://www.perplexity.ai');
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -154,13 +156,11 @@ export default function BrowserPage() {
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
     
-    // Load bookmarks from localStorage
     const savedBookmarks = localStorage.getItem('aisha-bookmarks');
     if (savedBookmarks) {
       setBookmarks(JSON.parse(savedBookmarks));
     }
     
-    // Load AI Assistant URL from localStorage
     const savedAiUrl = localStorage.getItem('aisha-ai-assistant-url');
     if (savedAiUrl) {
       setAiAssistantUrl(savedAiUrl);
@@ -168,7 +168,6 @@ export default function BrowserPage() {
   }, []);
 
   useEffect(() => {
-    // Apply zoom level to the content area
     const activeContent = document.getElementById('browser-content-area');
     if (activeContent) {
       activeContent.style.transform = `scale(${zoomLevel / 100})`;
@@ -399,13 +398,11 @@ export default function BrowserPage() {
   
     try {
       if (currentUrl.startsWith("about:")) {
-        // For internal pages, eval in the main window context. Be careful!
         output = window.eval(consoleInput);
       } else {
          if (!iframe || !iframe.contentWindow) {
             throw new Error("Cannot access the content of the current tab.");
          }
-         // Check for cross-origin restrictions
          if (iframe.contentWindow.location.origin !== window.location.origin) {
             throw new Error("Cannot execute JavaScript on a cross-origin page. This is a security restriction.");
          }
@@ -457,7 +454,7 @@ export default function BrowserPage() {
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Voice search is not implemented yet.'})}><Mic className="w-5 h-5" /></Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({ title: 'Image search is not implemented yet.'})}><Camera className="w-5 h-5" /></Button>
-                <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
+                <Button variant="outline" size="sm" className="rounded-full" onClick={() => setIsAssistantOpen(true)}>
                     <Sparkles className="w-4 h-4 mr-2"/>
                     AI Assistant
                 </Button>
@@ -708,6 +705,7 @@ export default function BrowserPage() {
 
 
   return (
+    <SidebarProvider>
     <div className="flex flex-col h-screen bg-secondary text-foreground overflow-hidden">
       <header className="flex-shrink-0">
         <div className="flex items-center justify-between pt-2 px-2">
@@ -785,9 +783,11 @@ export default function BrowserPage() {
             </Button>
           </div>
           
-          <Button variant="ghost" size="icon" onClick={() => handleNavigation(activeTabId, aiAssistantUrl)}>
-            <Sparkles className="w-5 h-5" />
-          </Button>
+          <SidebarTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Sparkles className="w-5 h-5" />
+            </Button>
+          </SidebarTrigger>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1088,40 +1088,57 @@ export default function BrowserPage() {
 
         </Card>
       </header>
-      <main id="browser-content-area" className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-auto relative">
-        {tabs.map(tab => (
-            <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
-                {tab.history[tab.currentIndex] === DEFAULT_URL ? (
-                    <NewTabPage />
-                ) : tab.history[tab.currentIndex] === 'about:settings' ? (
-                    <SettingsPage />
-                ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
-                  <StartupChecklistPage />
-                ) : tab.history[tab.currentIndex] === 'about:ai-hub' ? (
-                  <AiHubPage />
-                ) : tab.history[tab.currentIndex] === 'about:history' ? (
-                    <HistoryPage />
-                ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
-                    <BookmarksPage />
-                ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
-                    <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
-                ) : (
-                    <iframe
-                        ref={el => (iframeRefs.current[tab.id] = el)}
-                        src={tab.history[tab.currentIndex]}
-                        onLoad={() => handleIframeLoad(tab.id)}
-                        className="w-full h-full border-0"
-                        title="Browser Content"
-                        sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                    />
-                )}
+      <div className="flex-1 flex overflow-hidden">
+        <SidebarInset>
+            <main id="browser-content-area" className="flex-1 bg-card m-2 mt-0 mb-0 rounded-t-lg overflow-auto relative">
+                {tabs.map(tab => (
+                    <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                        {tab.history[tab.currentIndex] === DEFAULT_URL ? (
+                            <NewTabPage />
+                        ) : tab.history[tab.currentIndex] === 'about:settings' ? (
+                            <SettingsPage />
+                        ) : tab.history[tab.currentIndex] === 'about:startup-checklist' ? (
+                        <StartupChecklistPage />
+                        ) : tab.history[tab.currentIndex] === 'about:ai-hub' ? (
+                        <AiHubPage />
+                        ) : tab.history[tab.currentIndex] === 'about:history' ? (
+                            <HistoryPage />
+                        ) : tab.history[tab.currentIndex] === 'about:bookmarks' ? (
+                            <BookmarksPage />
+                        ) : tab.history[tab.currentIndex] === 'about:downloads' ? (
+                            <GenericInternalPage title="Downloads" icon={Download}><p>There are no downloads to show.</p></GenericInternalPage>
+                        ) : (
+                            <iframe
+                                ref={el => (iframeRefs.current[tab.id] = el)}
+                                src={tab.history[tab.currentIndex]}
+                                onLoad={() => handleIframeLoad(tab.id)}
+                                className="w-full h-full border-0"
+                                title="Browser Content"
+                                sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+                            />
+                        )}
+                    </div>
+                ))}
+            </main>
+        </SidebarInset>
+        <Sidebar side="right" className="w-[400px] border-l" variant="sidebar" collapsible="offcanvas">
+            <div className="flex h-full flex-col p-2">
+                <iframe
+                    src={aiAssistantUrl}
+                    className="w-full h-full border-0 rounded-lg"
+                    title="AI Assistant"
+                />
             </div>
-        ))}
-      </main>
+        </Sidebar>
+      </div>
+
       <DeveloperConsole />
       <FeedbackSheet />
     </div>
+    </SidebarProvider>
   );
 }
+
+    
 
     
