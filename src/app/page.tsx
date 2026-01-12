@@ -70,6 +70,13 @@ import {
   Terminal,
   ChevronUp,
   MessageSquare,
+  LayoutGrid,
+  Mail,
+  Youtube,
+  Map,
+  Newspaper,
+  Image as ImageIcon,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,7 +121,7 @@ const DEFAULT_URL = "about:newtab";
 
 const initialShortcuts: Shortcut[] = [
     { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com' },
-    { name: "YouTube", icon: 'Y', color: 'bg-red-500', url: 'https://youtube.com' },
+    { name: "YouTube", icon: 'Youtube', color: 'bg-red-500', url: 'https://youtube.com' },
     { name: "ChatGPT", icon: 'Sparkles', color: 'bg-purple-500', url: 'https://chat.openai.com' },
     { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com' },
     { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com' },
@@ -124,13 +131,25 @@ const initialShortcuts: Shortcut[] = [
     { name: "Flutter", icon: 'Book', color: 'bg-sky-500', url: 'https://flutter.dev' },
 ];
 
+const companyApps = [
+  { name: 'Account', icon: User, url: 'https://myaccount.google.com/' },
+  { name: 'Drive', icon: Folder, url: 'https://drive.google.com/' },
+  { name: 'Business', icon: Store, url: 'https://www.google.com/business/' },
+  { name: 'Gmail', icon: Mail, url: 'https://mail.google.com/' },
+  { name: 'YouTube', icon: Youtube, url: 'https://www.youtube.com/' },
+  { name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/' },
+  { name: 'Maps', icon: Map, url: 'https://www.google.com/maps' },
+  { name: 'Search', icon: Search, url: 'https://www.google.com/' },
+  { name: 'Calendar', icon: BookCopy, url: 'https://calendar.google.com/' },
+  { name: 'News', icon: Newspaper, url: 'https://news.google.com/' },
+  { name: 'Photos', icon: ImageIcon, url: 'https://photos.google.com/' },
+  { name: 'Meet', icon: Video, url: 'https://meet.google.com/' },
+];
+
 const renderShortcutIcon = (icon: string) => {
-    if (icon === 'Sparkles') {
-        return <Sparkles className="w-5 h-5" />;
-    }
-    if (icon === 'Book') {
-        return <Book className="w-5 h-5" />;
-    }
+    if (icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
+    if (icon === 'Book') return <Book className="w-5 h-5" />;
+    if (icon === 'Youtube') return <Youtube className="w-5 h-5" />;
     return icon;
 };
 
@@ -1054,7 +1073,7 @@ const BrowserApp = () => {
   return (
     <TooltipProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        <Sidebar onNavigate={handleNavigation} onSetOpen={setIsSidebarOpen} />
+        <Sidebar onNavigate={(url) => handleNavigation(activeTabId, url)} onSetOpen={setIsSidebarOpen} />
         <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
           <header className="flex-shrink-0">
             <div className="flex items-center justify-between pt-2 px-2">
@@ -1180,6 +1199,32 @@ const BrowserApp = () => {
                 </Tooltip>
               </div>
               <Separator orientation="vertical" className="h-6 mx-1" />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <LayoutGrid className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <ScrollArea className="h-96">
+                    <div className="grid grid-cols-3 gap-x-4 gap-y-2 p-4">
+                      {companyApps.map((app) => (
+                        <button
+                          key={app.name}
+                          onClick={() => window.open(app.url, '_blank')}
+                          className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent text-center"
+                        >
+                          <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-full">
+                            <app.icon className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                          <span className="text-xs">{app.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1499,6 +1544,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
