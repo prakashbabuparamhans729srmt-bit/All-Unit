@@ -73,7 +73,7 @@ import {
   LayoutGrid,
   Mail,
   Youtube,
-  Map,
+  Map as MapIcon,
   Newspaper,
   Image as ImageIcon,
   Video,
@@ -138,7 +138,7 @@ const companyApps = [
   { name: 'Gmail', icon: Mail, url: 'https://mail.google.com/' },
   { name: 'YouTube', icon: Youtube, url: 'https://www.youtube.com/' },
   { name: 'Gemini', icon: Sparkles, url: 'https://gemini.google.com/' },
-  { name: 'Maps', icon: Map, url: 'https://www.google.com/maps' },
+  { name: 'Maps', icon: MapIcon, url: 'https://www.google.com/maps' },
   { name: 'Search', icon: Search, url: 'https://www.google.com/' },
   { name: 'Calendar', icon: BookCopy, url: 'https://calendar.google.com/' },
   { name: 'News', icon: Newspaper, url: 'https://news.google.com/' },
@@ -1544,6 +1544,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
