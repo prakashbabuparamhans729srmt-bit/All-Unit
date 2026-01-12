@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import Image, { StaticImageData } from 'next/image';
 import {
   ArrowLeft,
   ArrowRight,
@@ -153,11 +154,14 @@ const searchEngines: { [key: string]: { name: string; url: string } } = {
   yahoo: { name: 'Yahoo', url: 'https://search.yahoo.com/search?p=' },
 };
 
-const renderShortcutIcon = (icon: string) => {
-    if (icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
-    if (icon === 'Book') return <Book className="w-5 h-5" />;
-    if (icon === 'Youtube') return <Youtube className="w-5 h-5" />;
-    return icon;
+const renderShortcutIcon = (shortcut: Shortcut) => {
+    if (shortcut.icon.startsWith('https://')) {
+        return <Image src={shortcut.icon} alt={shortcut.name} width={24} height={24} />;
+    }
+    if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
+    if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
+    if (shortcut.icon === 'Youtube') return <Youtube className="w-5 h-5" />;
+    return shortcut.icon;
 };
 
 type Shortcut = {
@@ -603,8 +607,8 @@ const BrowserApp = () => {
     const newShortcut: Shortcut = {
       name: newShortcutName,
       url: url,
-      icon: newShortcutName.charAt(0).toUpperCase(),
-      color: 'bg-gray-500',
+      icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`,
+      color: 'bg-secondary',
     };
 
     const newShortcuts = [...shortcuts, newShortcut];
@@ -755,7 +759,7 @@ const BrowserApp = () => {
               {shortcuts.map((shortcut, index) => (
                   <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                          {renderShortcutIcon(shortcut.icon)}
+                          {renderShortcutIcon(shortcut)}
                       </div>
                       <span className="text-xs truncate w-20">{shortcut.name}</span>
                   </div>
