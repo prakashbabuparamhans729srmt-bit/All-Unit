@@ -77,6 +77,7 @@ import {
   Newspaper,
   Image as ImageIcon,
   Video,
+  AppWindow,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1211,7 +1212,18 @@ const BrowserApp = () => {
         <Sidebar onNavigate={(url) => handleNavigation(activeTabId, url)} onSetOpen={setIsSidebarOpen} />
         <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
           <header className="flex-shrink-0">
-            <div className="flex items-center justify-between pt-2 px-2">
+            <div className="flex items-center justify-between h-10 px-2 bg-background draggable">
+                <div className="flex items-center gap-2">
+                    <AppWindow className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm font-semibold">Aisha Browser</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="w-8 h-8 non-draggable" onClick={() => toast({title: "Window controls are cosmetic."})}><Minus className="w-5 h-5"/></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 non-draggable" onClick={() => toast({title: "Window controls are cosmetic."})}><Square className="w-4 h-4"/></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500 non-draggable" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
+                </div>
+            </div>
+            <div className="flex items-center justify-start pt-1 px-2 non-draggable">
                 <div className="flex items-end">
                   {tabs.map((tab) => (
                      <div key={tab.id}
@@ -1239,11 +1251,6 @@ const BrowserApp = () => {
                   <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
                     <Plus className="w-4 h-4" />
                   </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><Minus className="w-5 h-5"/></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "Window controls are cosmetic."})}><Square className="w-4 h-4"/></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
                 </div>
             </div>
             <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
@@ -1735,3 +1742,6 @@ export default function BrowserPage() {
 
     
 
+
+
+    
