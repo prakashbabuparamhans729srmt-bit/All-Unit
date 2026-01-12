@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
 import Image, { StaticImageData } from 'next/image';
 import {
   ArrowLeft,
@@ -147,6 +147,37 @@ const companyApps = [
   { name: 'Meet', icon: Video, url: 'https://meet.google.com/' },
 ];
 
+const aiTools = {
+  "AI Chatbots & Assistants": [
+    { name: "ChatGPT", url: "https://chat.openai.com" },
+    { name: "Google Gemini", url: "https://gemini.google.com" },
+    { name: "Microsoft Copilot", url: "https://copilot.microsoft.com" },
+    { name: "Claude", url: "https://claude.ai" },
+    { name: "Grok", url: "https://grok.x.ai" },
+    { name: "Perplexity AI", url: "https://www.perplexity.ai" },
+    { name: "Deepseek", url: "https://chat.deepseek.com" },
+  ],
+  "Image / Video AI": [
+    { name: "Midjourney", url: "https://www.midjourney.com" },
+    { name: "DALL-E 3", url: "https://openai.com/dall-e-3" },
+    { name: "Stable Diffusion", url: "https://stability.ai/" },
+    { name: "Runway ML", url: "https://runwayml.com/" },
+    { name: "Sora", url: "https://openai.com/sora" },
+    { name: "Leonardo.ai", url: "https://leonardo.ai/" },
+  ],
+  "Audio & Voice AI": [
+    { name: "Murf.ai", url: "https://murf.ai" },
+    { name: "ElevenLabs", url: "https://elevenlabs.io" },
+    { name: "Whisper", url: "https://openai.com/research/whisper" },
+  ],
+  "Coding / Developer AI": [
+    { name: "GitHub Copilot", url: "https://github.com/features/copilot" },
+    { name: "Replit AI", url: "https://replit.com/ai" },
+    { name: "Tabnine", url: "https://www.tabnine.com/" },
+  ],
+};
+
+
 const searchEngines: { [key: string]: { name: string; url: string } } = {
   google: { name: 'Google', url: 'https://www.google.com/search?q=' },
   bing: { name: 'Bing', url: 'https://www.bing.com/search?q=' },
@@ -155,8 +186,8 @@ const searchEngines: { [key: string]: { name: string; url: string } } = {
 };
 
 const renderShortcutIcon = (shortcut: Shortcut) => {
-    if (shortcut.icon.startsWith('https://')) {
-        return <Image src={shortcut.icon} alt={shortcut.name} width={24} height={24} />;
+    if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
+        return <Image src={shortcut.icon} alt={shortcut.name} width={24} height={24} className="rounded-full"/>;
     }
     if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
     if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
@@ -166,7 +197,7 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
 
 type Shortcut = {
     name: string;
-    icon: string;
+    icon: string | React.ElementType;
     color: string;
     url: string;
 };
@@ -722,7 +753,7 @@ const BrowserApp = () => {
                 onKeyDown={handleInputKeyDown}
                 autoFocus
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <Button variant="ghost" size="icon" className={`w-8 h-8 ${isListening ? 'bg-red-500/20 text-red-500' : ''}`} onClick={handleVoiceSearch}>
                   <Mic className="w-5 h-5" />
                 </Button>
@@ -751,6 +782,37 @@ const BrowserApp = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+                <Button variant="ghost" size="icon" className="w-9 h-9 gap-1.5 rounded-full px-2" onClick={() => toast({title: "AI Mode activated!"})}>
+                  <Sparkles className="w-4 h-4" />
+                  AI Mode
+                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64">
+                         <ScrollArea className="h-96">
+                            {Object.entries(aiTools).map(([category, tools]) => (
+                                <React.Fragment key={category}>
+                                    <DropdownMenuLabel>{category}</DropdownMenuLabel>
+                                    {tools.map(tool => (
+                                        <DropdownMenuItem key={tool.name} onSelect={() => handleNavigation(activeTabId, tool.url)}>
+                                            <Image 
+                                                src={`https://www.google.com/s2/favicons?sz=32&domain_url=${tool.url}`} 
+                                                alt={`${tool.name} logo`}
+                                                width={16}
+                                                height={16}
+                                                className="mr-2"
+                                            />
+                                            <span>{tool.name}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator />
+                                </React.Fragment>
+                            ))}
+                        </ScrollArea>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
         <div className="max-w-3xl w-full mt-8 flex flex-col items-center">
