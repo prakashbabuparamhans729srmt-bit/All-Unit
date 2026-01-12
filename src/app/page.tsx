@@ -364,9 +364,13 @@ const BrowserApp = () => {
         return;
     }
 
-    if (!/^(https?:\/\/)/i.test(newUrl)) {
+    const isUrl = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(newUrl);
+
+    if (!isUrl) {
       const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
       newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
+    } else if (!/^(https?:\/\/)/i.test(newUrl)) {
+      newUrl = `https://${newUrl}`;
     }
     
     const tab = tabs.find(t => t.id === tabId);
@@ -1560,6 +1564,8 @@ export default function BrowserPage() {
     <BrowserApp />
   )
 }
+    
+
     
 
     
