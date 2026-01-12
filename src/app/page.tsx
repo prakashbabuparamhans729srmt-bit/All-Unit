@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
@@ -1214,7 +1213,7 @@ const BrowserApp = () => {
                     <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
                 </div>
             </div>
-            <Card className={`flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
+            <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                   <ArrowLeft className="w-5 h-5" />
@@ -1248,12 +1247,32 @@ const BrowserApp = () => {
                   className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
                   placeholder="Ask anything or navigate..."
                 />
-                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                  <LinkIcon className="w-5 h-5 text-muted-foreground" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                  <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                        <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Copy link</p></TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                     <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                        <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+                      </Button>
+                     </TooltipTrigger>
+                     <TooltipContent><p>Bookmark this tab</p></TooltipContent>
+                  </Tooltip>
+                   <Tooltip>
+                     <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast({title: "This feature is not implemented."})}>
+                        <Languages className="w-5 h-5 text-muted-foreground"/>
+                      </Button>
+                     </TooltipTrigger>
+                     <TooltipContent><p>Translate this page</p></TooltipContent>
+                  </Tooltip>
+                </div>
                 <Separator orientation="vertical" className="h-6 mx-1" />
                 <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
                   {isAssistantOpen ? <X className="w-4 h-4 mr-2"/> : <Sparkles className="w-4 h-4 mr-2" />}
@@ -1634,3 +1653,6 @@ export default function BrowserPage() {
 
     
 
+
+
+    
