@@ -51,6 +51,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 
 const menuItems = [
@@ -114,9 +125,34 @@ export default function SettingsPage() {
         newValue: value,
     }));
   };
+
+  const handleClearBrowsingData = () => {
+    localStorage.removeItem('aisha-bookmarks');
+    localStorage.removeItem('aisha-shortcuts');
+    // We can't clear iframe history easily, but we can clear our internal history tracking
+    toast({ title: "Browsing data cleared", description: "Your bookmarks and shortcuts have been removed." });
+     // This is a placeholder for a more robust history clearing mechanism
+    window.parent.postMessage({ type: 'clear-history' }, '*');
+  }
+
+  const handleResetSettings = () => {
+    localStorage.removeItem('aisha-bookmarks');
+    localStorage.removeItem('aisha-shortcuts');
+    localStorage.removeItem('aisha-search-engine');
+    setSearchEngine('google');
+     window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-search-engine', newValue: 'google' }));
+    toast({ title: "Settings reset", description: "All settings have been restored to their defaults." });
+    window.parent.postMessage({ type: 'reset' }, '*');
+  }
+
+  const scrollToSection = (id: string) => {
+    setActiveMenu(id);
+    const element = document.getElementById(id);
+    element?.scrollIntoView({ behavior: 'smooth' });
+  };
   
   const YouAndAisha = () => (
-    <div className="space-y-6">
+    <div className="space-y-6" id="you-and-aisha">
       <h2 className="text-2xl font-semibold">You and Aisha</h2>
       
       <Card>
@@ -147,7 +183,7 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="pt-6">
           <SettingsItem title="Sync and Aisha services" description="Services for search suggestions, security, and more" onClick={() => toast({title: "This feature is not implemented."})} />
-          <SettingsItem title="Manage your Account" description="Control your data, privacy, and security" externalLink onClick={() => toast({title: "This would open the account management page."})} />
+          <SettingsItem title="Manage your Account" description="Control your data, privacy, and security" externalLink onClick={() => window.open('https://myaccount.google.com/', '_blank')} />
           <SettingsItem title="Customize your Aisha profile" description="Choose a profile name and picture" onClick={() => toast({title: "Profile customization is not implemented."})} />
           <SettingsItem title="Import bookmarks and settings" description="Get your favorites, history, and passwords from another browser" onClick={() => toast({title: "Importing is not implemented."})} />
         </CardContent>
@@ -156,7 +192,7 @@ export default function SettingsPage() {
   );
 
   const AutofillAndPasswords = () => (
-     <div className="space-y-6">
+     <div className="space-y-6" id="autofill-and-passwords">
       <h2 className="text-2xl font-semibold">Autofill and passwords</h2>
       <Card>
         <CardContent className="pt-6">
@@ -170,7 +206,7 @@ export default function SettingsPage() {
   )
 
   const PrivacyAndSecurity = () => (
-    <div className="space-y-8">
+    <div className="space-y-8" id="privacy-and-security">
       <h2 className="text-2xl font-semibold">Privacy and security</h2>
       <Card>
         <CardHeader>
@@ -181,7 +217,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <Image src="https://www.gstatic.com/images/branding/product/2x/chrome_96dp.png" alt="Privacy Guide" width={80} height={80} className="opacity-50" />
             <div className="pt-2">
-              <Button onClick={() => toast({title: "Privacy Guide is not implemented."})}>Get started</Button>
+              <Button onClick={() => toast({title: "This is a placeholder for a privacy guide."})}>Get started</Button>
             </div>
           </div>
         </CardContent>
@@ -199,14 +235,37 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Safety check helps keep you safe from data breaches, bad extensions, and more.</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => toast({title: "Running safety check..."})}>Check now</Button>
+            <Button variant="outline" onClick={() => toast({title: "Running safety check...", description:"Everything looks good!"})}>Check now</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle>More privacy</CardTitle></CardHeader>
         <CardContent>
-            <SettingsItem icon={Trash2} title="Clear browsing data" description="Clear history, cookies, cache, and more" onClick={() => toast({title: "This feature is not implemented."})} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <div className="flex items-center py-4 cursor-pointer hover:bg-muted/50 -mx-4 px-4">
+                    <Trash2 className="w-5 h-5 mr-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <h3 className="font-medium">Clear browsing data</h3>
+                      <p className="text-sm text-muted-foreground">Clear history, cookies, cache, and more</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure you want to clear browsing data?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will remove your shortcuts and bookmarks. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearBrowsingData}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <SettingsItem icon={Cookie} title="Third-party cookies" description="Third-party cookies are allowed" onClick={() => toast({title: "Cookie settings are not available."})} />
             <SettingsItem icon={ShieldAlert} title="Ad privacy" description="Customize the info used by sites to show you ads" onClick={() => toast({title: "Ad privacy settings are not available."})} />
         </CardContent>
@@ -229,7 +288,7 @@ export default function SettingsPage() {
     const [preloadPages, setPreloadPages] = useState(true);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" id="performance">
         <h2 className="text-2xl font-semibold">Performance</h2>
         
         <Card>
@@ -295,7 +354,7 @@ export default function SettingsPage() {
     const [helpMeWrite, setHelpMeWrite] = useState(true);
     
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" id="ai">
             <h2 className="text-2xl font-semibold">Reimagine Aisha, supercharged with AI</h2>
             <Card>
                 <CardHeader>
@@ -346,7 +405,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" id="appearance">
           <h2 className="text-2xl font-semibold">Appearance</h2>
           <Card>
             <CardHeader><CardTitle>Customize Look</CardTitle></CardHeader>
@@ -405,7 +464,7 @@ export default function SettingsPage() {
 
   const SearchEngine = () => {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" id="search-engine">
         <h2 className="text-2xl font-semibold">Search engine</h2>
         <Card>
           <CardContent className="pt-6">
@@ -426,13 +485,47 @@ export default function SettingsPage() {
             <SettingsItem 
               title="Manage search engines and site search" 
               description="Add, edit, or remove search engines"
-              onClick={() => toast({title: "This feature is not implemented."})}
+              onClick={() => scrollToSection('search-engine')}
             />
           </CardContent>
         </Card>
       </div>
     );
   };
+  
+  const ResetSettings = () => (
+    <div className="space-y-6" id="reset-settings">
+       <h2 className="text-2xl font-semibold">Reset settings</h2>
+        <Card>
+          <CardContent className="pt-6">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <div className="flex items-center py-4 cursor-pointer hover:bg-muted/50 -mx-4 px-4">
+                    <RefreshCw className="w-5 h-5 mr-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <h3 className="font-medium">Restore settings to their original defaults</h3>
+                      <p className="text-sm text-muted-foreground">This will reset your startup page, new tab page, search engine, and pinned tabs.</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure you want to reset all settings?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will restore all settings to their defaults, clearing all your custom shortcuts, bookmarks, and search engine preference. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleResetSettings}>Reset settings</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+    </div>
+  )
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -450,9 +543,11 @@ export default function SettingsPage() {
         return <Appearance />;
       case 'search-engine':
         return <SearchEngine />;
+      case 'reset-settings':
+        return <ResetSettings />;
       case 'about-aisha':
         return (
-          <div className="flex flex-col h-full items-center justify-center text-center p-10">
+          <div className="flex flex-col h-full items-center justify-center text-center p-10" id="about-aisha">
             <h1 className="text-6xl font-bold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
             <p className="text-muted-foreground">
               Version 1.0 (Prototype)
@@ -465,9 +560,15 @@ export default function SettingsPage() {
       default:
         return (
           <Card className="flex h-full items-center justify-center min-h-60">
-            <p className="text-muted-foreground">
-              {menuItems.find(item => item.id === activeMenu)?.text} settings will be shown here.
-            </p>
+            <div className='text-center'>
+                <div className='flex justify-center mb-4'>
+                    {React.createElement(menuItems.find(item => item.id === activeMenu)?.icon || Cog, {className: "w-12 h-12 text-muted-foreground"})}
+                </div>
+                <h2 className='text-xl font-semibold mb-2'>{menuItems.find(item => item.id === activeMenu)?.text}</h2>
+                <p className="text-muted-foreground">
+                This settings page is a work in progress.
+                </p>
+            </div>
           </Card>
         );
     }

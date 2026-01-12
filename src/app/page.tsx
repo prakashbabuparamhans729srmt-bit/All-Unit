@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
-import Image, { StaticImageData } from 'next/image';
+import Image from 'next/image';
 import {
   ArrowLeft,
   ArrowRight,
@@ -252,6 +252,9 @@ const BrowserApp = () => {
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const [isIncognito, setIsIncognito] = useState(false);
   const [searchEngine, setSearchEngine] = useState('google');
+  const [isFindOpen, setIsFindOpen] = useState(false);
+  const [findInput, setFindInput] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -734,6 +737,23 @@ const BrowserApp = () => {
       setAssistantMessages(assistantMessages);
     } finally {
       setIsAssistantLoading(false);
+    }
+  };
+
+  const handleFind = () => {
+    if(!isFindOpen) {
+      setIsFindOpen(true);
+      return;
+    }
+    if (!findInput) return;
+    window.find(findInput);
+  };
+  
+  const createQRCode = () => {
+    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
+    } else {
+      toast({ title: "Can't create QR code for this page." });
     }
   };
 
@@ -1266,7 +1286,15 @@ const BrowserApp = () => {
                   </Tooltip>
                    <Tooltip>
                      <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast({title: "This feature is not implemented."})}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" 
+                        onClick={() => {
+                          if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                            const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                            handleNavigation(activeTabId, googleTranslateUrl);
+                          } else {
+                            toast({ title: "Can't translate internal pages." });
+                          }
+                        }}>
                         <Languages className="w-5 h-5 text-muted-foreground"/>
                       </Button>
                      </TooltipTrigger>
@@ -1483,7 +1511,14 @@ const BrowserApp = () => {
                             <Search className="mr-2 h-4 w-4" />
                             <span>Search with Google Lens</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                        <DropdownMenuItem onSelect={() => {
+                            if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                                const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                                handleNavigation(activeTabId, googleTranslateUrl);
+                            } else {
+                                toast({ title: "Can't translate internal pages." });
+                            }
+                        }}>
                             <Languages className="mr-2 h-4 w-4" />
                             <span>Translate...</span>
                         </DropdownMenuItem>
@@ -1494,7 +1529,7 @@ const BrowserApp = () => {
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
-                                    <DropdownMenuItem onSelect={() => toast({title: "Find is not implemented."})}>
+                                    <DropdownMenuItem onSelect={handleFind}>
                                         <Search className="mr-2 h-4 w-4" />
                                         <span>Find...</span>
                                         <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
@@ -1535,12 +1570,12 @@ const BrowserApp = () => {
                                     <span>Cast...</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => toast({title: "Saving pages is not implemented."})}>
+                                <DropdownMenuItem onSelect={() => window.print()}>
                                     <Download className="mr-2 h-4 w-4" />
                                     <span>Save page as...</span>
                                     <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => toast({title: "Creating shortcuts is not implemented."})}>
+                                <DropdownMenuItem onSelect={() => setIsAddShortcutOpen(true)}>
                                     <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
                                     <span>Create shortcut...</span>
                                 </DropdownMenuItem>
@@ -1549,11 +1584,11 @@ const BrowserApp = () => {
                                     <LinkIcon className="mr-2 h-4 w-4" />
                                     <span>Copy link</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                                <DropdownMenuItem onSelect={() => toast({title: "This feature is only a placeholder."})}>
                                     <Computer className="mr-2 h-4 w-4" />
                                     <span>Send to your devices</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => toast({title: "QR Code generation is not implemented."})}>
+                                <DropdownMenuItem onSelect={createQRCode}>
                                     <QrCode className="mr-2 h-4 w-4" />
                                     <span>Create QR Code</span>
                                 </DropdownMenuItem>
@@ -1623,10 +1658,40 @@ const BrowserApp = () => {
                         {renderCurrentPage()}
                     </div>
                 ))}
+                 {isFindOpen && (
+                    <Card className="absolute top-2 right-2 w-80 p-2 shadow-lg z-50">
+                        <div className="flex items-center gap-2">
+                            <Input 
+                                placeholder="Find in page" 
+                                value={findInput}
+                                onChange={e => setFindInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleFind()}
+                                className="h-8"
+                                autoFocus
+                            />
+                            <Button size="sm" onClick={handleFind}>Find</Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFindOpen(false)}><X className="w-4 h-4"/></Button>
+                        </div>
+                    </Card>
+                )}
             </main>
             {isAssistantOpen && <AishaAssistant />}
           </div>
         </div>
+
+        <Dialog open={!!qrCodeUrl} onOpenChange={(isOpen) => !isOpen && setQrCodeUrl('')}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>QR Code for this page</DialogTitle>
+              <DialogDescription>
+                Scan this code to open <span className="font-bold">{currentUrl}</span> on another device.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-center p-4">
+              {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={150} height={150} />}
+            </div>
+          </DialogContent>
+        </Dialog>
 
 
         <DeveloperConsole />
