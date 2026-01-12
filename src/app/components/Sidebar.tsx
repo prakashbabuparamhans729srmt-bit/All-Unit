@@ -44,12 +44,12 @@ const Sidebar = ({ onNavigate, onSetOpen }: SidebarProps) => {
             <div
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className={`fixed top-0 left-0 h-screen bg-gray-900 text-white flex flex-col items-center py-4 transition-all duration-300 z-50 ${isOpen ? 'w-64' : 'w-16'}`}
+                className={`fixed top-0 left-0 h-screen bg-sidebar text-sidebar-foreground flex flex-col items-center py-4 transition-all duration-300 z-50 ${isOpen ? 'w-64' : 'w-16'}`}
             >
                 <div className="mb-8">
                     <Tooltip>
                         <TooltipTrigger asChild>
-                             <button onClick={() => onNavigate('about:about')} className="flex items-center justify-center w-full p-2 rounded-lg hover:bg-gray-800">
+                             <button onClick={() => onNavigate('about:about')} className="flex items-center justify-center w-full p-2 rounded-lg hover:bg-sidebar-accent">
                                 <AppWindow className="h-7 w-7 text-cyan-400" />
                                 {isOpen && <span className="ml-4 font-semibold text-lg">Aisha</span>}
                             </button>
@@ -64,7 +64,7 @@ const Sidebar = ({ onNavigate, onSetOpen }: SidebarProps) => {
                     {navItems.map((item, index) => (
                         <Tooltip key={index}>
                             <TooltipTrigger asChild>
-                                <button onClick={item.action} className="w-full flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-cyan-400">
+                                <button onClick={item.action} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                                     <item.icon className="h-6 w-6" />
                                     {isOpen && <span className="ml-4">{item.label}</span>}
                                 </button>
@@ -81,7 +81,7 @@ const Sidebar = ({ onNavigate, onSetOpen }: SidebarProps) => {
                 <div className="mt-auto">
                      <Tooltip>
                         <TooltipTrigger asChild>
-                            <button className="w-full flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-cyan-400">
+                            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                                 <LogOut className="h-6 w-6" />
                                 {isOpen && <span className="ml-4">Logout</span>}
                             </button>
