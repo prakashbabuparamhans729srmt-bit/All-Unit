@@ -380,8 +380,7 @@ const BrowserApp = () => {
       newUrl = newUrl.replace('aisha://', 'about:');
     }
     
-    const internalPages = ['about:settings', 'about:history', 'about:bookmarks', 'about:downloads', 'about:blank', 'about:startup-checklist', 'about:about'];
-    if (internalPages.includes(newUrl)) {
+    if (newUrl.startsWith("about:")) {
         if (isIncognito && (newUrl === 'about:history' || newUrl === 'about:bookmarks')) {
              toast({ title: "History and Bookmarks are disabled in Incognito mode." });
              return;
@@ -414,17 +413,23 @@ const BrowserApp = () => {
       newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
     }
     
+    // Open external sites in a new tab
+    window.open(newUrl, '_blank');
+
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
     
     const newHistory = isIncognito ? [DEFAULT_URL, newUrl] : tab.history.slice(0, tab.currentIndex + 1);
     if(!isIncognito) newHistory.push(newUrl);
-    
+
+    // Update the tab state, but don't show loading as it opens in a new tab
     updateTab(tabId, { 
         history: newHistory,
         currentIndex: newHistory.length - 1,
-        isLoading: true 
+        isLoading: false,
+        title: newUrl, // We can set a temporary title
     });
+    setInputValue(newUrl);
   };
 
   const goBack = () => {
@@ -444,15 +449,19 @@ const BrowserApp = () => {
   const reload = () => {
     if (!activeTab) return;
 
+    const currentUrl = activeTab.history[activeTab.currentIndex];
+    
     if (currentUrl.startsWith('about:')) {
-        toast({ title: "Internal pages don't need to be reloaded." });
-        return;
+      // For internal pages, we can simply re-render
+      const currentTabId = activeTabId;
+      // A little hack to force re-render of internal component
+      setActiveTabId('');
+      setTimeout(() => setActiveTabId(currentTabId), 0);
+      toast({ title: "Page reloaded." });
+      return;
     }
-
-    if (iframeRefs.current[activeTab.id]) {
-      updateTab(activeTabId, { isLoading: true });
-      iframeRefs.current[activeTab.id]!.src = iframeRefs.current[activeTab.id]!.src;
-    }
+    
+    toast({ title: "External pages open in a new tab and can be reloaded there." });
   };
   
   const goHome = () => {
@@ -489,11 +498,14 @@ const BrowserApp = () => {
       }
     } catch (error) {
       console.warn("Could not access iframe content due to cross-origin restrictions:", error);
-      try {
-        const url = new URL(tab.history[tab.currentIndex]);
-        title = url.hostname;
-      } catch {
-        title = "Invalid URL";
+      // For internally rendered pages, the title is already set.
+      if (!tab.history[tab.currentIndex].startsWith('about:')) {
+          try {
+            const url = new URL(tab.history[tab.currentIndex]);
+            title = url.hostname;
+          } catch {
+            title = "Invalid URL";
+          }
       }
     }
     updateTab(tabId, { isLoading: false, title });
@@ -589,10 +601,8 @@ const BrowserApp = () => {
         output = window.eval(consoleInput);
       } else {
          if (!iframe || !iframe.contentWindow) {
-            throw new Error("Cannot access the content of the current tab.");
+            throw new Error("Cannot access the content of the current tab. External pages run in a separate context.");
          }
-         // This is a security risk in a real browser, but for a demo it's fine.
-         // A real implementation would need a secure way to communicate with iframes.
          output = iframe.contentWindow.eval(consoleInput);
       }
   
@@ -746,7 +756,12 @@ const BrowserApp = () => {
       return;
     }
     if (!findInput) return;
-    window.find(findInput);
+    
+    if (currentUrl.startsWith('about:')) {
+      window.find(findInput);
+    } else {
+      toast({ title: "Find on page is only available for internal pages."});
+    }
   };
   
   const createQRCode = () => {
@@ -1179,16 +1194,14 @@ const BrowserApp = () => {
                 </div>
             </GenericInternalPage>;
         default:
-            return (
-                <iframe
-                    ref={el => { if(activeTab) iframeRefs.current[activeTab.id] = el }}
-                    src={url}
-                    onLoad={() => { if(activeTab) handleIframeLoad(activeTab.id) }}
-                    className="w-full h-full border-0"
-                    title="Browser Content"
-                    sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-                />
-            );
+            // Since external pages now open in a new tab, we just show a placeholder.
+            return <GenericInternalPage title="External Page" icon={Globe}>
+                <div className="flex flex-col h-full items-center justify-center text-center">
+                    <SquareArrowOutUpRight className="w-16 h-16 mb-4 text-muted-foreground"/>
+                    <h2 className="text-xl font-semibold">This page has opened in a new tab.</h2>
+                    <p className="text-muted-foreground mt-2 max-w-md">To provide the best experience and ensure all websites work correctly, external pages now open in a new browser tab.</p>
+                </div>
+            </GenericInternalPage>;
     }
   };
 
@@ -1654,7 +1667,7 @@ const BrowserApp = () => {
           <div className="flex-1 flex overflow-hidden">
             <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
                 {tabs.map(tab => (
-                    <div key={tab.id} className={`w-full h-full ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                    <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                         {renderCurrentPage()}
                     </div>
                 ))}
@@ -1721,3 +1734,4 @@ export default function BrowserPage() {
 
 
     
+
