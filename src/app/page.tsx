@@ -107,6 +107,7 @@ import { summarizeText } from "@/ai/flows/summarize-flow";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import Sidebar from "./components/Sidebar";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -195,6 +196,7 @@ const BrowserApp = () => {
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -1052,7 +1054,8 @@ const BrowserApp = () => {
   return (
     <TooltipProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <Sidebar onNavigate={handleNavigation} onSetOpen={setIsSidebarOpen} />
+        <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
           <header className="flex-shrink-0">
             <div className="flex items-center justify-between pt-2 px-2">
                 <div className="flex items-end">
@@ -1496,6 +1499,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
