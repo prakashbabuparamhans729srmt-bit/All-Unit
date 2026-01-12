@@ -414,21 +414,17 @@ const BrowserApp = () => {
       newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
     }
     
-    // Open external sites in a new tab
-    window.open(newUrl, '_blank');
-
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
     
     const newHistory = isIncognito ? [DEFAULT_URL, newUrl] : tab.history.slice(0, tab.currentIndex + 1);
     if(!isIncognito) newHistory.push(newUrl);
 
-    // Update the tab state, but don't show loading as it opens in a new tab
     updateTab(tabId, { 
         history: newHistory,
         currentIndex: newHistory.length - 1,
-        isLoading: false,
-        title: newUrl, // We can set a temporary title
+        isLoading: true,
+        title: "Loading..."
     });
     setInputValue(newUrl);
   };
@@ -462,7 +458,14 @@ const BrowserApp = () => {
       return;
     }
     
-    toast({ title: "External pages open in a new tab and can be reloaded there." });
+    const iframe = iframeRefs.current[activeTabId];
+    if (iframe) {
+        iframe.src = 'about:blank';
+        setTimeout(() => {
+            iframe.src = currentUrl;
+            updateTab(activeTabId, { isLoading: true });
+        }, 100);
+    }
   };
   
   const goHome = () => {
@@ -1195,14 +1198,20 @@ const BrowserApp = () => {
                 </div>
             </GenericInternalPage>;
         default:
-            // Since external pages now open in a new tab, we just show a placeholder.
-            return <GenericInternalPage title="External Page" icon={Globe}>
-                <div className="flex flex-col h-full items-center justify-center text-center">
-                    <SquareArrowOutUpRight className="w-16 h-16 mb-4 text-muted-foreground"/>
-                    <h2 className="text-xl font-semibold">This page has opened in a new tab.</h2>
-                    <p className="text-muted-foreground mt-2 max-w-md">To provide the best experience and ensure all websites work correctly, external pages now open in a new browser tab.</p>
-                </div>
-            </GenericInternalPage>;
+            return (
+              <iframe
+                  ref={(el) => {
+                    if (el && activeTab) {
+                      iframeRefs.current[activeTab.id] = el;
+                    }
+                  }}
+                  src={url}
+                  className="w-full h-full border-0"
+                  onLoad={() => handleIframeLoad(activeTab.id)}
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads"
+                  allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture"
+                />
+            );
     }
   };
 
@@ -1328,7 +1337,7 @@ const BrowserApp = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center gap-1 ml-2">
+              <div className="flex items-center gap-2 ml-2">
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
