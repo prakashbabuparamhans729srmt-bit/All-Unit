@@ -100,6 +100,10 @@ export default function SettingsPage() {
     setSearchEngine(savedEngine);
   }, []);
 
+  const handleNavigate = (url: string) => {
+    window.parent.postMessage({ type: 'navigate', url }, '*');
+  };
+
   const handleSearchEngineChange = (value: string) => {
     setSearchEngine(value);
     localStorage.setItem('aisha-search-engine', value);
@@ -109,10 +113,6 @@ export default function SettingsPage() {
         key: 'aisha-search-engine',
         newValue: value,
     }));
-  };
-
-  const handleNavigate = (url: string) => {
-    window.parent.postMessage({ type: 'navigate', url }, '*');
   };
   
   const YouAndAisha = () => (
