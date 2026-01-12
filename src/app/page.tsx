@@ -78,6 +78,7 @@ import {
   Image as ImageIcon,
   Video,
   AppWindow,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,6 +209,7 @@ type Tab = {
   currentIndex: number;
   title: string;
   isLoading: boolean;
+  loadFailed: boolean;
 };
 
 type BookmarkItem = {
@@ -229,6 +231,7 @@ const BrowserApp = () => {
       currentIndex: 0,
       title: "New Tab",
       isLoading: false,
+      loadFailed: false,
     },
   ]);
   const [activeTabId, setActiveTabId] = useState("tab-1");
@@ -396,7 +399,8 @@ const BrowserApp = () => {
             history: newHistory,
             currentIndex: newHistory.length - 1,
             isLoading: false,
-            title: pageTitle
+            title: pageTitle,
+            loadFailed: false,
         });
         return;
     }
@@ -424,7 +428,8 @@ const BrowserApp = () => {
         history: newHistory,
         currentIndex: newHistory.length - 1,
         isLoading: true,
-        title: "Loading..."
+        title: "Loading...",
+        loadFailed: false,
     });
     setInputValue(newUrl);
   };
@@ -432,14 +437,14 @@ const BrowserApp = () => {
   const goBack = () => {
     if (!activeTab) return;
     if (activeTab.currentIndex > 0) {
-      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: !activeTab.history[activeTab.currentIndex - 1].startsWith('about:') });
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex - 1, isLoading: !activeTab.history[activeTab.currentIndex - 1].startsWith('about:'), loadFailed: false });
     }
   };
 
   const goForward = () => {
     if (!activeTab) return;
     if (activeTab.currentIndex < activeTab.history.length - 1) {
-      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: !activeTab.history[activeTab.currentIndex + 1].startsWith('about:') });
+      updateTab(activeTabId, { currentIndex: activeTab.currentIndex + 1, isLoading: !activeTab.history[activeTab.currentIndex + 1].startsWith('about:'), loadFailed: false });
     }
   };
 
@@ -463,7 +468,7 @@ const BrowserApp = () => {
         iframe.src = 'about:blank';
         setTimeout(() => {
             iframe.src = currentUrl;
-            updateTab(activeTabId, { isLoading: true });
+            updateTab(activeTabId, { isLoading: true, loadFailed: false });
         }, 100);
     }
   };
@@ -483,36 +488,45 @@ const BrowserApp = () => {
   const handleIframeLoad = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
-
+  
     let title = "Untitled";
+    let loadFailed = false;
     try {
       const iframe = iframeRefs.current[tabId];
       if (iframe && iframe.contentWindow) {
-        title = iframe.contentWindow.document.title || "Untitled";
+        // Check if the iframe content is accessible. If not, it's a cross-origin error.
+        if (iframe.contentWindow.document.body.innerHTML === "") {
+            // This might happen for sites that load blank and then redirect.
+            // A more robust check is needed.
+        }
+        title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
 
-        const realUrl = iframe.contentWindow.location.href;
-        if (realUrl !== 'about:blank' && realUrl !== tab.history[tab.currentIndex] && !isIncognito) {
-           const newHistory = [...tab.history];
-           newHistory[tab.currentIndex] = realUrl;
-           updateTab(tabId, {history: newHistory});
-           if (tabId === activeTabId) {
-             setInputValue(realUrl);
-           }
+        // A simple but not foolproof way to detect if a page failed to load due to X-Frame-Options
+        // In a real browser, you would get a more explicit error. Here we simulate.
+        if (iframe.contentWindow.location.href === 'about:blank' && tab.history[tab.currentIndex] !== 'about:blank') {
+            loadFailed = true;
+            title = "Blocked";
         }
       }
     } catch (error) {
-      console.warn("Could not access iframe content due to cross-origin restrictions:", error);
-      // For internally rendered pages, the title is already set.
-      if (!tab.history[tab.currentIndex].startsWith('about:')) {
-          try {
-            const url = new URL(tab.history[tab.currentIndex]);
-            title = url.hostname;
-          } catch {
-            title = "Invalid URL";
-          }
+      // This catch block will be triggered by cross-origin access errors.
+      // This is our primary way of detecting that the page *might* have loaded, but we can't inspect it.
+      // It's not a guaranteed failure, but for our purposes, we'll try to get the title from the URL.
+      try {
+        const url = new URL(tab.history[tab.currentIndex]);
+        title = url.hostname;
+      } catch {
+        title = "Invalid URL";
       }
+
+      // Check if the iframe is truly empty, which indicates a failure.
+      const iframe = iframeRefs.current[tabId];
+       if (!iframe || !iframe.contentWindow || iframe.contentWindow.location.href === 'about:blank') {
+           loadFailed = true;
+           title = "Blocked";
+       }
     }
-    updateTab(tabId, { isLoading: false, title });
+    updateTab(tabId, { isLoading: false, title, loadFailed });
   };
   
   const addTab = () => {
@@ -523,6 +537,7 @@ const BrowserApp = () => {
       currentIndex: 0,
       title: "New Tab",
       isLoading: false,
+      loadFailed: false,
     };
     setTabs([...tabs, newTab]);
     setActiveTabId(newTabId);
@@ -1172,9 +1187,27 @@ const BrowserApp = () => {
     </aside>
   );
 
+  const LoadFailedContent = ({ url }: { url: string }) => (
+    <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4 text-center">
+      <MessageSquareWarning className="w-16 h-16 text-destructive mb-4" />
+      <h2 className="text-2xl font-bold mb-2">This page can't be displayed</h2>
+      <p className="text-muted-foreground max-w-md mb-6">
+        The website at <span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span> doesn't allow itself to be embedded in other pages. This is a security feature to protect its content.
+      </p>
+      <Button onClick={() => window.open(url, '_blank')}>
+        <ExternalLink className="w-4 h-4 mr-2" />
+        Open in New Tab
+      </Button>
+    </div>
+  );
+
   const renderCurrentPage = () => {
     if (!activeTab) return <NewTabPage />;
     const url = activeTab.history[activeTab.currentIndex];
+
+    if (activeTab.loadFailed) {
+      return <LoadFailedContent url={url} />;
+    }
 
     switch (url) {
         case DEFAULT_URL:
