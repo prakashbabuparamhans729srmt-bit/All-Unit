@@ -491,27 +491,22 @@ const BrowserApp = () => {
   
     let title = "Untitled";
     let loadFailed = false;
-    try {
-      const iframe = iframeRefs.current[tabId];
-      if (iframe && iframe.contentWindow) {
-        // Check if the iframe content is accessible. If not, it's a cross-origin error.
-        if (iframe.contentWindow.document.body.innerHTML === "") {
-            // This might happen for sites that load blank and then redirect.
-            // A more robust check is needed.
-        }
-        title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
+    const iframe = iframeRefs.current[tabId];
 
-        // A simple but not foolproof way to detect if a page failed to load due to X-Frame-Options
-        // In a real browser, you would get a more explicit error. Here we simulate.
-        if (iframe.contentWindow.location.href === 'about:blank' && tab.history[tab.currentIndex] !== 'about:blank') {
-            loadFailed = true;
-            title = "Blocked";
+    try {
+      if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+        title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
+        
+        // This is a naive check. A better check might be to see if the document body is empty
+        // after a short delay, but that's more complex.
+        if (title === "about:blank") {
+          loadFailed = true;
+          title = "Blocked";
         }
       }
     } catch (error) {
-      // This catch block will be triggered by cross-origin access errors.
-      // This is our primary way of detecting that the page *might* have loaded, but we can't inspect it.
-      // It's not a guaranteed failure, but for our purposes, we'll try to get the title from the URL.
+      // Cross-origin access error. This means an external page has loaded.
+      // We can't access its title, so we'll use the hostname from the URL.
       try {
         const url = new URL(tab.history[tab.currentIndex]);
         title = url.hostname;
@@ -519,14 +514,25 @@ const BrowserApp = () => {
         title = "Invalid URL";
       }
 
-      // Check if the iframe is truly empty, which indicates a failure.
-      const iframe = iframeRefs.current[tabId];
-       if (!iframe || !iframe.contentWindow || iframe.contentWindow.location.href === 'about:blank') {
-           loadFailed = true;
-           title = "Blocked";
-       }
+      // Check if the iframe is still on about:blank after trying to load, which suggests a block.
+      // This is a race condition, so we check again.
+      // We add a small timeout to let the page potentially redirect.
+      setTimeout(() => {
+        try {
+            if (iframe && iframe.contentWindow && iframe.contentWindow.location.href === 'about:blank') {
+               updateTab(tabId, { isLoading: false, title: "Blocked", loadFailed: true });
+            }
+        } catch (e) {
+            // If we get an error here, it's a good sign the page loaded something.
+        }
+      }, 100);
     }
-    updateTab(tabId, { isLoading: false, title, loadFailed });
+    
+    // Only update if we haven't already marked it as failed by the timeout
+    const currentTabState = tabs.find(t => t.id === tabId);
+    if (currentTabState && !currentTabState.loadFailed) {
+       updateTab(tabId, { isLoading: false, title, loadFailed });
+    }
   };
   
   const addTab = () => {
@@ -1785,5 +1791,7 @@ export default function BrowserPage() {
     
 
 
+
+    
 
     
