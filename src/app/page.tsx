@@ -399,12 +399,14 @@ const BrowserApp = () => {
         return;
     }
 
-    const isUrl = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(newUrl) || newUrl.includes('localhost');
+    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+    const isLocalhost = newUrl.includes('localhost');
+    const isUrl = isUrlRegex.test(newUrl) || isLocalhost;
 
     if (isUrl) {
-        if (!/^(https?:\/\/)/i.test(newUrl)) {
-            newUrl = `https://${newUrl}`;
-        }
+      if (!/^(https?:\/\/)/i.test(newUrl)) {
+          newUrl = `https://${newUrl}`;
+      }
     } else {
       const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
       newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
@@ -747,7 +749,7 @@ const BrowserApp = () => {
             <Input 
                 type="text"
                 placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
-                className="w-full h-12 pl-12 pr-32 rounded-full bg-secondary border-none focus-visible:ring-0"
+                className="w-full h-12 pl-12 pr-48 rounded-full bg-secondary border-none focus-visible:ring-0"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
@@ -782,10 +784,16 @@ const BrowserApp = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button variant="ghost" size="icon" className="w-9 h-9 gap-1.5 rounded-full px-2" onClick={() => toast({title: "AI Mode activated!"})}>
-                  <Sparkles className="w-4 h-4" />
-                  AI Mode
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "AI Mode activated!"})}>
+                          <Sparkles className="w-5 h-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>AI Mode</p>
+                    </TooltipContent>
+                </Tooltip>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
@@ -1207,18 +1215,20 @@ const BrowserApp = () => {
                 </div>
             </div>
             <Card className={`flex items-center gap-1 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
-              <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={reload}>
-                {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
-              </Button>
-              <Button variant="ghost" size="icon" onClick={goHome}>
-                <Home className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={reload}>
+                  {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
+                </Button>
+                <Button variant="ghost" size="icon" onClick={goHome}>
+                  <Home className="w-5 h-5" />
+                </Button>
+              </div>
               <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
                 {isInternalPage ? (
                     <div className="flex items-center gap-2">
@@ -1623,3 +1633,4 @@ export default function BrowserPage() {
     
 
     
+
