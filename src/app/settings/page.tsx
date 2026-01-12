@@ -93,6 +93,23 @@ const SettingsItem = ({ title, description, externalLink = false, icon: Icon, va
 export default function SettingsPage() {
   const [activeMenu, setActiveMenu] = useState('you-and-aisha');
   const { toast } = useToast();
+  const [searchEngine, setSearchEngine] = useState('google');
+
+  useEffect(() => {
+    const savedEngine = localStorage.getItem('aisha-search-engine') || 'google';
+    setSearchEngine(savedEngine);
+  }, []);
+
+  const handleSearchEngineChange = (value: string) => {
+    setSearchEngine(value);
+    localStorage.setItem('aisha-search-engine', value);
+    // This is a bit of a hack to trigger a storage event for other tabs.
+    // A more robust solution might use BroadcastChannel or a state management library.
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: 'aisha-search-engine',
+        newValue: value,
+    }));
+  };
 
   const handleNavigate = (url: string) => {
     window.parent.postMessage({ type: 'navigate', url }, '*');
@@ -394,7 +411,7 @@ export default function SettingsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <Label htmlFor='search-engine-select' className="font-medium">Search engine used in the address bar</Label>
-              <Select defaultValue="google">
+              <Select value={searchEngine} onValueChange={handleSearchEngineChange}>
                 <SelectTrigger id="search-engine-select" className="w-[220px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -402,7 +419,7 @@ export default function SettingsPage() {
                   <SelectItem value="google">Google</SelectItem>
                   <SelectItem value="bing">Bing</SelectItem>
                   <SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
-                  <SelectItem value="yahoo">Yahoo!</SelectItem>
+                  <SelectItem value="yahoo">Yahoo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -494,6 +511,4 @@ export default function SettingsPage() {
     </div>
   );
 }
-
     
-

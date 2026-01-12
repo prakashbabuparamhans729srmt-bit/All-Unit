@@ -146,6 +146,13 @@ const companyApps = [
   { name: 'Meet', icon: Video, url: 'https://meet.google.com/' },
 ];
 
+const searchEngines: { [key: string]: { name: string; url: string } } = {
+  google: { name: 'Google', url: 'https://www.google.com/search?q=' },
+  bing: { name: 'Bing', url: 'https://www.bing.com/search?q=' },
+  duckduckgo: { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
+  yahoo: { name: 'Yahoo', url: 'https://search.yahoo.com/search?p=' },
+};
+
 const renderShortcutIcon = (icon: string) => {
     if (icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
     if (icon === 'Book') return <Book className="w-5 h-5" />;
@@ -210,6 +217,7 @@ const BrowserApp = () => {
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const [isIncognito, setIsIncognito] = useState(false);
+  const [searchEngine, setSearchEngine] = useState('google');
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -237,6 +245,20 @@ const BrowserApp = () => {
       window.removeEventListener('message', handleMessage);
     };
   }, [activeTabId]);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedEngine = localStorage.getItem('aisha-search-engine') || 'google';
+      setSearchEngine(savedEngine);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    handleStorageChange(); // Initial load
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -343,7 +365,8 @@ const BrowserApp = () => {
     }
 
     if (!/^(https?:\/\/)/i.test(newUrl)) {
-      newUrl = `https://www.google.com/search?q=${encodeURIComponent(newUrl)}`;
+      const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
+      newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
     }
     
     const tab = tabs.find(t => t.id === tabId);
@@ -682,7 +705,7 @@ const BrowserApp = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 
                 type="text"
-                placeholder="Search Aisha or type a URL"
+                placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
                 className="w-full h-12 pl-12 pr-32 rounded-full bg-secondary border-none focus-visible:ring-0"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -1544,14 +1567,3 @@ export default function BrowserPage() {
     
 
     
-
-
-
-
-
-
-
-
-
-
-
