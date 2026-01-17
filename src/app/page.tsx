@@ -505,40 +505,34 @@ const BrowserApp = () => {
   
     try {
       if (iframe && iframe.contentWindow) {
-        // Accessing document will throw an error for cross-origin frames
+        // This will throw for cross-origin, which is caught below
         title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
-        if (title === "") {
-          title = "Blocked";
-          loadFailed = true;
-        }
       } else {
         // Fallback for when contentWindow is not accessible
         title = new URL(tab.history[tab.currentIndex]).hostname;
       }
     } catch (e) {
-      // This is expected for cross-origin iframes. We treat it as a successful load.
+      // This is expected for cross-origin iframes.
       try {
         title = new URL(tab.history[tab.currentIndex]).hostname;
       } catch {
         title = "Invalid URL";
         loadFailed = true;
       }
-  
+      
       // A secondary check to see if the page is truly blocked
       setTimeout(() => {
         try {
-          // This will fail for cross-origin, which is ok.
-          // If it doesn't fail AND body is empty, it's a blocked page.
-          if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.innerHTML === '') {
+          if (iframe && iframe.contentWindow && !iframe.contentWindow.document.body.innerHTML) {
             updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
           }
         } catch (error) {
-          // Cross-origin access failed, which means the page has likely loaded.
+          // Cross-origin access failed, which is ok and expected for loaded pages.
         }
       }, 500);
     }
   
-    updateTab(tabId, { isLoading: false, title, loadFailed });
+    updateTab(tabId, { isLoading: false, title, loadFailed: loadFailed || tab.loadFailed });
   };
   
   const addTab = () => {
@@ -1824,8 +1818,8 @@ const BrowserApp = () => {
                 <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
                     <div className="flex items-center p-2 border-b shrink-0">
                         <DialogTitle className="flex items-center gap-2 px-2"><Sparkles className="w-5 h-5"/> Assistant</DialogTitle>
-                        <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setIsAssistantOpen(false)}>
-                            <X className="w-5 h-5" />
+                        <Button variant="secondary" size="icon" className="ml-auto rounded-full" onClick={() => setIsAssistantOpen(false)}>
+                            <X className="w-5 h-5 text-muted-foreground" />
                         </Button>
                     </div>
                     <AishaAssistant isMobile={true} />
@@ -1865,4 +1859,5 @@ export default function BrowserPage() {
     
 
     
+
 
