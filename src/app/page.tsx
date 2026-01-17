@@ -121,6 +121,8 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import Sidebar from "./components/Sidebar";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -270,6 +272,7 @@ const BrowserApp = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
 
   useEffect(() => {
@@ -500,33 +503,29 @@ const BrowserApp = () => {
     let loadFailed = false;
 
     try {
-      // Try to access the title. If it fails, it's a cross-origin frame.
       if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
         title = iframe.contentWindow.document.title;
       }
-      // If title is empty, it might be a blocked page
+
       if (title === "") {
         loadFailed = true;
         title = "Blocked";
       }
     } catch (error) {
-      // This catch block is expected for cross-origin frames.
-      // We can't access the title, so we'll derive it from the URL.
       try {
         title = new URL(tab.history[tab.currentIndex]).hostname;
       } catch {
         title = "Invalid URL";
         loadFailed = true;
       }
-      // A secondary check after a short delay to see if the iframe body is empty,
-      // which is a strong indicator of a blocked frame.
+      
       setTimeout(() => {
         try {
           if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.childNodes.length === 0) {
             updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
           }
         } catch (e) {
-          // Cross-origin access error, which is fine. We assume it loaded.
+          // This is expected. If we can't access the body, it means it's a cross-origin frame that has likely loaded.
         }
       }, 500);
     }
@@ -1115,8 +1114,12 @@ const BrowserApp = () => {
     </Sheet>
   );
 
-  const AishaAssistant = () => (
-    <aside className="w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm p-2 flex flex-col">
+  const AishaAssistant = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <aside className={cn("p-2 flex flex-col",
+        isMobile
+        ? "flex-1 h-full bg-background"
+        : "w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+    )}>
        <ScrollArea className="flex-1 pr-2">
         <div className="p-2 space-y-4">
           {assistantMessages.length === 0 ? (
@@ -1786,7 +1789,7 @@ const BrowserApp = () => {
                     </Card>
                 )}
             </main>
-            {isAssistantOpen && <AishaAssistant />}
+            {!isMobile && isAssistantOpen && <AishaAssistant isMobile={false} />}
           </div>
         </div>
 
@@ -1833,6 +1836,19 @@ const BrowserApp = () => {
                 </div>
             </SheetContent>
         </Sheet>
+        {isMobile && (
+            <Dialog open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
+                <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
+                    <div className="flex items-center p-2 border-b shrink-0">
+                        <DialogTitle className="flex items-center gap-2 px-2"><Sparkles className="w-5 h-5"/> Assistant</DialogTitle>
+                        <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setIsAssistantOpen(false)}>
+                            <X className="w-5 h-5" />
+                        </Button>
+                    </div>
+                    <AishaAssistant isMobile={true} />
+                </DialogContent>
+            </Dialog>
+        )}
       </div>
     </TooltipProvider>
   );
