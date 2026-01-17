@@ -83,6 +83,7 @@ import {
   Play,
   History,
   Paperclip,
+  ArrowUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -498,39 +499,46 @@ const BrowserApp = () => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
   
-    let title = "Untitled";
     const iframe = iframeRefs.current[tabId];
+    let title = "Untitled";
     let loadFailed = false;
-
+  
     try {
-      if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
-        title = iframe.contentWindow.document.title;
+      if (iframe && iframe.contentWindow) {
+        // Accessing document will throw an error for cross-origin frames
+        title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
+        if (title === "") {
+          title = "Blocked";
+          loadFailed = true;
+        }
+      } else {
+        // Fallback for when contentWindow is not accessible
+        title = new URL(tab.history[tab.currentIndex]).hostname;
       }
-
-      if (title === "") {
-        loadFailed = true;
-        title = "Blocked";
-      }
-    } catch (error) {
+    } catch (e) {
+      // This is expected for cross-origin iframes. We treat it as a successful load.
       try {
         title = new URL(tab.history[tab.currentIndex]).hostname;
       } catch {
         title = "Invalid URL";
         loadFailed = true;
       }
-      
+  
+      // A secondary check to see if the page is truly blocked
       setTimeout(() => {
         try {
-          if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.childNodes.length === 0) {
+          // This will fail for cross-origin, which is ok.
+          // If it doesn't fail AND body is empty, it's a blocked page.
+          if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.innerHTML === '') {
             updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
           }
-        } catch (e) {
-          // This is expected. If we can't access the body, it means it's a cross-origin frame that has likely loaded.
+        } catch (error) {
+          // Cross-origin access failed, which means the page has likely loaded.
         }
       }, 500);
     }
-    
-    updateTab(tabId, { isLoading: false, title, loadFailed: loadFailed });
+  
+    updateTab(tabId, { isLoading: false, title, loadFailed });
   };
   
   const addTab = () => {
@@ -1180,7 +1188,7 @@ const BrowserApp = () => {
           value={assistantInput}
           onChange={(e) => setAssistantInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && assistantInput.trim()) {
               e.preventDefault();
               handleAssistantSubmit();
             }
@@ -1189,58 +1197,33 @@ const BrowserApp = () => {
         />
         <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleAssistantSubmit}
-              disabled={isAssistantLoading || !assistantInput.trim()}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="mr-2 h-4 w-4"
-              >
-                <ellipse
-                  cx="8"
-                  cy="8"
-                  rx="7"
-                  ry="3"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  transform="rotate(0 8 8)"
-                />
-                <ellipse
-                  cx="8"
-                  cy="8"
-                  rx="7"
-                  ry="3"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  transform="rotate(60 8 8)"
-                />
-                <ellipse
-                  cx="8"
-                  cy="8"
-                  rx="7"
-                  ry="3"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  transform="rotate(120 8 8)"
-                />
-              </svg>
-              DeepThink
+             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Attachments are not implemented.' })}>
+                <Paperclip className="w-5 h-5 text-muted-foreground" />
             </Button>
             <Button variant="secondary" size="sm" onClick={() => toast({ title: 'Search in assistant is not implemented.' })}>
               <Globe className="mr-2 h-4 w-4" />
               Search
             </Button>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Attachments are not implemented.' })}>
-            <Paperclip className="w-5 h-5 text-muted-foreground" />
-          </Button>
+          {assistantInput.trim() ? (
+            <Button 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={handleAssistantSubmit} 
+                disabled={isAssistantLoading}
+            >
+                <ArrowUp className="w-5 h-5" />
+            </Button>
+          ) : (
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => toast({title: "Voice input for assistant is not yet implemented."})}
+            >
+                <Mic className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </div>
     </aside>
@@ -1882,3 +1865,4 @@ export default function BrowserPage() {
     
 
     
+
