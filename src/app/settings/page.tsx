@@ -105,44 +105,72 @@ export default function SettingsPage() {
   const [activeMenu, setActiveMenu] = useState('you-and-aisha');
   const { toast } = useToast();
   const [searchEngine, setSearchEngine] = useState('google');
+  
+  const [showHomeButton, setShowHomeButton] = useState(true);
+  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
+
 
   useEffect(() => {
     const savedEngine = localStorage.getItem('aisha-search-engine') || 'google';
     setSearchEngine(savedEngine);
+    
+    const savedShowHome = localStorage.getItem('aisha-show-home-button');
+    setShowHomeButton(savedShowHome ? JSON.parse(savedShowHome) : true);
+
+    const savedShowBookmarks = localStorage.getItem('aisha-show-bookmarks-bar');
+    setShowBookmarksBar(savedShowBookmarks ? JSON.parse(savedShowBookmarks) : true);
+
   }, []);
 
   const handleNavigate = (url: string) => {
     window.parent.postMessage({ type: 'navigate', url }, '*');
   };
+  
+  const updateSetting = (key: string, value: any) => {
+      localStorage.setItem(key, JSON.stringify(value));
+      window.dispatchEvent(new StorageEvent('storage', { key, newValue: JSON.stringify(value) }));
+  }
+
+  const handleShowHomeButtonChange = (checked: boolean) => {
+      setShowHomeButton(checked);
+      updateSetting('aisha-show-home-button', checked);
+  }
+
+  const handleShowBookmarksBarChange = (checked: boolean) => {
+      setShowBookmarksBar(checked);
+      updateSetting('aisha-show-bookmarks-bar', checked);
+  }
 
   const handleSearchEngineChange = (value: string) => {
     setSearchEngine(value);
     localStorage.setItem('aisha-search-engine', value);
-    // This is a bit of a hack to trigger a storage event for other tabs.
-    // A more robust solution might use BroadcastChannel or a state management library.
-    window.dispatchEvent(new StorageEvent('storage', {
-        key: 'aisha-search-engine',
-        newValue: value,
-    }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-search-engine', newValue: value }));
   };
 
   const handleClearBrowsingData = () => {
     localStorage.removeItem('aisha-bookmarks');
     localStorage.removeItem('aisha-shortcuts');
-    // We can't clear iframe history easily, but we can clear our internal history tracking
-    toast({ title: "Browsing data cleared", description: "Your bookmarks and shortcuts have been removed." });
-     // This is a placeholder for a more robust history clearing mechanism
     window.parent.postMessage({ type: 'clear-history' }, '*');
+    toast({ title: "Browsing data cleared", description: "Your bookmarks, shortcuts, and history have been removed." });
   }
 
   const handleResetSettings = () => {
     localStorage.removeItem('aisha-bookmarks');
     localStorage.removeItem('aisha-shortcuts');
     localStorage.removeItem('aisha-search-engine');
+    localStorage.removeItem('aisha-show-home-button');
+    localStorage.removeItem('aisha-show-bookmarks-bar');
+
     setSearchEngine('google');
-     window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-search-engine', newValue: 'google' }));
-    toast({ title: "Settings reset", description: "All settings have been restored to their defaults." });
+    setShowHomeButton(true);
+    setShowBookmarksBar(true);
+
+    window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-search-engine', newValue: 'google' }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-show-home-button', newValue: 'true' }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-show-bookmarks-bar', newValue: 'true' }));
+
     window.parent.postMessage({ type: 'reset' }, '*');
+    toast({ title: "Settings reset", description: "All settings have been restored to their defaults." });
   }
 
   const scrollToSection = (id: string) => {
@@ -257,7 +285,7 @@ export default function SettingsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure you want to clear browsing data?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will remove your shortcuts and bookmarks. This action cannot be undone.
+                    This will remove your shortcuts, bookmarks, and history. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -385,8 +413,6 @@ export default function SettingsPage() {
 
   const Appearance = () => {
     const [theme, setTheme] = useState('dark');
-    const [showHome, setShowHome] = useState(false);
-    const [showBookmarks, setShowBookmarks] = useState(true);
     
     useEffect(() => {
         const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
@@ -436,10 +462,10 @@ export default function SettingsPage() {
           <Card>
             <CardContent className="pt-6">
                 <SettingsItem icon={Home} title="Show home button">
-                    <Switch checked={showHome} onCheckedChange={setShowHome}/>
+                    <Switch checked={showHomeButton} onCheckedChange={handleShowHomeButtonChange}/>
                 </SettingsItem>
-                <SettingsItem title="Show bookmarks bar">
-                    <Switch checked={showBookmarks} onCheckedChange={setShowBookmarks}/>
+                <SettingsItem title="Show bookmarks button" description="This shows/hides the bookmarks button in the address bar.">
+                    <Switch checked={showBookmarksBar} onCheckedChange={handleShowBookmarksBarChange}/>
                 </SettingsItem>
                  <div className="p-4 flex items-center justify-between">
                     <div>

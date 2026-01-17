@@ -118,6 +118,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
+import { describeImage } from "@/ai/flows/describe-image-flow";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -238,6 +239,8 @@ const AishaAssistant = ({
   setAssistantInput,
   handleAssistantSubmit,
   toast,
+  isAssistantListening,
+  handleAssistantVoiceSearch,
 }: {
   isMobile?: boolean;
   assistantMessages: AssistantMessage[];
@@ -246,6 +249,8 @@ const AishaAssistant = ({
   setAssistantInput: (value: string) => void;
   handleAssistantSubmit: () => void;
   toast: (options: any) => void;
+  isAssistantListening: boolean;
+  handleAssistantVoiceSearch: () => void;
 }) => (
   <aside className={cn("p-2 flex flex-col",
       isMobile
@@ -343,8 +348,8 @@ const AishaAssistant = ({
             <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8"
-                onClick={() => toast({title: "Voice input for assistant is not yet implemented."})}
+                className={`h-8 w-8 ${isAssistantListening ? 'bg-red-500/20 text-red-500' : ''}`}
+                onClick={handleAssistantVoiceSearch}
             >
                 <Mic className="w-5 h-5" />
             </Button>
@@ -399,12 +404,80 @@ const BrowserApp = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  
+  const [showHomeButton, setShowHomeButton] = useState(true);
+  const [showBookmarksButton, setShowBookmarksButton] = useState(true);
+  
+  const assistantRecognitionRef = useRef<any>(null);
+  const [isAssistantListening, setIsAssistantListening] = useState(false);
 
+  const handleAssistantVoiceSearch = () => {
+    if (isAssistantListening) {
+      assistantRecognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
+      return;
+    }
+
+    assistantRecognitionRef.current = new SpeechRecognition();
+    assistantRecognitionRef.current.continuous = false;
+    assistantRecognitionRef.current.interimResults = false;
+    assistantRecognitionRef.current.lang = 'en-US';
+
+    assistantRecognitionRef.current.onstart = () => {
+      setIsAssistantListening(true);
+      toast({ title: "Assistant is Listening...", description: "Speak your query now." });
+    };
+
+    assistantRecognitionRef.current.onend = () => {
+      setIsAssistantListening(false);
+    };
+
+    assistantRecognitionRef.current.onerror = (event: any) => {
+      toast({ title: "Voice search error", description: event.error, variant: "destructive" });
+      setIsAssistantListening(false);
+    };
+
+    assistantRecognitionRef.current.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setAssistantInput(transcript);
+    };
+
+    assistantRecognitionRef.current.start();
+  };
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'navigate' && event.data.url) {
         handleNavigation(activeTabId, event.data.url);
+      }
+      if (event.data.type === 'clear-history') {
+        setTabs(prevTabs => 
+            prevTabs.map(tab => ({
+                ...tab,
+                history: [DEFAULT_URL],
+                currentIndex: 0,
+            }))
+        );
+        handleNavigation(activeTabId, DEFAULT_URL);
+      }
+      if (event.data.type === 'reset') {
+        setTabs(prevTabs => 
+            prevTabs.map(tab => ({
+                ...tab,
+                history: [DEFAULT_URL],
+                currentIndex: 0,
+                title: "New Tab"
+            }))
+        );
+        if (tabs.length > 0) {
+            setActiveTabId(tabs[0].id);
+            handleNavigation(tabs[0].id, DEFAULT_URL);
+        }
       }
     };
     window.addEventListener('message', handleMessage);
@@ -420,12 +493,21 @@ const BrowserApp = () => {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [activeTabId]);
+  }, [activeTabId, tabs]);
 
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleStorageChange = (e?: StorageEvent) => {
       const savedEngine = localStorage.getItem('aisha-search-engine') || 'google';
       setSearchEngine(savedEngine);
+      
+      if (!e || e.key === 'aisha-show-home-button') {
+        const savedShowHome = localStorage.getItem('aisha-show-home-button');
+        setShowHomeButton(savedShowHome ? JSON.parse(savedShowHome) : true);
+      }
+      if (!e || e.key === 'aisha-show-bookmarks-bar') {
+        const savedShowBookmarks = localStorage.getItem('aisha-show-bookmarks-bar');
+        setShowBookmarksButton(savedShowBookmarks ? JSON.parse(savedShowBookmarks) : true);
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -526,8 +608,8 @@ const BrowserApp = () => {
         }
         const currentTab = tabs.find(t => t.id === tabId);
         if (!currentTab) return;
-        const newHistory = isIncognito ? [DEFAULT_URL, newUrl] : currentTab.history.slice(0, currentTab.currentIndex + 1);
-        if (!isIncognito) newHistory.push(newUrl);
+        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
+        newHistory.push(newUrl);
 
         const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
         updateTab(tabId, { 
@@ -556,8 +638,8 @@ const BrowserApp = () => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
     
-    const newHistory = isIncognito ? [DEFAULT_URL, newUrl] : tab.history.slice(0, tab.currentIndex + 1);
-    if(!isIncognito) newHistory.push(newUrl);
+    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
+    newHistory.push(newUrl);
 
     updateTab(tabId, { 
         history: newHistory,
@@ -589,9 +671,7 @@ const BrowserApp = () => {
     const currentUrl = activeTab.history[activeTab.currentIndex];
     
     if (currentUrl.startsWith('about:')) {
-      // For internal pages, we can simply re-render
       const currentTabId = activeTabId;
-      // A little hack to force re-render of internal component
       setActiveTabId('');
       setTimeout(() => setActiveTabId(currentTabId), 0);
       toast({ title: "Page reloaded." });
@@ -623,38 +703,39 @@ const BrowserApp = () => {
   const handleIframeLoad = (tabId: string) => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
-  
+
     const iframe = iframeRefs.current[tabId];
     let title = "Untitled";
     let loadFailed = false;
-  
+
     try {
-      if (iframe && iframe.contentWindow) {
-        // Attempt to access document.title. This will throw for cross-origin.
-        title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
-      } else {
-        // Fallback for when contentWindow is not accessible
-        title = new URL(tab.history[tab.currentIndex]).hostname;
-      }
-    } catch (e) {
-      // Cross-origin access failed. This is expected.
-      try {
-        title = new URL(tab.history[tab.currentIndex]).hostname;
-      } catch {
-        title = "Invalid URL";
-        loadFailed = true;
-      }
-      
-      // A timeout check to see if the iframe is actually empty (blocked)
-      setTimeout(() => {
-        try {
-          if (iframe && iframe.contentWindow && !iframe.contentWindow.document.body.innerHTML) {
-            updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
-          }
-        } catch (error) {
-          // Cross-origin access failed, which is ok for loaded pages.
+        if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
+            title = iframe.contentWindow.document.title;
+        } else {
+             title = new URL(tab.history[tab.currentIndex]).hostname;
         }
-      }, 500);
+    } catch (e) {
+        try {
+            title = new URL(tab.history[tab.currentIndex]).hostname;
+             // Check if the page is blocked after a short delay
+             setTimeout(() => {
+                try {
+                    // This will throw if it's cross-origin and blocked.
+                    const doc = iframe?.contentWindow?.document;
+                    if (doc && (doc.body.innerHTML === "" || doc.body.childElementCount === 0)) {
+                         updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
+                    }
+                } catch (error) {
+                    // This is expected for successfully loaded cross-origin pages.
+                    // The page is not blocked, but we can't access it.
+                    updateTab(tabId, { isLoading: false, loadFailed: false, title });
+                }
+            }, 500);
+
+        } catch {
+            title = "Invalid URL";
+            loadFailed = true;
+        }
     }
   
     updateTab(tabId, { isLoading: false, title, loadFailed: loadFailed || tab.loadFailed });
@@ -859,12 +940,40 @@ const BrowserApp = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      toast({
-        title: "Image selected",
-        description: `${file.name} - Image search is not yet implemented.`,
-      });
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageDataUri = e.target?.result as string;
+        if (!imageDataUri) {
+          toast({
+            title: 'Could not read image',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        toast({
+          title: 'Analyzing image...',
+          description: 'AI is generating a search query for your image.',
+        });
+        
+        try {
+          const result = await describeImage({ imageDataUri });
+          if (result.description) {
+            handleNavigation(activeTabId, result.description);
+          } else {
+            throw new Error("AI could not describe the image.");
+          }
+        } catch (error) {
+          console.error("Image search error:", error);
+          toast({
+            title: "Image Search Failed",
+            description: "Could not get a description from the AI.",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsDataURL(file);
     }
-    // clear the input value so the same file can be selected again
     event.target.value = '';
   };
 
@@ -1247,7 +1356,7 @@ const BrowserApp = () => {
       <MessageSquareWarning className="w-16 h-16 text-destructive mb-4" />
       <h2 className="text-2xl font-bold mb-2">This page can't be displayed</h2>
       <p className="text-muted-foreground max-w-md mb-6">
-        The website at <span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span> may not allow itself to be embedded.
+        The website at <span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span> may not allow itself to be embedded. Some sites use this for security.
       </p>
       <Button onClick={() => window.open(url, '_blank')}>
         <ExternalLink className="w-4 h-4 mr-2" />
@@ -1354,9 +1463,9 @@ const BrowserApp = () => {
                 <Button variant="ghost" size="icon" onClick={reload}>
                   {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={goHome}>
+                {showHomeButton && (<Button variant="ghost" size="icon" onClick={goHome}>
                   <Home className="w-5 h-5" />
-                </Button>
+                </Button>)}
               </div>
               <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
                 {isInternalPage ? (
@@ -1419,14 +1528,14 @@ const BrowserApp = () => {
               </div>
               
               <div className="flex items-center gap-2 ml-2">
-                <Tooltip>
+                {showBookmarksButton && <Tooltip>
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Bookmarks</p>
                     </TooltipContent>
-                </Tooltip>
+                </Tooltip>}
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
@@ -1793,6 +1902,8 @@ const BrowserApp = () => {
               setAssistantInput={setAssistantInput}
               handleAssistantSubmit={handleAssistantSubmit}
               toast={toast}
+              isAssistantListening={isAssistantListening}
+              handleAssistantVoiceSearch={handleAssistantVoiceSearch}
             />}
           </div>
         </div>
@@ -1857,6 +1968,8 @@ const BrowserApp = () => {
                       setAssistantInput={setAssistantInput}
                       handleAssistantSubmit={handleAssistantSubmit}
                       toast={toast}
+                      isAssistantListening={isAssistantListening}
+                      handleAssistantVoiceSearch={handleAssistantVoiceSearch}
                     />
                 </DialogContent>
             </Dialog>
@@ -1894,6 +2007,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
