@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
+import React, { useState, useRef, useEffect, KeyboardEvent, useCallback } from "react";
 import Image from 'next/image';
 import {
   ArrowLeft,
@@ -229,6 +229,131 @@ type AssistantMessage = {
   role: 'user' | 'assistant';
   content: string;
 }
+
+const AishaAssistant = ({
+  isMobile = false,
+  assistantMessages,
+  isAssistantLoading,
+  assistantInput,
+  setAssistantInput,
+  handleAssistantSubmit,
+  toast,
+}: {
+  isMobile?: boolean;
+  assistantMessages: AssistantMessage[];
+  isAssistantLoading: boolean;
+  assistantInput: string;
+  setAssistantInput: (value: string) => void;
+  handleAssistantSubmit: () => void;
+  toast: (options: any) => void;
+}) => (
+  <aside className={cn("p-2 flex flex-col",
+      isMobile
+      ? "flex-1 h-full bg-background"
+      : "w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+  )}>
+     <ScrollArea className="flex-1 pr-2">
+      <div className="p-2 space-y-4">
+        {assistantMessages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
+            <Sparkles className="w-16 h-16 text-muted-foreground/50 mb-4" />
+            <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
+            <p className="text-sm text-muted-foreground mt-2">Ask me anything to get started.</p>
+          </div>
+        ) : (
+          assistantMessages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex items-start gap-3 ${
+                message.role === 'user' ? 'justify-end' : ''
+              }`}
+            >
+              {message.role === 'assistant' && (
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback><Sparkles /></AvatarFallback>
+                </Avatar>
+              )}
+              <div
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary'
+                }`}
+              >
+                {message.content}
+              </div>
+               {message.role === 'user' && (
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
+                  <AvatarFallback><User/></AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+          ))
+        )}
+        {isAssistantLoading && (
+          <div className="flex items-start gap-3">
+            <Avatar className="w-8 h-8">
+               <AvatarFallback><Sparkles /></AvatarFallback>
+            </Avatar>
+            <div className="bg-secondary rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+              <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-0"></div>
+              <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-150"></div>
+              <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-300"></div>
+            </div>
+          </div>
+        )}
+      </div>
+    </ScrollArea>
+    <div className="p-2 bg-background/70 rounded-lg mt-2">
+      <Textarea
+        placeholder="Ask anything..."
+        className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none"
+        value={assistantInput}
+        onChange={(e) => setAssistantInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && assistantInput.trim()) {
+            e.preventDefault();
+            handleAssistantSubmit();
+          }
+        }}
+        disabled={isAssistantLoading}
+      />
+      <div className="mt-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => toast({ title: 'Search in assistant is not implemented.' })}>
+            <Globe className="mr-2 h-4 w-4" />
+            Search
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Attachments are not implemented.' })}>
+              <Paperclip className="w-5 h-5 text-muted-foreground" />
+          </Button>
+          {assistantInput.trim() ? (
+            <Button 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={handleAssistantSubmit} 
+                disabled={isAssistantLoading}
+            >
+                <ArrowUp className="w-5 h-5" />
+            </Button>
+          ) : (
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => toast({title: "Voice input for assistant is not yet implemented."})}
+            >
+                <Mic className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  </aside>
+);
 
 const BrowserApp = () => {
   const [tabs, setTabs] = useState<Tab[]>([
@@ -505,14 +630,14 @@ const BrowserApp = () => {
   
     try {
       if (iframe && iframe.contentWindow) {
-        // This will throw for cross-origin, which is caught below
+        // Attempt to access document.title. This will throw for cross-origin.
         title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
       } else {
         // Fallback for when contentWindow is not accessible
         title = new URL(tab.history[tab.currentIndex]).hostname;
       }
     } catch (e) {
-      // This is expected for cross-origin iframes.
+      // Cross-origin access failed. This is expected.
       try {
         title = new URL(tab.history[tab.currentIndex]).hostname;
       } catch {
@@ -520,14 +645,14 @@ const BrowserApp = () => {
         loadFailed = true;
       }
       
-      // A secondary check to see if the page is truly blocked
+      // A timeout check to see if the iframe is actually empty (blocked)
       setTimeout(() => {
         try {
           if (iframe && iframe.contentWindow && !iframe.contentWindow.document.body.innerHTML) {
             updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
           }
         } catch (error) {
-          // Cross-origin access failed, which is ok and expected for loaded pages.
+          // Cross-origin access failed, which is ok for loaded pages.
         }
       }, 500);
     }
@@ -743,24 +868,26 @@ const BrowserApp = () => {
     event.target.value = '';
   };
 
-  const handleAssistantSubmit = async () => {
+  const handleAssistantSubmit = useCallback(async () => {
     if (!assistantInput.trim()) return;
+
+    const userInput = assistantInput;
+    const userMessage: AssistantMessage = { role: 'user', content: userInput };
 
     const newMessages: AssistantMessage[] = [
       ...assistantMessages,
-      { role: 'user', content: assistantInput },
+      userMessage,
     ];
     setAssistantMessages(newMessages);
     setAssistantInput('');
     setIsAssistantLoading(true);
 
     try {
-      // Using summarizeText as a proxy for a general assistant flow
-      const result = await summarizeText({ text: assistantInput });
-      setAssistantMessages([
-        ...newMessages,
-        { role: 'assistant', content: result.summary },
-      ]);
+      const result = await summarizeText({ text: userInput });
+      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
+      
+      setAssistantMessages([...newMessages, assistantMessage]);
+
     } catch (error) {
       console.error("Assistant error:", error);
       toast({
@@ -768,12 +895,11 @@ const BrowserApp = () => {
         description: "Could not get a response from the assistant.",
         variant: "destructive",
       });
-      // remove the user's message if the call fails
       setAssistantMessages(assistantMessages);
     } finally {
       setIsAssistantLoading(false);
     }
-  };
+  }, [assistantInput, assistantMessages, toast]);
 
   const handleFind = () => {
     if(!isFindOpen) {
@@ -1114,113 +1240,6 @@ const BrowserApp = () => {
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  );
-
-  const AishaAssistant = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <aside className={cn("p-2 flex flex-col",
-        isMobile
-        ? "flex-1 h-full bg-background"
-        : "w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
-    )}>
-       <ScrollArea className="flex-1 pr-2">
-        <div className="p-2 space-y-4">
-          {assistantMessages.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
-              <Sparkles className="w-16 h-16 text-muted-foreground/50 mb-4" />
-              <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
-              <p className="text-sm text-muted-foreground mt-2">Ask me anything to get started.</p>
-            </div>
-          ) : (
-            assistantMessages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex items-start gap-3 ${
-                  message.role === 'user' ? 'justify-end' : ''
-                }`}
-              >
-                {message.role === 'assistant' && (
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback><Sparkles /></AvatarFallback>
-                  </Avatar>
-                )}
-                <div
-                  className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary'
-                  }`}
-                >
-                  {message.content}
-                </div>
-                 {message.role === 'user' && (
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
-                    <AvatarFallback><User/></AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
-            ))
-          )}
-          {isAssistantLoading && (
-            <div className="flex items-start gap-3">
-              <Avatar className="w-8 h-8">
-                 <AvatarFallback><Sparkles /></AvatarFallback>
-              </Avatar>
-              <div className="bg-secondary rounded-lg px-3 py-2 text-sm flex items-center gap-2">
-                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-0"></div>
-                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-150"></div>
-                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-300"></div>
-              </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-      <div className="p-2 bg-background/70 rounded-lg mt-2">
-        <Textarea
-          placeholder="Ask anything..."
-          className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none"
-          value={assistantInput}
-          onChange={(e) => setAssistantInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && assistantInput.trim()) {
-              e.preventDefault();
-              handleAssistantSubmit();
-            }
-          }}
-          disabled={isAssistantLoading}
-        />
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Attachments are not implemented.' })}>
-                <Paperclip className="w-5 h-5 text-muted-foreground" />
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => toast({ title: 'Search in assistant is not implemented.' })}>
-              <Globe className="mr-2 h-4 w-4" />
-              Search
-            </Button>
-          </div>
-          {assistantInput.trim() ? (
-            <Button 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={handleAssistantSubmit} 
-                disabled={isAssistantLoading}
-            >
-                <ArrowUp className="w-5 h-5" />
-            </Button>
-          ) : (
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => toast({title: "Voice input for assistant is not yet implemented."})}
-            >
-                <Mic className="w-5 h-5" />
-            </Button>
-          )}
-        </div>
-      </div>
-    </aside>
   );
 
   const LoadFailedContent = ({ url }: { url: string }) => (
@@ -1766,7 +1785,15 @@ const BrowserApp = () => {
                     </Card>
                 )}
             </main>
-            {!isMobile && isAssistantOpen && <AishaAssistant isMobile={false} />}
+            {!isMobile && isAssistantOpen && <AishaAssistant 
+              isMobile={false}
+              assistantMessages={assistantMessages}
+              isAssistantLoading={isAssistantLoading}
+              assistantInput={assistantInput}
+              setAssistantInput={setAssistantInput}
+              handleAssistantSubmit={handleAssistantSubmit}
+              toast={toast}
+            />}
           </div>
         </div>
 
@@ -1822,7 +1849,15 @@ const BrowserApp = () => {
                             <X className="w-5 h-5 text-muted-foreground" />
                         </Button>
                     </div>
-                    <AishaAssistant isMobile={true} />
+                    <AishaAssistant 
+                      isMobile={true}
+                      assistantMessages={assistantMessages}
+                      isAssistantLoading={isAssistantLoading}
+                      assistantInput={assistantInput}
+                      setAssistantInput={setAssistantInput}
+                      handleAssistantSubmit={handleAssistantSubmit}
+                      toast={toast}
+                    />
                 </DialogContent>
             </Dialog>
         )}
@@ -1859,5 +1894,6 @@ export default function BrowserPage() {
     
 
     
+
 
 
