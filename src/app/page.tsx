@@ -79,6 +79,9 @@ import {
   Video,
   AppWindow,
   ExternalLink,
+  Menu,
+  Play,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -265,6 +268,8 @@ const BrowserApp = () => {
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -494,20 +499,16 @@ const BrowserApp = () => {
     const iframe = iframeRefs.current[tabId];
 
     try {
-      // This will throw a cross-origin error for external sites
       if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
         title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
-        // This is a naive check. A better check might be to see if the document body is empty
         if (iframe.contentWindow.document.body.innerHTML === "") {
           loadFailed = true;
           title = "Blocked";
         }
       } else {
-        // Fallback for when we can't access contentDocument
         throw new Error("Cross-origin frame");
       }
     } catch (error) {
-      // This is expected for cross-origin frames. It's a sign the page has loaded something.
       try {
         const url = new URL(tab.history[tab.currentIndex]);
         title = url.hostname;
@@ -515,25 +516,22 @@ const BrowserApp = () => {
         title = "Invalid URL";
       }
       
-      // We need a way to detect if the page was blocked by X-Frame-Options.
-      // This is tricky. A common (but not foolproof) hack is to check if we can *still* access the location after a timeout.
-      // If we can, it means it's likely still on about:blank and was blocked.
       setTimeout(() => {
         try {
-            if (iframe && iframe.contentWindow && iframe.contentWindow.location.href === 'about:blank') {
-               updateTab(tabId, { isLoading: false, title: "Blocked", loadFailed: true });
-            }
+          if (iframe && iframe.contentWindow) {
+             const canAccess = iframe.contentWindow.document.title;
+             // If we can access, it means it's not a cross-origin blocked frame yet. It might be about:blank
+             // Or it could be a page that allows framing but then navigates.
+             // This is complex. The simple check for about:blank is not reliable as some pages redirect.
+             // A better heuristic is to assume a catch block means a cross-origin page has loaded.
+             // If it fails after a timeout, it's likely blocked.
+          }
         } catch (e) {
-            // If we get an error here, it's a good sign the page loaded something.
-            // So we just update the title and loading state.
-             updateTab(tabId, { isLoading: false, title, loadFailed: false });
+            updateTab(tabId, { isLoading: false, title: "Blocked", loadFailed: true });
         }
-      }, 100);
-      // We return here because the timeout will handle the update.
-      return;
+      }, 500);
     }
     
-    // If no cross-origin error was thrown, update immediately.
     updateTab(tabId, { isLoading: false, title, loadFailed });
   };
   
@@ -798,6 +796,14 @@ const BrowserApp = () => {
       toast({ title: "Can't create QR code for this page." });
     }
   };
+
+  const mobileNavItems = [
+    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:blank') },
+    { icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
+    { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { icon: Bookmark, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+  ];
 
 
   const isInternalPage = currentUrl.startsWith('about:');
@@ -1200,7 +1206,7 @@ const BrowserApp = () => {
       <MessageSquareWarning className="w-16 h-16 text-destructive mb-4" />
       <h2 className="text-2xl font-bold mb-2">This page can't be displayed</h2>
       <p className="text-muted-foreground max-w-md mb-6">
-        The website at <span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span> doesn't allow itself to be embedded in other pages. This is a security feature to protect its content.
+        The website at <span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span> may not allow itself to be embedded.
       </p>
       <Button onClick={() => window.open(url, '_blank')}>
         <ExternalLink className="w-4 h-4 mr-2" />
@@ -1259,10 +1265,17 @@ const BrowserApp = () => {
   return (
     <TooltipProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        <Sidebar onNavigate={(url) => handleNavigation(activeTabId, url)} onSetOpen={setIsSidebarOpen} />
-        <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
+        <div className="hidden md:block">
+          <Sidebar onNavigate={(url) => handleNavigation(activeTabId, url)} onSetOpen={setIsSidebarOpen} />
+        </div>
+        <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
           <header className="flex-shrink-0">
-            <div className="flex items-center justify-center h-10 px-2 bg-background draggable">
+            <div className="flex items-center justify-center h-10 px-2 bg-background draggable relative">
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 md:hidden">
+                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)}>
+                        <Menu className="w-5 h-5" />
+                    </Button>
+                </div>
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold">Aisha Browser</span>
                 </div>
@@ -1760,6 +1773,32 @@ const BrowserApp = () => {
 
         <DeveloperConsole />
         <FeedbackSheet />
+        <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
+                <div className="flex flex-col h-full py-4">
+                    <div className="mb-8 px-4">
+                        <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
+                            <AppWindow className="h-7 w-7 text-cyan-400" />
+                            <span className="ml-4 font-semibold text-lg">Aisha</span>
+                        </button>
+                    </div>
+                    <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1">
+                        {mobileNavItems.map((item, index) => (
+                            <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                                <item.icon className="h-6 w-6" />
+                                <span className="ml-4">{item.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="mt-auto px-4">
+                         <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
+                            <LogOut className="h-6 w-6" />
+                            <span className="ml-4">Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
       </div>
     </TooltipProvider>
   );
