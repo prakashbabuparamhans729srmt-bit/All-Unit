@@ -499,12 +499,8 @@ const BrowserApp = () => {
     const iframe = iframeRefs.current[tabId];
 
     try {
-      if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+      if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
         title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
-        if (iframe.contentWindow.document.body.innerHTML === "") {
-          loadFailed = true;
-          title = "Blocked";
-        }
       } else {
         throw new Error("Cross-origin frame");
       }
@@ -518,16 +514,15 @@ const BrowserApp = () => {
       
       setTimeout(() => {
         try {
-          if (iframe && iframe.contentWindow) {
-             const canAccess = iframe.contentWindow.document.title;
-             // If we can access, it means it's not a cross-origin blocked frame yet. It might be about:blank
-             // Or it could be a page that allows framing but then navigates.
-             // This is complex. The simple check for about:blank is not reliable as some pages redirect.
-             // A better heuristic is to assume a catch block means a cross-origin page has loaded.
-             // If it fails after a timeout, it's likely blocked.
+          // If we can't access this, it's a cross-origin frame, which is expected.
+          // But if the body is empty, it's likely a blocked frame.
+          if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.innerHTML === "") {
+             updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
           }
         } catch (e) {
-            updateTab(tabId, { isLoading: false, title: "Blocked", loadFailed: true });
+            // This catch block means it's a cross origin frame.
+            // We can't determine if it failed to load for sure, so we assume success.
+            updateTab(tabId, { isLoading: false, loadFailed: false, title });
         }
       }, 500);
     }
@@ -1270,45 +1265,37 @@ const BrowserApp = () => {
         </div>
         <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
           <header className="flex-shrink-0">
-            <div className="flex items-center justify-center h-10 px-2 bg-background draggable relative">
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 md:hidden">
-                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)}>
-                        <Menu className="w-5 h-5" />
-                    </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Aisha Browser</span>
-                </div>
-            </div>
-            <div className="flex items-center justify-start pt-1 px-2 non-draggable">
-                <div className="flex items-end">
+            <div className="flex items-end h-11 pt-1 px-1 bg-background draggable">
+              <div className="flex items-end non-draggable">
+                  <div className="md:hidden self-center">
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(true)}>
+                          <Menu className="w-5 h-5" />
+                      </Button>
+                  </div>
                   {tabs.map((tab) => (
-                     <div key={tab.id}
-                        onClick={() => setActiveTabId(tab.id)}
-                        className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
-                        ${activeTabId === tab.id 
-                            ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
-                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
-                        }`}
-                     >
-                        {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
-                        <span className="truncate max-w-[150px]">
-                            {tab.isLoading ? "Loading..." : tab.title}
-                        </span>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20"
-                            onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
-                        >
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
+                      <div
+                          key={tab.id}
+                          onClick={() => setActiveTabId(tab.id)}
+                          className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
+                          ${activeTabId === tab.id
+                              ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
+                              : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
+                          }`}
+                      >
+                          {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
+                          <span className="truncate max-w-[150px]">
+                              {tab.isLoading ? "Loading..." : tab.title}
+                          </span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
+                              <X className="w-4 h-4" />
+                          </Button>
+                      </div>
                   ))}
-                  <Button variant="ghost" size="icon" className="h-9 w-9 ml-1" onClick={addTab}>
-                    <Plus className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center" onClick={addTab}>
+                      <Plus className="w-4 h-4" />
                   </Button>
-                </div>
+              </div>
+              <div className="flex-grow h-full" />
             </div>
             <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
               <div className="flex items-center gap-1">
