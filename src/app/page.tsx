@@ -494,29 +494,30 @@ const BrowserApp = () => {
     const iframe = iframeRefs.current[tabId];
 
     try {
+      // This will throw a cross-origin error for external sites
       if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
         title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
-        
         // This is a naive check. A better check might be to see if the document body is empty
-        // after a short delay, but that's more complex.
-        if (title === "about:blank") {
+        if (iframe.contentWindow.document.body.innerHTML === "") {
           loadFailed = true;
           title = "Blocked";
         }
+      } else {
+        // Fallback for when we can't access contentDocument
+        throw new Error("Cross-origin frame");
       }
     } catch (error) {
-      // Cross-origin access error. This means an external page has loaded.
-      // We can't access its title, so we'll use the hostname from the URL.
+      // This is expected for cross-origin frames. It's a sign the page has loaded something.
       try {
         const url = new URL(tab.history[tab.currentIndex]);
         title = url.hostname;
       } catch {
         title = "Invalid URL";
       }
-
-      // Check if the iframe is still on about:blank after trying to load, which suggests a block.
-      // This is a race condition, so we check again.
-      // We add a small timeout to let the page potentially redirect.
+      
+      // We need a way to detect if the page was blocked by X-Frame-Options.
+      // This is tricky. A common (but not foolproof) hack is to check if we can *still* access the location after a timeout.
+      // If we can, it means it's likely still on about:blank and was blocked.
       setTimeout(() => {
         try {
             if (iframe && iframe.contentWindow && iframe.contentWindow.location.href === 'about:blank') {
@@ -524,15 +525,16 @@ const BrowserApp = () => {
             }
         } catch (e) {
             // If we get an error here, it's a good sign the page loaded something.
+            // So we just update the title and loading state.
+             updateTab(tabId, { isLoading: false, title, loadFailed: false });
         }
       }, 100);
+      // We return here because the timeout will handle the update.
+      return;
     }
     
-    // Only update if we haven't already marked it as failed by the timeout
-    const currentTabState = tabs.find(t => t.id === tabId);
-    if (currentTabState && !currentTabState.loadFailed) {
-       updateTab(tabId, { isLoading: false, title, loadFailed });
-    }
+    // If no cross-origin error was thrown, update immediately.
+    updateTab(tabId, { isLoading: false, title, loadFailed });
   };
   
   const addTab = () => {
@@ -1260,15 +1262,9 @@ const BrowserApp = () => {
         <Sidebar onNavigate={(url) => handleNavigation(activeTabId, url)} onSetOpen={setIsSidebarOpen} />
         <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-16'}`}>
           <header className="flex-shrink-0">
-            <div className="flex items-center justify-between h-10 px-2 bg-background draggable">
+            <div className="flex items-center justify-center h-10 px-2 bg-background draggable">
                 <div className="flex items-center gap-2">
-                    <AppWindow className="w-5 h-5 text-muted-foreground" />
                     <span className="text-sm font-semibold">Aisha Browser</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="w-8 h-8 non-draggable" onClick={() => toast({title: "Window controls are cosmetic."})}><Minus className="w-5 h-5"/></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 non-draggable" onClick={() => toast({title: "Window controls are cosmetic."})}><Square className="w-4 h-4"/></Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8 hover:bg-red-500 non-draggable" onClick={() => toast({title: "Window controls are cosmetic."})}><X className="w-5 h-5"/></Button>
                 </div>
             </div>
             <div className="flex items-center justify-start pt-1 px-2 non-draggable">
