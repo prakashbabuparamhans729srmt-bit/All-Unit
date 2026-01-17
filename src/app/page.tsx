@@ -82,6 +82,7 @@ import {
   Menu,
   Play,
   History,
+  Paperclip,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -495,39 +496,42 @@ const BrowserApp = () => {
     if (!tab) return;
   
     let title = "Untitled";
-    let loadFailed = false;
     const iframe = iframeRefs.current[tabId];
+    let loadFailed = false;
 
     try {
+      // Try to access the title. If it fails, it's a cross-origin frame.
       if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
-        title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
-      } else {
-        throw new Error("Cross-origin frame");
+        title = iframe.contentWindow.document.title;
+      }
+      // If title is empty, it might be a blocked page
+      if (title === "") {
+        loadFailed = true;
+        title = "Blocked";
       }
     } catch (error) {
+      // This catch block is expected for cross-origin frames.
+      // We can't access the title, so we'll derive it from the URL.
       try {
-        const url = new URL(tab.history[tab.currentIndex]);
-        title = url.hostname;
+        title = new URL(tab.history[tab.currentIndex]).hostname;
       } catch {
         title = "Invalid URL";
+        loadFailed = true;
       }
-      
+      // A secondary check after a short delay to see if the iframe body is empty,
+      // which is a strong indicator of a blocked frame.
       setTimeout(() => {
         try {
-          // If we can't access this, it's a cross-origin frame, which is expected.
-          // But if the body is empty, it's likely a blocked frame.
-          if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.innerHTML === "") {
-             updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
+          if (iframe && iframe.contentWindow && iframe.contentWindow.document.body.childNodes.length === 0) {
+            updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
           }
         } catch (e) {
-            // This catch block means it's a cross origin frame.
-            // We can't determine if it failed to load for sure, so we assume success.
-            updateTab(tabId, { isLoading: false, loadFailed: false, title });
+          // Cross-origin access error, which is fine. We assume it loaded.
         }
       }, 500);
     }
     
-    updateTab(tabId, { isLoading: false, title, loadFailed });
+    updateTab(tabId, { isLoading: false, title, loadFailed: loadFailed });
   };
   
   const addTab = () => {
@@ -1167,30 +1171,73 @@ const BrowserApp = () => {
         </div>
       </ScrollArea>
       <div className="p-2 bg-background/70 rounded-lg mt-2">
-        <div className="relative">
-          <Textarea 
-            placeholder="Ask anything..."
-            className="bg-secondary border-none rounded-lg p-3 pr-12 h-auto min-h-[48px] resize-none"
-            value={assistantInput}
-            onChange={e => setAssistantInput(e.target.value)}
-            onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleAssistantSubmit();
-                }
-            }}
-            disabled={isAssistantLoading}
-          />
-          <div className="absolute bottom-2 right-2 flex items-center gap-1">
-            <Button 
-                size="icon" 
-                className="w-8 h-8 bg-cyan-500 hover:bg-cyan-600"
-                onClick={handleAssistantSubmit}
-                disabled={isAssistantLoading || !assistantInput.trim()}
+        <Textarea
+          placeholder="Ask anything..."
+          className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none"
+          value={assistantInput}
+          onChange={(e) => setAssistantInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleAssistantSubmit();
+            }
+          }}
+          disabled={isAssistantLoading}
+        />
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleAssistantSubmit}
+              disabled={isAssistantLoading || !assistantInput.trim()}
             >
-              <Sparkles className="w-5 h-5"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="mr-2 h-4 w-4"
+              >
+                <ellipse
+                  cx="8"
+                  cy="8"
+                  rx="7"
+                  ry="3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  transform="rotate(0 8 8)"
+                />
+                <ellipse
+                  cx="8"
+                  cy="8"
+                  rx="7"
+                  ry="3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  transform="rotate(60 8 8)"
+                />
+                <ellipse
+                  cx="8"
+                  cy="8"
+                  rx="7"
+                  ry="3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  transform="rotate(120 8 8)"
+                />
+              </svg>
+              DeepThink
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => toast({ title: 'Search in assistant is not implemented.' })}>
+              <Globe className="mr-2 h-4 w-4" />
+              Search
             </Button>
           </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Attachments are not implemented.' })}>
+            <Paperclip className="w-5 h-5 text-muted-foreground" />
+          </Button>
         </div>
       </div>
     </aside>
@@ -1813,6 +1860,8 @@ export default function BrowserPage() {
     
 
 
+
+    
 
     
 
