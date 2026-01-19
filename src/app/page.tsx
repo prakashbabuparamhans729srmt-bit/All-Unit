@@ -122,10 +122,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
 import { describeImage } from "@/ai/flows/describe-image-flow";
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar, Sidebar, SidebarRail, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import Sidebar from "./components/Sidebar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -405,7 +404,6 @@ const BrowserApp = () => {
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const [isDesktopSite, setIsDesktopSite] = useState(false);
@@ -1046,6 +1044,13 @@ const BrowserApp = () => {
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
+  const navItems = [
+    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:blank') },
+    { icon: History, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
+    { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { icon: Bookmark, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+  ];
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -1416,12 +1421,53 @@ const BrowserApp = () => {
   };
 
   return (
-    <TooltipProvider>
+    <SidebarProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        <div className="hidden md:block">
-          <Sidebar onNavigate={(url) => handleNavigation(activeTabId, url)} onSetOpen={setIsSidebarOpen} />
-        </div>
-        <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
+        <Sidebar collapsible="icon" className="hidden md:block">
+            <SidebarRail />
+            <SidebarHeader>
+                <SidebarMenuButton
+                    onClick={() => handleNavigation(activeTabId, 'about:about')}
+                    tooltip={{ children: 'About Aisha', side: 'right' }}
+                    className="w-full justify-center data-[state=open]:justify-start h-12"
+                >
+                    <AppWindow className="h-7 w-7 text-cyan-400 shrink-0" />
+                    <span className="font-semibold text-lg">Aisha</span>
+                </SidebarMenuButton>
+            </SidebarHeader>
+            <SidebarContent>
+                <SidebarMenu>
+                    {navItems.map((item, index) => (
+                        <SidebarMenuItem key={index}>
+                            <SidebarMenuButton
+                                onClick={item.action}
+                                tooltip={{ children: item.label, side: 'right' }}
+                                className="w-full justify-center data-[state=open]:justify-start h-12"
+                            >
+                                <item.icon className="size-6" />
+                                <span>{item.label}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+            </SidebarContent>
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip={{ children: 'Logout', side: 'right' }}
+                             onClick={() => toast({ title: 'Logout is not implemented.' })}
+                            className="w-full justify-center data-[state=open]:justify-start h-12"
+                        >
+                            <LogOut className="size-6" />
+                            <span>Logout</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
+
+        <div className="flex flex-1 flex-col overflow-hidden">
           <header className="flex-shrink-0">
             <div className="flex items-end h-11 pt-1 px-1 bg-background draggable">
               <div className="flex items-end non-draggable">
@@ -2063,7 +2109,7 @@ const BrowserApp = () => {
             </Dialog>
         )}
       </div>
-    </TooltipProvider>
+    </SidebarProvider>
   );
 }
 
