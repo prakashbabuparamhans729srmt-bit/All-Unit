@@ -249,6 +249,7 @@ const AishaAssistant = React.memo(({
   setIsAssistantOpen,
   setMobileMenuOpen,
   toggleMainSidebar,
+  setMobileSheetContent,
 }: {
   isMobile?: boolean;
   assistantMessages: AssistantMessage[];
@@ -263,6 +264,7 @@ const AishaAssistant = React.memo(({
   setIsAssistantOpen: (open: boolean) => void;
   setMobileMenuOpen: (open: boolean) => void;
   toggleMainSidebar: () => void;
+  setMobileSheetContent: (content: 'nav' | 'chat') => void;
 }) => (
   <aside className={cn("flex flex-col",
       isMobile
@@ -273,6 +275,7 @@ const AishaAssistant = React.memo(({
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={() => {
           if (isMobile && setIsAssistantOpen && setMobileMenuOpen) {
+            setMobileSheetContent('chat');
             setIsAssistantOpen(false);
             setMobileMenuOpen(true);
           } else if (toggleMainSidebar) {
@@ -440,6 +443,7 @@ const BrowserApp = () => {
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSheetContent, setMobileSheetContent] = useState<'nav' | 'chat'>('nav');
   const isMobile = useIsMobile();
   const [isDesktopSite, setIsDesktopSite] = useState(false);
   
@@ -1464,35 +1468,128 @@ const BrowserApp = () => {
     }
   };
 
+  const ChatHistorySidebarContent = () => (
+    <>
+      <SidebarHeader>
+        <div className="flex h-12 w-full items-center gap-2 p-2 justify-center data-[state=open]:justify-start">
+            <Sparkles className="h-7 w-7 text-purple-400 shrink-0" />
+            <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Chat History</span>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <div className="p-2 flex flex-col h-full">
+          <Button variant="outline" className="w-full justify-center data-[state=open]:justify-start">
+              <Plus className="h-4 w-4" />
+              <span className="ml-2 group-data-[collapsible=icon]:hidden">New Chat</span>
+          </Button>
+          <ScrollArea className="flex-1 mt-4 group-data-[collapsible=icon]:hidden">
+              <div className="space-y-1">
+                  <p className="px-2 text-xs font-semibold text-muted-foreground/80">Today</p>
+                  <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Summarize recent news about AI</Button>
+                  <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Help me debug a React component</Button>
+                  <p className="px-2 pt-4 text-xs font-semibold text-muted-foreground/80">Yesterday</p>
+                  <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Brainstorm ideas for a new side project</Button>
+                  <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Translate 'Hello World' to Japanese</Button>
+              </div>
+          </ScrollArea>
+        </div>
+      </SidebarContent>
+    </>
+  );
+
+  const NavigationSidebarContent = () => (
+    <>
+      <SidebarHeader>
+          <SidebarMenuButton
+              onClick={() => handleNavigation(activeTabId, 'about:about')}
+              tooltip={{ children: 'About Aisha', side: 'right' }}
+              className="w-full justify-center data-[state=open]:justify-start h-12"
+          >
+              <AppWindow className="h-7 w-7 text-cyan-400 shrink-0" />
+              <span className="font-semibold text-lg">Aisha</span>
+          </SidebarMenuButton>
+      </SidebarHeader>
+      <SidebarContent>
+          <SidebarMenu>
+              {navItems.map((item, index) => (
+                  <SidebarMenuItem key={index}>
+                      <SidebarMenuButton
+                          onClick={item.action}
+                          tooltip={{ children: item.label, side: 'right' }}
+                          className="w-full justify-center data-[state=open]:justify-start h-12"
+                      >
+                          <item.icon className="size-6" />
+                          <span>{item.label}</span>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+              ))}
+          </SidebarMenu>
+      </SidebarContent>
+    </>
+  );
+  
+  const ChatHistorySheetContent = () => (
+    <div className="flex flex-col h-full py-4">
+        <div className="mb-4 px-4">
+            <div className="flex items-center justify-start w-full p-2 rounded-lg">
+                <Sparkles className="h-7 w-7 text-purple-400" />
+                <span className="ml-4 font-semibold text-lg">Chat History</span>
+            </div>
+        </div>
+        <div className="px-4 mb-4">
+            <Button variant="outline" className="w-full justify-center">
+                <Plus className="h-4 w-4 mr-2" />
+                New Chat
+            </Button>
+        </div>
+        <ScrollArea className="flex-1 px-2">
+            <div className="space-y-1 px-2">
+                <p className="px-2 text-xs font-semibold text-muted-foreground/80">Today</p>
+                <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Summarize recent news about AI</Button>
+                <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Help me debug a React component</Button>
+                <p className="px-2 pt-4 text-xs font-semibold text-muted-foreground/80">Yesterday</p>
+                <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Brainstorm ideas for a new side project</Button>
+                <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Translate 'Hello World' to Japanese</Button>
+            </div>
+        </ScrollArea>
+        <div className="mt-auto px-4">
+            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
+                <LogOut className="h-6 w-6" />
+                <span className="ml-4">Logout</span>
+            </button>
+        </div>
+    </div>
+  );
+
+  const NavigationSheetContent = () => (
+    <div className="flex flex-col h-full py-4">
+      <div className="mb-8 px-4">
+          <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
+              <AppWindow className="h-7 w-7 text-cyan-400" />
+              <span className="ml-4 font-semibold text-lg">Aisha</span>
+          </button>
+      </div>
+      <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1">
+          {mobileNavItems.map((item, index) => (
+              <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                  <item.icon className="h-6 w-6" />
+                  <span className="ml-4">{item.label}</span>
+              </button>
+          ))}
+      </nav>
+      <div className="mt-auto px-4">
+            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
+              <LogOut className="h-6 w-6" />
+              <span className="ml-4">Logout</span>
+          </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       <Sidebar collapsible="icon">
-          <SidebarHeader>
-              <SidebarMenuButton
-                  onClick={() => handleNavigation(activeTabId, 'about:about')}
-                  tooltip={{ children: 'About Aisha', side: 'right' }}
-                  className="w-full justify-center data-[state=open]:justify-start h-12"
-              >
-                  <AppWindow className="h-7 w-7 text-cyan-400 shrink-0" />
-                  <span className="font-semibold text-lg">Aisha</span>
-              </SidebarMenuButton>
-          </SidebarHeader>
-          <SidebarContent>
-              <SidebarMenu>
-                  {navItems.map((item, index) => (
-                      <SidebarMenuItem key={index}>
-                          <SidebarMenuButton
-                              onClick={item.action}
-                              tooltip={{ children: item.label, side: 'right' }}
-                              className="w-full justify-center data-[state=open]:justify-start h-12"
-                          >
-                              <item.icon className="size-6" />
-                              <span>{item.label}</span>
-                          </SidebarMenuButton>
-                      </SidebarMenuItem>
-                  ))}
-              </SidebarMenu>
-          </SidebarContent>
+          {isAssistantOpen ? <ChatHistorySidebarContent/> : <NavigationSidebarContent />}
           <SidebarFooter>
               <SidebarMenu>
                   <SidebarMenuItem>
@@ -1502,7 +1599,7 @@ const BrowserApp = () => {
                               className="w-full justify-center data-[state=open]:justify-start h-12"
                           >
                               <PanelLeft className="size-6" />
-                              <span>Collapse</span>
+                              <span className="group-data-[collapsible=icon]:hidden">Collapse</span>
                           </SidebarMenuButton>
                       </SidebarTrigger>
                   </SidebarMenuItem>
@@ -1513,7 +1610,7 @@ const BrowserApp = () => {
                           className="w-full justify-center data-[state=open]:justify-start h-12"
                       >
                           <LogOut className="size-6" />
-                          <span>Logout</span>
+                          <span className="group-data-[collapsible=icon]:hidden">Logout</span>
                       </SidebarMenuButton>
                   </SidebarMenuItem>
               </SidebarMenu>
@@ -1525,7 +1622,7 @@ const BrowserApp = () => {
           <div className="flex items-end h-10 pt-1 px-1 bg-background draggable">
             <div className="flex items-end non-draggable">
                 <div className="md:hidden self-center">
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(true)}>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => { setMobileSheetContent('nav'); setMobileMenuOpen(true); }}>
                         <Menu className="w-5 h-5" />
                     </Button>
                 </div>
@@ -2095,6 +2192,7 @@ const BrowserApp = () => {
             setIsAssistantOpen={setIsAssistantOpen}
             setMobileMenuOpen={setMobileMenuOpen}
             toggleMainSidebar={toggleMainSidebar}
+            setMobileSheetContent={setMobileSheetContent}
           />}
         </div>
       </div>
@@ -2118,28 +2216,7 @@ const BrowserApp = () => {
       <FeedbackSheet />
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
-              <div className="flex flex-col h-full py-4">
-                  <div className="mb-8 px-4">
-                      <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
-                          <AppWindow className="h-7 w-7 text-cyan-400" />
-                          <span className="ml-4 font-semibold text-lg">Aisha</span>
-                      </button>
-                  </div>
-                  <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1">
-                      {mobileNavItems.map((item, index) => (
-                          <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                              <item.icon className="h-6 w-6" />
-                              <span className="ml-4">{item.label}</span>
-                          </button>
-                      ))}
-                  </nav>
-                  <div className="mt-auto px-4">
-                       <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
-                          <LogOut className="h-6 w-6" />
-                          <span className="ml-4">Logout</span>
-                      </button>
-                  </div>
-              </div>
+              {mobileSheetContent === 'chat' ? <ChatHistorySheetContent /> : <NavigationSheetContent />}
           </SheetContent>
       </Sheet>
       {isMobile && (
@@ -2159,6 +2236,7 @@ const BrowserApp = () => {
                     setIsAssistantOpen={setIsAssistantOpen}
                     setMobileMenuOpen={setMobileMenuOpen}
                     toggleMainSidebar={toggleMainSidebar}
+                    setMobileSheetContent={setMobileSheetContent}
                   />
               </DialogContent>
           </Dialog>
@@ -2167,7 +2245,7 @@ const BrowserApp = () => {
         variant="secondary"
         size="icon"
         className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
-        onClick={() => setMobileMenuOpen(true)}
+        onClick={() => { setMobileSheetContent('nav'); setMobileMenuOpen(true); }}
       >
         <Menu className="w-6 h-6" />
       </Button>
@@ -2212,4 +2290,5 @@ export default function BrowserPage() {
 
 
     
+
 
