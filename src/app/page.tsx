@@ -237,6 +237,7 @@ type AssistantMessage = {
 const AishaAssistant = React.memo(({
   isMobile = false,
   assistantMessages,
+  setAssistantMessages,
   isAssistantLoading,
   assistantInput,
   setAssistantInput,
@@ -244,9 +245,13 @@ const AishaAssistant = React.memo(({
   toast,
   isAssistantListening,
   handleAssistantVoiceSearch,
+  setIsAssistantOpen,
+  setMobileMenuOpen,
+  toggleMainSidebar,
 }: {
   isMobile?: boolean;
   assistantMessages: AssistantMessage[];
+  setAssistantMessages: (messages: AssistantMessage[]) => void;
   isAssistantLoading: boolean;
   assistantInput: string;
   setAssistantInput: (value: string) => void;
@@ -254,12 +259,40 @@ const AishaAssistant = React.memo(({
   toast: (options: any) => void;
   isAssistantListening: boolean;
   handleAssistantVoiceSearch: () => void;
+  setIsAssistantOpen: (open: boolean) => void;
+  setMobileMenuOpen: (open: boolean) => void;
+  toggleMainSidebar: () => void;
 }) => (
-  <aside className={cn("p-2 flex flex-col",
+  <aside className={cn("flex flex-col",
       isMobile
       ? "flex-1 h-full bg-background"
       : "w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
   )}>
+    <div className="flex items-center p-2 border-b shrink-0">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={() => {
+          if (isMobile && setIsAssistantOpen && setMobileMenuOpen) {
+            setIsAssistantOpen(false);
+            setMobileMenuOpen(true);
+          } else if (toggleMainSidebar) {
+            toggleMainSidebar();
+          }
+        }}>
+            <Menu className="w-5 h-5 text-muted-foreground" />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => toast({ title: "Get App is not implemented." })}>
+            <Laptop className="w-4 h-4 mr-2"/>
+            Get App
+        </Button>
+      </div>
+      <div className="flex-grow" />
+      <Button variant="ghost" size="icon" onClick={() => {
+        setAssistantMessages([]);
+        toast({ title: "New chat started." });
+      }}>
+          <PlusSquare className="w-5 h-5 text-muted-foreground" />
+      </Button>
+    </div>
      <ScrollArea className="flex-1 pr-2">
       <div className="p-2 space-y-4">
         {assistantMessages.length === 0 ? (
@@ -414,6 +447,7 @@ const BrowserApp = () => {
   
   const assistantRecognitionRef = useRef<any>(null);
   const [isAssistantListening, setIsAssistantListening] = useState(false);
+  const { toggleSidebar: toggleMainSidebar } = useSidebar();
 
   const handleAssistantVoiceSearch = () => {
     if (isAssistantListening) {
@@ -449,6 +483,9 @@ const BrowserApp = () => {
     assistantRecognitionRef.current.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setAssistantInput(transcript);
+      if(transcript) {
+        handleAssistantSubmit(transcript);
+      }
     };
 
     assistantRecognitionRef.current.start();
@@ -986,10 +1023,11 @@ const BrowserApp = () => {
     event.target.value = '';
   };
 
-  const handleAssistantSubmit = useCallback(async () => {
-    if (!assistantInput.trim()) return;
+  const handleAssistantSubmit = useCallback(async (text?: string) => {
+    const currentInput = text || assistantInput;
+    if (!currentInput.trim()) return;
 
-    const userInput = assistantInput;
+    const userInput = currentInput;
     const userMessage: AssistantMessage = { role: 'user', content: userInput };
 
     const newMessages: AssistantMessage[] = [
@@ -1426,375 +1464,554 @@ const BrowserApp = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-background text-foreground overflow-hidden">
-        <Sidebar collapsible="icon" className="hidden md:block">
-            <SidebarHeader>
-                <SidebarMenuButton
-                    onClick={() => handleNavigation(activeTabId, 'about:about')}
-                    tooltip={{ children: 'About Aisha', side: 'right' }}
-                    className="w-full justify-center data-[state=open]:justify-start h-12"
-                >
-                    <AppWindow className="h-7 w-7 text-cyan-400 shrink-0" />
-                    <span className="font-semibold text-lg">Aisha</span>
-                </SidebarMenuButton>
-            </SidebarHeader>
-            <SidebarContent>
-                <SidebarMenu>
-                    {navItems.map((item, index) => (
-                        <SidebarMenuItem key={index}>
-                            <SidebarMenuButton
-                                onClick={item.action}
-                                tooltip={{ children: item.label, side: 'right' }}
-                                className="w-full justify-center data-[state=open]:justify-start h-12"
-                            >
-                                <item.icon className="size-6" />
-                                <span>{item.label}</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                </SidebarMenu>
-            </SidebarContent>
-            <SidebarFooter>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarTrigger asChild>
-                            <SidebarMenuButton
-                                tooltip={{ children: 'Toggle sidebar', side: 'right' }}
-                                className="w-full justify-center data-[state=open]:justify-start h-12"
-                            >
-                                <PanelLeft className="size-6" />
-                                <span>Collapse</span>
-                            </SidebarMenuButton>
-                        </SidebarTrigger>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            tooltip={{ children: 'Logout', side: 'right' }}
-                             onClick={() => toast({ title: 'Logout is not implemented.' })}
-                            className="w-full justify-center data-[state=open]:justify-start h-12"
-                        >
-                            <LogOut className="size-6" />
-                            <span>Logout</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
-        </Sidebar>
-
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="flex-shrink-0">
-            <div className="flex items-end h-11 pt-1 px-1 bg-background draggable">
-              <div className="flex items-end non-draggable">
-                  <div className="md:hidden self-center">
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(true)}>
-                          <Menu className="w-5 h-5" />
-                      </Button>
-                  </div>
-                  {tabs.map((tab) => (
-                      <div
-                          key={tab.id}
-                          onClick={() => setActiveTabId(tab.id)}
-                          className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
-                          ${activeTabId === tab.id
-                              ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
-                              : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
-                          }`}
-                      >
-                          {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
-                          <span className="truncate max-w-[150px]">
-                              {tab.isLoading ? "Loading..." : tab.title}
-                          </span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
-                              <X className="w-4 h-4" />
-                          </Button>
-                      </div>
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      <Sidebar collapsible="icon" className="hidden md:block">
+          <SidebarHeader>
+              <SidebarMenuButton
+                  onClick={() => handleNavigation(activeTabId, 'about:about')}
+                  tooltip={{ children: 'About Aisha', side: 'right' }}
+                  className="w-full justify-center data-[state=open]:justify-start h-12"
+              >
+                  <AppWindow className="h-7 w-7 text-cyan-400 shrink-0" />
+                  <span className="font-semibold text-lg">Aisha</span>
+              </SidebarMenuButton>
+          </SidebarHeader>
+          <SidebarContent>
+              <SidebarMenu>
+                  {navItems.map((item, index) => (
+                      <SidebarMenuItem key={index}>
+                          <SidebarMenuButton
+                              onClick={item.action}
+                              tooltip={{ children: item.label, side: 'right' }}
+                              className="w-full justify-center data-[state=open]:justify-start h-12"
+                          >
+                              <item.icon className="size-6" />
+                              <span>{item.label}</span>
+                          </SidebarMenuButton>
+                      </SidebarMenuItem>
                   ))}
-                  <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center" onClick={addTab}>
-                      <Plus className="w-4 h-4" />
-                  </Button>
-              </div>
-              <div className="flex-grow h-full" />
-            </div>
-            <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={reload}>
-                  {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
-                </Button>
-                {showHomeButton && (<Button variant="ghost" size="icon" onClick={goHome}>
-                  <Home className="w-5 h-5" />
-                </Button>)}
-              </div>
-              <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
-                {isInternalPage ? (
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
-                            <Globe className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">Aisha</span>
-                        </div>
-                    </div>
-                ) : (
-                    isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-muted-foreground" /> : <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
-                )}
-                <Input
-                  type="text"
-                  value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleInputKeyDown}
-                  className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  placeholder="Ask anything or navigate..."
-                />
-                <div className="flex items-center gap-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                        <LinkIcon className="w-5 h-5 text-muted-foreground" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Copy link</p></TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                        <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                      </Button>
-                     </TooltipTrigger>
-                     <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                  </Tooltip>
-                   <Tooltip>
-                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" 
-                        onClick={() => {
-                          if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                            const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                            handleNavigation(activeTabId, googleTranslateUrl);
-                          } else {
-                            toast({ title: "Can't translate internal pages." });
-                          }
-                        }}>
-                        <Languages className="w-5 h-5 text-muted-foreground"/>
-                      </Button>
-                     </TooltipTrigger>
-                     <TooltipContent><p>Translate this page</p></TooltipContent>
-                  </Tooltip>
+              </SidebarMenu>
+          </SidebarContent>
+          <SidebarFooter>
+              <SidebarMenu>
+                  <SidebarMenuItem>
+                      <SidebarTrigger asChild>
+                          <SidebarMenuButton
+                              tooltip={{ children: 'Toggle sidebar', side: 'right' }}
+                              className="w-full justify-center data-[state=open]:justify-start h-12"
+                          >
+                              <PanelLeft className="size-6" />
+                              <span>Collapse</span>
+                          </SidebarMenuButton>
+                      </SidebarTrigger>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                      <SidebarMenuButton
+                          tooltip={{ children: 'Logout', side: 'right' }}
+                           onClick={() => toast({ title: 'Logout is not implemented.' })}
+                          className="w-full justify-center data-[state=open]:justify-start h-12"
+                      >
+                          <LogOut className="size-6" />
+                          <span>Logout</span>
+                      </SidebarMenuButton>
+                  </SidebarMenuItem>
+              </SidebarMenu>
+          </SidebarFooter>
+      </Sidebar>
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex-shrink-0">
+          <div className="flex items-end h-11 pt-1 px-1 bg-background draggable">
+            <div className="flex items-end non-draggable">
+                <div className="md:hidden self-center">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(true)}>
+                        <Menu className="w-5 h-5" />
+                    </Button>
                 </div>
-                <Separator orientation="vertical" className="h-6 mx-1" />
-                <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                  {isAssistantOpen ? <X className="w-4 h-4 mr-2"/> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Assistant
+                {tabs.map((tab) => (
+                    <div
+                        key={tab.id}
+                        onClick={() => setActiveTabId(tab.id)}
+                        className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
+                        ${activeTabId === tab.id
+                            ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
+                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
+                        }`}
+                    >
+                        {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
+                        <span className="truncate max-w-[150px]">
+                            {tab.isLoading ? "Loading..." : tab.title}
+                        </span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
+                ))}
+                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center" onClick={addTab}>
+                    <Plus className="w-4 h-4" />
                 </Button>
-              </div>
-              
-              <div className="flex items-center gap-2 ml-2">
-                {showBookmarksButton && <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Bookmarks</p>
-                    </TooltipContent>
-                </Tooltip>}
+            </div>
+            <div className="flex-grow h-full" />
+          </div>
+          <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={reload}>
+                {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
+              </Button>
+              {showHomeButton && (<Button variant="ghost" size="icon" onClick={goHome}>
+                <Home className="w-5 h-5" />
+              </Button>)}
+            </div>
+            <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
+              {isInternalPage ? (
+                  <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
+                          <Globe className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">Aisha</span>
+                      </div>
+                  </div>
+              ) : (
+                  isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-muted-foreground" /> : <Lock className="w-4 h-4 mr-2 text-muted-foreground" />
+              )}
+              <Input
+                type="text"
+                value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
+                placeholder="Ask anything or navigate..."
+              />
+              <div className="flex items-center gap-1">
                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Downloads</p>
-                    </TooltipContent>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Copy link</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+                    </Button>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
                  <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>History</p>
-                    </TooltipContent>
-                </Tooltip>
-                <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <LayoutGrid className="w-5 h-5" />
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" 
+                      onClick={() => {
+                        if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                          const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                          handleNavigation(activeTabId, googleTranslateUrl);
+                        } else {
+                          toast({ title: "Can't translate internal pages." });
+                        }
+                      }}>
+                      <Languages className="w-5 h-5 text-muted-foreground"/>
                     </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80">
-                    <ScrollArea className="h-96">
-                        <div className="grid grid-cols-3 gap-x-4 gap-y-2 p-4">
-                        {companyApps.map((app) => (
-                            <button
-                            key={app.name}
-                            onClick={() => window.open(app.url, '_blank')}
-                            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent text-center"
-                            >
-                            <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-full">
-                                <app.icon className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                            <span className="text-xs">{app.name}</span>
-                            </button>
-                        ))}
-                        </div>
-                    </ScrollArea>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Translate this page</p></TooltipContent>
+                </Tooltip>
+              </div>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                {isAssistantOpen ? <X className="w-4 h-4 mr-2"/> : <Sparkles className="w-4 h-4 mr-2" />}
+                Assistant
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-2 ml-2">
+              {showBookmarksButton && <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>Bookmarks</p>
+                  </TooltipContent>
+              </Tooltip>}
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>Downloads</p>
+                  </TooltipContent>
+              </Tooltip>
+               <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>History</p>
+                  </TooltipContent>
+              </Tooltip>
+              <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                      <LayoutGrid className="w-5 h-5" />
+                  </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-80">
+                  <ScrollArea className="h-96">
+                      <div className="grid grid-cols-3 gap-x-4 gap-y-2 p-4">
+                      {companyApps.map((app) => (
+                          <button
+                          key={app.name}
+                          onClick={() => window.open(app.url, '_blank')}
+                          className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent text-center"
+                          >
+                          <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-full">
+                              <app.icon className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                          <span className="text-xs">{app.name}</span>
+                          </button>
+                      ))}
+                      </div>
+                  </ScrollArea>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                      <Avatar className="w-7 h-7">
+                      <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
+                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                      </Avatar>
+                  </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => toast({title: 'Profile management not implemented.'})}>
+                          <User className="mr-2 h-4 w-4"/>
+                          <span>Manage Profile</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented.'})}>
+                          <LogOut className="mr-2 h-4 w-4"/>
+                          <span>Sign Out</span>
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <div className="hidden md:block">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                        <Avatar className="w-7 h-7">
-                        <AvatarImage src="https://picsum.photos/seed/avatar/32/32" />
-                        <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                        </Avatar>
+                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <MoreVertical className="w-5 h-5" />
                     </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => toast({title: 'Profile management not implemented.'})}>
-                            <User className="mr-2 h-4 w-4"/>
-                            <span>Manage Profile</span>
+                    <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto">
+                        <DropdownMenuItem onSelect={addTab}>
+                            <FilePlus className="mr-2 h-4 w-4" />
+                            <span>New tab</span>
+                            <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented.'})}>
-                            <LogOut className="mr-2 h-4 w-4"/>
-                            <span>Sign Out</span>
+                        <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
+                            <PlusSquare className="mr-2 h-4 w-4" />
+                            <span>New window</span>
+                            <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
+                            <ShieldOff className="mr-2 h-4 w-4" />
+                            <span>New Incognito window</span>
+                            <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
+                            <HistoryIcon className="mr-2 h-4 w-4" />
+                            <span>History</span>
+                            <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Downloads</span>
+                            <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Bookmark className="mr-2 h-4 w-4" />
+                            <span>Bookmarks and lists</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-80">
+                            <DropdownMenuItem onSelect={toggleBookmark}>
+                                <BookmarkPlus className="mr-2 h-4 w-4" />
+                                <span>Bookmark this tab...</span>
+                                <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                                <BookCopy className="mr-2 h-4 w-4" />
+                                <span>Bookmark all tabs...</span>
+                                <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
+                                <BookMarked className="mr-2 h-4 w-4" />
+                                <span>Bookmark manager</span>
+                                <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
+                            {bookmarks.slice(0, 5).map(b => (
+                                <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
+                                    <Star className="mr-2 h-4 w-4 text-yellow-500"/>
+                                    <span className="truncate">{b.title}</span>
+                                </DropdownMenuItem>
+                            ))}
+                            {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <PanelsTopLeft className="mr-2 h-4 w-4" />
+                                <span>Tab groups</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    <span>Create new tab group</span>
+                                </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            <span>Extensions</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                            <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported."})}>
+                                <Puzzle className="mr-2 h-4 w-4" />
+                                <span>Manage Extensions</span>
+                            </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={toggleTheme}>
+                        {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                        <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "Password manager is not available."})}>
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            <span>Passwords and autofill</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "Clearing browsing data is not implemented."})}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Clear browsing data...</span>
+                            <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <ZoomIn className="mr-2 h-4 w-4" />
+                                <span>Zoom</span>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
+                                    <span>{zoomLevel}%</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
+                                </div>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuItem onSelect={() => window.print()}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            <span>Print...</span>
+                            <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                            <Search className="mr-2 h-4 w-4" />
+                            <span>Search with Google Lens</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {
+                            if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                                const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                                handleNavigation(activeTabId, googleTranslateUrl);
+                            } else {
+                                toast({ title: "Can't translate internal pages." });
+                            }
+                        }}>
+                            <Languages className="mr-2 h-4 w-4" />
+                            <span>Translate...</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <Search className="mr-2 h-4 w-4" />
+                                <span>Find and edit</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onSelect={handleFind}>
+                                        <Search className="mr-2 h-4 w-4" />
+                                        <span>Find...</span>
+                                        <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
+                                        <Scissors className="mr-2 h-4 w-4" />
+                                        <span>Cut</span>
+                                        <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
+                                        <Copy className="mr-2 h-4 w-4" />
+                                        <span>Copy</span>
+                                        <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
+                                        const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
+                                        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                                            activeElement.value += text;
+                                        }
+                                    })}>
+                                        <ClipboardPaste className="mr-2 h-4 w-4" />
+                                        <span>Paste</span>
+                                        <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                            <Cast className="mr-2 h-4 w-4" />
+                            <span>Cast, save, and share</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="w-80">
+                                <DropdownMenuItem onSelect={() => toast({title: "Casting is not available in this browser."})}>
+                                    <Cast className="mr-2 h-4 w-4" />
+                                    <span>Cast...</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => window.print()}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    <span>Save page as...</span>
+                                    <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsAddShortcutOpen(true)}>
+                                    <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+                                    <span>Create shortcut...</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={copyLink}>
+                                    <LinkIcon className="mr-2 h-4 w-4" />
+                                    <span>Copy link</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => toast({title: "This feature is only a placeholder."})}>
+                                    <Computer className="mr-2 h-4 w-4" />
+                                    <span>Send to your devices</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={createQRCode}>
+                                    <QrCode className="mr-2 h-4 w-4" />
+                                    <span>Create QR Code</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            <span>More tools</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                <span>Customize Aisha</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                                <Gauge className="mr-2 h-4 w-4" />
+                                <span>Performance</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
+                                <Terminal className="mr-2 h-4 w-4" />
+                                <span>Developer Console</span>
+                            </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Settings</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <HelpCircle className="mr-2 h-4 w-4" />
+                            <span>Help</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
+                                <Info className="mr-2 h-4 w-4"/>
+                                <span>About Aisha</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
+                                <MessageSquare className="mr-2 h-4 w-4"/>
+                                <span>Send Feedback</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                        </DropdownMenuSub>
+
+                        <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Exit</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                
-                <div className="hidden md:block">
+              </div>
+              <div className="block md:hidden">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                          <MoreVertical className="w-5 h-5" />
-                      </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9">
+                              <MoreVertical className="w-5 h-5" />
+                          </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto">
+                      <DropdownMenuContent align="end" className="w-80">
                           <DropdownMenuItem onSelect={addTab}>
-                              <FilePlus className="mr-2 h-4 w-4" />
+                              <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>New tab</span>
-                              <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
-                              <PlusSquare className="mr-2 h-4 w-4" />
-                              <span>New window</span>
-                              <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
-                              <ShieldOff className="mr-2 h-4 w-4" />
+                              <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>New Incognito window</span>
-                              <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
-                              <HistoryIcon className="mr-2 h-4 w-4" />
+                              <HistoryIcon className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>History</span>
-                              <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
-                              <Download className="mr-2 h-4 w-4" />
+                              <Download className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Downloads</span>
-                              <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
                           </DropdownMenuItem>
-                          <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                              <Bookmark className="mr-2 h-4 w-4" />
-                              <span>Bookmarks and lists</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                              <DropdownMenuSubContent className="w-80">
-                              <DropdownMenuItem onSelect={toggleBookmark}>
-                                  <BookmarkPlus className="mr-2 h-4 w-4" />
-                                  <span>Bookmark this tab...</span>
-                                  <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                                  <BookCopy className="mr-2 h-4 w-4" />
-                                  <span>Bookmark all tabs...</span>
-                                  <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
-                                  <BookMarked className="mr-2 h-4 w-4" />
-                                  <span>Bookmark manager</span>
-                                  <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
-                              {bookmarks.slice(0, 5).map(b => (
-                                  <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
-                                      <Star className="mr-2 h-4 w-4 text-yellow-500"/>
-                                      <span className="truncate">{b.title}</span>
-                                  </DropdownMenuItem>
-                              ))}
-                              {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
-                              </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                          <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                  <PanelsTopLeft className="mr-2 h-4 w-4" />
-                                  <span>Tab groups</span>
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuPortal>
-                                  <DropdownMenuSubContent>
-                                  <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                                      <Plus className="mr-2 h-4 w-4" />
-                                      <span>Create new tab group</span>
-                                  </DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                              </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                          <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                              <Sparkles className="mr-2 h-4 w-4" />
-                              <span>Extensions</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                              <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported."})}>
-                                  <Puzzle className="mr-2 h-4 w-4" />
-                                  <span>Manage Extensions</span>
-                              </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={toggleTheme}>
-                          {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
-                          <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
+                              <Star className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>Bookmarks</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => toast({title: "Password manager is not available."})}>
-                              <KeyRound className="mr-2 h-4 w-4" />
-                              <span>Passwords and autofill</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => toast({title: "Clearing browsing data is not implemented."})}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Clear browsing data...</span>
-                              <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
+                          <DropdownMenuItem onSelect={() => toast({ title: "Recent tabs not implemented." })}>
+                              <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>Recent tabs</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuGroup>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                  <ZoomIn className="mr-2 h-4 w-4" />
-                                  <span>Zoom</span>
-                                  <div className="ml-auto flex items-center gap-2">
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
-                                      <span>{zoomLevel}%</span>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
-                                  </div>
-                              </DropdownMenuItem>
-                          </DropdownMenuGroup>
-                          <DropdownMenuItem onSelect={() => window.print()}>
-                              <Printer className="mr-2 h-4 w-4" />
-                              <span>Print...</span>
-                              <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+                          <DropdownMenuItem onSelect={() => toast({ title: "Share feature not implemented." })}>
+                              <Share className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>Share...</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                              <Search className="mr-2 h-4 w-4" />
-                              <span>Search with Google Lens</span>
+                          <DropdownMenuItem onSelect={handleFind}>
+                              <Search className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>Find in page</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => {
                               if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
@@ -1804,341 +2021,164 @@ const BrowserApp = () => {
                                   toast({ title: "Can't translate internal pages." });
                               }
                           }}>
-                              <Languages className="mr-2 h-4 w-4" />
+                              <Languages className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Translate...</span>
                           </DropdownMenuItem>
-                          <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                  <Search className="mr-2 h-4 w-4" />
-                                  <span>Find and edit</span>
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuPortal>
-                                  <DropdownMenuSubContent>
-                                      <DropdownMenuItem onSelect={handleFind}>
-                                          <Search className="mr-2 h-4 w-4" />
-                                          <span>Find...</span>
-                                          <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
-                                          <Scissors className="mr-2 h-4 w-4" />
-                                          <span>Cut</span>
-                                          <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
-                                          <Copy className="mr-2 h-4 w-4" />
-                                          <span>Copy</span>
-                                          <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
-                                          const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
-                                          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-                                              activeElement.value += text;
-                                          }
-                                      })}>
-                                          <ClipboardPaste className="mr-2 h-4 w-4" />
-                                          <span>Paste</span>
-                                          <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
-                                      </DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                              </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                          <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                              <Cast className="mr-2 h-4 w-4" />
-                              <span>Cast, save, and share</span>
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuPortal>
-                              <DropdownMenuSubContent className="w-80">
-                                  <DropdownMenuItem onSelect={() => toast({title: "Casting is not available in this browser."})}>
-                                      <Cast className="mr-2 h-4 w-4" />
-                                      <span>Cast...</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onSelect={() => window.print()}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      <span>Save page as...</span>
-                                      <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => setIsAddShortcutOpen(true)}>
-                                      <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
-                                      <span>Create shortcut...</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onSelect={copyLink}>
-                                      <LinkIcon className="mr-2 h-4 w-4" />
-                                      <span>Copy link</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => toast({title: "This feature is only a placeholder."})}>
-                                      <Computer className="mr-2 h-4 w-4" />
-                                      <span>Send to your devices</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={createQRCode}>
-                                      <QrCode className="mr-2 h-4 w-4" />
-                                      <span>Create QR Code</span>
-                                  </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                              </DropdownMenuPortal>
-                          </DropdownMenuSub>
-                          <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                              <Sparkles className="mr-2 h-4 w-4" />
-                              <span>More tools</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                              <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  <span>Customize Aisha</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
-                                  <Gauge className="mr-2 h-4 w-4" />
-                                  <span>Performance</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
-                                  <Terminal className="mr-2 h-4 w-4" />
-                                  <span>Developer Console</span>
-                              </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                          </DropdownMenuSub>
+                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => toast({ title: "Add to Home Screen not implemented." })}>
+                              <PlusSquare className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>Add to Home screen</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuCheckboxItem
+                              checked={isDesktopSite}
+                              onCheckedChange={(checked) => {
+                                  setIsDesktopSite(checked as boolean);
+                                  toast({ title: `Desktop site ${checked ? 'enabled' : 'disabled'}. Page reload may be required.` });
+                              }}
+                          >
+                              <div className="flex items-center">
+                                  <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
+                                  <span>Desktop site</span>
+                              </div>
+                          </DropdownMenuCheckboxItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                              <Settings className="mr-2 h-4 w-4" />
+                              <Settings className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Settings</span>
                           </DropdownMenuItem>
-                          <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                              <HelpCircle className="mr-2 h-4 w-4" />
-                              <span>Help</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
-                                  <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
-                                  <Info className="mr-2 h-4 w-4"/>
-                                  <span>About Aisha</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
-                                  <MessageSquare className="mr-2 h-4 w-4"/>
-                                  <span>Send Feedback</span>
-                                  </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                          </DropdownMenuSub>
-
-                          <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
-                              <LogOut className="mr-2 h-4 w-4" />
-                              <span>Exit</span>
+                          <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
+                              <HelpCircle className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>Help & feedback</span>
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-                <div className="block md:hidden">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9">
-                                <MoreVertical className="w-5 h-5" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-80">
-                            <DropdownMenuItem onSelect={addTab}>
-                                <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>New tab</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
-                                <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>New Incognito window</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
-                                <HistoryIcon className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>History</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
-                                <Download className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Downloads</span>
-                            </DropdownMenuItem>
-                             <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
-                                <Star className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Bookmarks</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => toast({ title: "Recent tabs not implemented." })}>
-                                <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Recent tabs</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => toast({ title: "Share feature not implemented." })}>
-                                <Share className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Share...</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={handleFind}>
-                                <Search className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Find in page</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => {
-                                if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                                    const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                                    handleNavigation(activeTabId, googleTranslateUrl);
-                                } else {
-                                    toast({ title: "Can't translate internal pages." });
-                                }
-                            }}>
-                                <Languages className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Translate...</span>
-                            </DropdownMenuItem>
-                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => toast({ title: "Add to Home Screen not implemented." })}>
-                                <PlusSquare className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Add to Home screen</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuCheckboxItem
-                                checked={isDesktopSite}
-                                onCheckedChange={(checked) => {
-                                    setIsDesktopSite(checked as boolean);
-                                    toast({ title: `Desktop site ${checked ? 'enabled' : 'disabled'}. Page reload may be required.` });
-                                }}
-                            >
-                                <div className="flex items-center">
-                                    <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
-                                    <span>Desktop site</span>
-                                </div>
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                                <Settings className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Settings</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
-                                <HelpCircle className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Help & feedback</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
               </div>
-            </Card>
-          </header>
-          <div className="flex-1 flex overflow-hidden">
-            <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
-                {tabs.map(tab => (
-                    <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
-                        {renderCurrentPage()}
-                    </div>
-                ))}
-                 {isFindOpen && (
-                    <Card className="absolute top-2 right-2 w-80 p-2 shadow-lg z-50">
-                        <div className="flex items-center gap-2">
-                            <Input 
-                                placeholder="Find in page" 
-                                value={findInput}
-                                onChange={e => setFindInput(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleFind()}
-                                className="h-8"
-                                autoFocus
-                            />
-                            <Button size="sm" onClick={handleFind}>Find</Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFindOpen(false)}><X className="w-4 h-4"/></Button>
-                        </div>
-                    </Card>
-                )}
-            </main>
-            {!isMobile && isAssistantOpen && <AishaAssistant 
-              isMobile={false}
-              assistantMessages={assistantMessages}
-              isAssistantLoading={isAssistantLoading}
-              assistantInput={assistantInput}
-              setAssistantInput={setAssistantInput}
-              handleAssistantSubmit={handleAssistantSubmit}
-              toast={toast}
-              isAssistantListening={isAssistantListening}
-              handleAssistantVoiceSearch={handleAssistantVoiceSearch}
-            />}
-          </div>
-        </div>
-
-        <Dialog open={!!qrCodeUrl} onOpenChange={(isOpen) => !isOpen && setQrCodeUrl('')}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>QR Code for this page</DialogTitle>
-              <DialogDescription>
-                Scan this code to open <span className="font-bold">{currentUrl}</span> on another device.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex items-center justify-center p-4">
-              {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={150} height={150} />}
             </div>
-          </DialogContent>
-        </Dialog>
-
-
-        <DeveloperConsole />
-        <FeedbackSheet />
-        <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
-                <div className="flex flex-col h-full py-4">
-                    <div className="mb-8 px-4">
-                        <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
-                            <AppWindow className="h-7 w-7 text-cyan-400" />
-                            <span className="ml-4 font-semibold text-lg">Aisha</span>
-                        </button>
-                    </div>
-                    <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1">
-                        {mobileNavItems.map((item, index) => (
-                            <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                                <item.icon className="h-6 w-6" />
-                                <span className="ml-4">{item.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-                    <div className="mt-auto px-4">
-                         <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
-                            <LogOut className="h-6 w-6" />
-                            <span className="ml-4">Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </SheetContent>
-        </Sheet>
-        {isMobile && (
-            <Dialog open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
-                <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
-                    <div className="flex items-center p-2 border-b shrink-0">
-                        <DialogTitle className="flex items-center gap-2 px-2"><Sparkles className="w-5 h-5"/> Assistant</DialogTitle>
-                        <Button variant="secondary" size="icon" className="ml-auto rounded-full" onClick={() => setIsAssistantOpen(false)}>
-                            <X className="w-5 h-5 text-muted-foreground" />
-                        </Button>
-                    </div>
-                    <AishaAssistant 
-                      isMobile={true}
-                      assistantMessages={assistantMessages}
-                      isAssistantLoading={isAssistantLoading}
-                      assistantInput={assistantInput}
-                      setAssistantInput={setAssistantInput}
-                      handleAssistantSubmit={handleAssistantSubmit}
-                      toast={toast}
-                      isAssistantListening={isAssistantListening}
-                      handleAssistantVoiceSearch={handleAssistantVoiceSearch}
-                    />
-                </DialogContent>
-            </Dialog>
-        )}
-        <Button
-          variant="secondary"
-          size="icon"
-          className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
-          onClick={() => setMobileMenuOpen(true)}
-        >
-          <Menu className="w-6 h-6" />
-        </Button>
+          </Card>
+        </header>
+        <div className="flex-1 flex overflow-hidden">
+          <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
+              {tabs.map(tab => (
+                  <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                      {renderCurrentPage()}
+                  </div>
+              ))}
+               {isFindOpen && (
+                  <Card className="absolute top-2 right-2 w-80 p-2 shadow-lg z-50">
+                      <div className="flex items-center gap-2">
+                          <Input 
+                              placeholder="Find in page" 
+                              value={findInput}
+                              onChange={e => setFindInput(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && handleFind()}
+                              className="h-8"
+                              autoFocus
+                          />
+                          <Button size="sm" onClick={handleFind}>Find</Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFindOpen(false)}><X className="w-4 h-4"/></Button>
+                      </div>
+                  </Card>
+              )}
+          </main>
+          {!isMobile && isAssistantOpen && <AishaAssistant 
+            isMobile={false}
+            assistantMessages={assistantMessages}
+            setAssistantMessages={setAssistantMessages}
+            isAssistantLoading={isAssistantLoading}
+            assistantInput={assistantInput}
+            setAssistantInput={setAssistantInput}
+            handleAssistantSubmit={handleAssistantSubmit}
+            toast={toast}
+            isAssistantListening={isAssistantListening}
+            handleAssistantVoiceSearch={handleAssistantVoiceSearch}
+            setIsAssistantOpen={setIsAssistantOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+            toggleMainSidebar={toggleMainSidebar}
+          />}
+        </div>
       </div>
-    </SidebarProvider>
+
+      <Dialog open={!!qrCodeUrl} onOpenChange={(isOpen) => !isOpen && setQrCodeUrl('')}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>QR Code for this page</DialogTitle>
+            <DialogDescription>
+              Scan this code to open <span className="font-bold">{currentUrl}</span> on another device.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-4">
+            {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" width={150} height={150} />}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+      <DeveloperConsole />
+      <FeedbackSheet />
+      <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
+              <div className="flex flex-col h-full py-4">
+                  <div className="mb-8 px-4">
+                      <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
+                          <AppWindow className="h-7 w-7 text-cyan-400" />
+                          <span className="ml-4 font-semibold text-lg">Aisha</span>
+                      </button>
+                  </div>
+                  <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1">
+                      {mobileNavItems.map((item, index) => (
+                          <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                              <item.icon className="h-6 w-6" />
+                              <span className="ml-4">{item.label}</span>
+                          </button>
+                      ))}
+                  </nav>
+                  <div className="mt-auto px-4">
+                       <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
+                          <LogOut className="h-6 w-6" />
+                          <span className="ml-4">Logout</span>
+                      </button>
+                  </div>
+              </div>
+          </SheetContent>
+      </Sheet>
+      {isMobile && (
+          <Dialog open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
+              <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
+                  <AishaAssistant 
+                    isMobile={true}
+                    assistantMessages={assistantMessages}
+                    setAssistantMessages={setAssistantMessages}
+                    isAssistantLoading={isAssistantLoading}
+                    assistantInput={assistantInput}
+                    setAssistantInput={setAssistantInput}
+                    handleAssistantSubmit={handleAssistantSubmit}
+                    toast={toast}
+                    isAssistantListening={isAssistantListening}
+                    handleAssistantVoiceSearch={handleAssistantVoiceSearch}
+                    setIsAssistantOpen={setIsAssistantOpen}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    toggleMainSidebar={toggleMainSidebar}
+                  />
+              </DialogContent>
+          </Dialog>
+      )}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
+        onClick={() => setMobileMenuOpen(true)}
+      >
+        <Menu className="w-6 h-6" />
+      </Button>
+    </div>
   );
 }
 
 export default function BrowserPage() {
   return (
-    <BrowserApp />
+    <SidebarProvider>
+      <BrowserApp />
+    </SidebarProvider>
   )
 }
     
