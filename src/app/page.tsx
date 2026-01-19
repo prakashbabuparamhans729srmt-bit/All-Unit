@@ -85,7 +85,8 @@ import {
   Paperclip,
   ArrowUp,
   Share,
-  Laptop
+  Laptop,
+  PanelLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,7 +123,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
 import { describeImage } from "@/ai/flows/describe-image-flow";
-import { SidebarProvider, useSidebar, Sidebar, SidebarRail, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -709,41 +710,45 @@ const BrowserApp = () => {
 
     const iframe = iframeRefs.current[tabId];
     let title = "Untitled";
+    let loadFailed = false;
 
     try {
-      if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
-        title = iframe.contentWindow.document.title;
-      }
-       updateTab(tabId, { isLoading: false, title, loadFailed: false });
+        if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+            title = iframe.contentWindow.document.title || new URL(tab.history[tab.currentIndex]).hostname;
+        }
     } catch (e) {
-      try {
-        title = new URL(tab.history[tab.currentIndex]).hostname;
-      } catch {
-        title = "Invalid URL";
-      }
-       updateTab(tabId, { isLoading: false, title, loadFailed: false });
-      
-      setTimeout(() => {
-        let isBlocked = false;
         try {
-            if (iframe && iframe.contentWindow) {
-                // This will throw for a loaded cross-origin page.
-                // If it doesn't throw, something is wrong, but if the body is empty, it's blocked.
-                const doc = iframe.contentWindow.document;
-                if (doc && (doc.body.innerHTML === "" || doc.body.childElementCount === 0)) {
-                    isBlocked = true;
-                }
+            title = new URL(tab.history[tab.currentIndex]).hostname;
+        } catch {
+            title = "Invalid URL";
+        }
+    }
+    
+    // A crude way to check for blocked content without triggering cross-origin errors
+    // by checking if we can access *anything*.
+    setTimeout(() => {
+        try {
+            // Accessing document will throw if it's a cross-origin iframe that's been blocked.
+            // If the body is empty, it might also mean it was blocked.
+            if (iframe && iframe.contentWindow && (!iframe.contentWindow.document || iframe.contentWindow.document.body.innerHTML === '')) {
+                loadFailed = true;
             }
-        } catch (error) {
-           isBlocked = false;
+        } catch (e) {
+            // Can't access, which is expected for cross-origin. Let's assume it loaded okay.
+            loadFailed = false;
         }
 
-        if (isBlocked) {
-           updateTab(tabId, { isLoading: false, title, loadFailed: true });
+        // Another check for Chrome's specific "refused to connect" page
+        if (iframe?.contentDocument?.title === '') {
+            const currentUrl = tab.history[tab.currentIndex];
+            if (!currentUrl.startsWith('about:')) {
+                loadFailed = true;
+            }
         }
-      }, 500);
-    }
-  };
+        
+        updateTab(tabId, { isLoading: false, title, loadFailed });
+    }, 100);
+};
   
   const addTab = () => {
     const newTabId = `tab-${Date.now()}`;
@@ -1424,7 +1429,6 @@ const BrowserApp = () => {
     <SidebarProvider>
       <div className="flex h-screen bg-background text-foreground overflow-hidden">
         <Sidebar collapsible="icon" className="hidden md:block">
-            <SidebarRail />
             <SidebarHeader>
                 <SidebarMenuButton
                     onClick={() => handleNavigation(activeTabId, 'about:about')}
@@ -1453,6 +1457,17 @@ const BrowserApp = () => {
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarTrigger asChild>
+                            <SidebarMenuButton
+                                tooltip={{ children: 'Toggle sidebar', side: 'right' }}
+                                className="w-full justify-center data-[state=open]:justify-start h-12"
+                            >
+                                <PanelLeft className="size-6" />
+                                <span>Collapse</span>
+                            </SidebarMenuButton>
+                        </SidebarTrigger>
+                    </SidebarMenuItem>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             tooltip={{ children: 'Logout', side: 'right' }}
@@ -2108,6 +2123,14 @@ const BrowserApp = () => {
                 </DialogContent>
             </Dialog>
         )}
+        <Button
+          variant="secondary"
+          size="icon"
+          className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <Menu className="w-6 h-6" />
+        </Button>
       </div>
     </SidebarProvider>
   );
