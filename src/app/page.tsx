@@ -2222,6 +2222,12 @@ const BrowserApp = () => {
       {isMobile && (
           <Dialog open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
               <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
+                  <DialogHeader className="sr-only">
+                    <DialogTitle>AI Assistant</DialogTitle>
+                    <DialogDescription>
+                      This is the AI assistant panel. You can ask it anything.
+                    </DialogDescription>
+                  </DialogHeader>
                   <AishaAssistant 
                     isMobile={true}
                     assistantMessages={assistantMessages}
@@ -2290,5 +2296,6 @@ export default function BrowserPage() {
 
 
     
+
 
 
