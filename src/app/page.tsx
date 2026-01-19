@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useRef, useEffect, KeyboardEvent, useCallback } from "react";
@@ -286,7 +287,7 @@ const AishaAssistant = React.memo(({
         </Button>
       </div>
       <div className="flex-grow" />
-      <Button variant="ghost" size="icon" onClick={() => {
+      <Button variant="ghost" size="icon" className={cn(isMobile && "mr-10")} onClick={() => {
         setAssistantMessages([]);
         toast({ title: "New chat started." });
       }}>
@@ -2211,3 +2212,4 @@ export default function BrowserPage() {
 
 
     
+
