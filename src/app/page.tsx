@@ -123,7 +123,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
 import { describeImage } from "@/ai/flows/describe-image-flow";
-import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarRail } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -299,7 +299,7 @@ const AishaAssistant = React.memo(({
           <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
             <Sparkles className="w-16 h-16 text-muted-foreground/50 mb-4" />
             <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
-            <p className="text-sm text-muted-foreground mt-2">Ask me anything to get started.</p>
+            <p className="text-lg text-muted-foreground mt-2">How can I help you?</p>
           </div>
         ) : (
           assistantMessages.map((message, index) => (
@@ -375,7 +375,7 @@ const AishaAssistant = React.memo(({
             <Button 
                 size="icon" 
                 className="h-8 w-8"
-                onClick={handleAssistantSubmit} 
+                onClick={() => handleAssistantSubmit()} 
                 disabled={isAssistantLoading}
             >
                 <ArrowUp className="w-5 h-5" />
@@ -1465,7 +1465,7 @@ const BrowserApp = () => {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      <Sidebar collapsible="icon" className="hidden md:block">
+      <Sidebar collapsible="icon">
           <SidebarHeader>
               <SidebarMenuButton
                   onClick={() => handleNavigation(activeTabId, 'about:about')}
@@ -1521,7 +1521,7 @@ const BrowserApp = () => {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
-          <div className="flex items-end h-11 pt-1 px-1 bg-background draggable">
+          <div className="flex items-end h-10 pt-1 px-1 bg-background draggable">
             <div className="flex items-end non-draggable">
                 <div className="md:hidden self-center">
                     <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(true)}>
@@ -1532,7 +1532,7 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={`relative flex items-center text-sm font-medium h-10 px-4 rounded-t-lg cursor-pointer border border-b-0
+                        className={`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer border border-b-0
                         ${activeTabId === tab.id
                             ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
@@ -2087,7 +2087,7 @@ const BrowserApp = () => {
             isAssistantLoading={isAssistantLoading}
             assistantInput={assistantInput}
             setAssistantInput={setAssistantInput}
-            handleAssistantSubmit={handleAssistantSubmit}
+            handleAssistantSubmit={() => handleAssistantSubmit()}
             toast={toast}
             isAssistantListening={isAssistantListening}
             handleAssistantVoiceSearch={handleAssistantVoiceSearch}
@@ -2151,7 +2151,7 @@ const BrowserApp = () => {
                     isAssistantLoading={isAssistantLoading}
                     assistantInput={assistantInput}
                     setAssistantInput={setAssistantInput}
-                    handleAssistantSubmit={handleAssistantSubmit}
+                    handleAssistantSubmit={() => handleAssistantSubmit()}
                     toast={toast}
                     isAssistantListening={isAssistantListening}
                     handleAssistantVoiceSearch={handleAssistantVoiceSearch}
