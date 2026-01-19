@@ -721,9 +721,11 @@ const BrowserApp = () => {
              setTimeout(() => {
                 try {
                     // This will throw if it's cross-origin and blocked.
-                    const doc = iframe?.contentWindow?.document;
-                    if (doc && (doc.body.innerHTML === "" || doc.body.childElementCount === 0)) {
-                         updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
+                    if (iframe && iframe.contentWindow) {
+                      const doc = iframe.contentWindow.document;
+                      if (doc && (doc.body.innerHTML === "" || doc.body.childElementCount === 0)) {
+                           updateTab(tabId, { isLoading: false, loadFailed: true, title: "Blocked" });
+                      }
                     }
                 } catch (error) {
                     // This is expected for successfully loaded cross-origin pages.
@@ -1269,12 +1271,9 @@ const BrowserApp = () => {
   const DeveloperConsole = () => (
     <Sheet open={isConsoleOpen} onOpenChange={setIsConsoleOpen}>
       <SheetContent side="bottom" className="h-1/2 flex flex-col p-0">
-        <div className="flex items-center justify-between p-2 border-b">
-          <h3 className="font-semibold text-lg px-2">Developer Console</h3>
-          <Button variant="ghost" size="icon" onClick={() => setIsConsoleOpen(false)}>
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
+        <SheetHeader className="p-2 border-b">
+          <SheetTitle>Developer Console</SheetTitle>
+        </SheetHeader>
         <div className="flex-1 overflow-y-auto p-4 bg-secondary/30 font-mono text-sm">
           {consoleHistory.map((entry, index) => (
             <div key={index} className="mb-2">
@@ -2011,3 +2010,6 @@ export default function BrowserPage() {
 
 
 
+
+
+    
