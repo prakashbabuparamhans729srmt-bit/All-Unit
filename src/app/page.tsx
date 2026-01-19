@@ -711,32 +711,25 @@ const BrowserApp = () => {
 
     const iframe = iframeRefs.current[tabId];
     let title = "Untitled";
-    let loadFailed = false;
 
     try {
       if (iframe && iframe.contentWindow && iframe.contentWindow.document.title) {
         title = iframe.contentWindow.document.title;
-      } else {
-        // This case will likely not be hit for cross-origin iframes
-        // due to security restrictions.
-        title = new URL(tab.history[tab.currentIndex]).hostname;
       }
-      updateTab(tabId, { isLoading: false, title, loadFailed: false });
+       updateTab(tabId, { isLoading: false, title, loadFailed: false });
     } catch (e) {
-      // This catch block is crucial for handling cross-origin iframe access errors.
       try {
         title = new URL(tab.history[tab.currentIndex]).hostname;
       } catch {
         title = "Invalid URL";
       }
+       updateTab(tabId, { isLoading: false, title, loadFailed: false });
       
       setTimeout(() => {
-        // A common trick to "guess" if an iframe is blocked.
-        // If we can't access the document after a delay, it's likely a security block.
         let isBlocked = false;
         try {
             if (iframe && iframe.contentWindow) {
-                // Accessing the document will throw an error for a loaded cross-origin page.
+                // This will throw for a loaded cross-origin page.
                 // If it doesn't throw, something is wrong, but if the body is empty, it's blocked.
                 const doc = iframe.contentWindow.document;
                 if (doc && (doc.body.innerHTML === "" || doc.body.childElementCount === 0)) {
@@ -744,21 +737,13 @@ const BrowserApp = () => {
                 }
             }
         } catch (error) {
-           // This error is expected for a successfully loaded cross-origin page.
-           // It means the page is NOT blocked in the traditional sense, but we can't script it.
-           // We will assume it loaded correctly.
            isBlocked = false;
         }
 
-        // After a longer delay, if we can't access it, assume it is blocked.
-         if (iframe && !iframe.contentWindow?.document?.body) {
-           isBlocked = true;
+        if (isBlocked) {
+           updateTab(tabId, { isLoading: false, title, loadFailed: true });
         }
-
-
-        updateTab(tabId, { isLoading: false, title, loadFailed: isBlocked });
       }, 500);
-       updateTab(tabId, { isLoading: false, title, loadFailed: false });
     }
   };
   
@@ -1548,7 +1533,7 @@ const BrowserApp = () => {
               <div className="flex items-center gap-2 ml-2">
                 {showBookmarksButton && <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Bookmarks</p>
@@ -1556,7 +1541,7 @@ const BrowserApp = () => {
                 </Tooltip>}
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Downloads</p>
@@ -1564,13 +1549,13 @@ const BrowserApp = () => {
                 </Tooltip>
                  <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>History</p>
                     </TooltipContent>
                 </Tooltip>
-                <Separator orientation="vertical" className="h-6 mx-1" />
+                <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9">
