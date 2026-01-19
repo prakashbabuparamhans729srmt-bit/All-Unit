@@ -33,7 +33,9 @@ import {
   ScanEye,
   Pencil,
   Home,
-  BookMarked
+  BookMarked,
+  ArrowLeft,
+  HelpCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,6 +65,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const menuItems = [
   { id: 'you-and-aisha', icon: User, text: 'You and Aisha' },
@@ -108,6 +111,7 @@ export default function SettingsPage() {
   
   const [showHomeButton, setShowHomeButton] = useState(true);
   const [showBookmarksBar, setShowBookmarksBar] = useState(true);
+  const isMobile = useIsMobile();
 
 
   useEffect(() => {
@@ -178,6 +182,81 @@ export default function SettingsPage() {
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  if (isMobile) {
+    const settingsGroups = [
+      {
+        items: [
+          { title: 'Google services', icon: 'G', onClick: () => toast({title: "This feature is not implemented."}) }
+        ]
+      },
+      {
+        header: 'Basics',
+        items: [
+          { title: 'Search engine', subtitle: 'Google', onClick: () => toast({title: "You can change the search engine from the main settings page."}) },
+          { title: 'Passwords', onClick: () => toast({title: "Password manager is not available."}) },
+          { title: 'Payment methods', onClick: () => toast({title: "Payment methods are not saved."}) },
+          { title: 'Addresses and more', onClick: () => toast({title: "Address management is not implemented."}) },
+        ]
+      },
+      {
+        items: [
+          { title: 'Privacy and security', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Safety check', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Theme', onClick: () => toast({title: "This feature is not implemented."}) },
+        ]
+      },
+      {
+        header: 'Advanced',
+        items: [
+          { title: 'Homepage', subtitle: 'On', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Accessibility', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Site settings', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Languages', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Lite mode', subtitle: '0% data savings', onClick: () => toast({title: "This feature is not implemented."}) },
+          { title: 'Downloads', onClick: () => handleNavigate('about:downloads') },
+          { title: 'About Aisha', onClick: () => handleNavigate('about:about') },
+        ]
+      }
+    ];
+
+    const renderItem = (item: { title: string; subtitle?: string; icon?: string; onClick: () => void; }) => (
+      <div key={item.title} className="flex items-center justify-between p-4 cursor-pointer" onClick={item.onClick}>
+        <div className="flex items-center">
+          {item.icon === 'G' && <Image src="https://www.google.com/s2/favicons?sz=64&domain_url=google.com" alt="Google" width={24} height={24} className="mr-4" />}
+          <div>
+            <p className="text-base">{item.title}</p>
+            {item.subtitle && <p className="text-sm text-muted-foreground">{item.subtitle}</p>}
+          </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="flex flex-col h-full bg-background text-foreground">
+        <header className="flex items-center p-2 border-b sticky top-0 bg-background z-10">
+          <Button variant="ghost" size="icon" onClick={() => handleNavigate('about:newtab')}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-xl font-semibold ml-4">Settings</h1>
+          <Button variant="ghost" size="icon" className="ml-auto" onClick={() => toast({title: "Help is not implemented."})}>
+            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          </Button>
+        </header>
+        <main className="flex-1 overflow-y-auto">
+          {settingsGroups.map((group, index) => (
+            <React.Fragment key={index}>
+              {index > 0 && <Separator />}
+              {group.header && <p className="px-4 py-2 text-sm font-semibold text-primary">{group.header}</p>}
+              <div className="divide-y divide-border">
+                {group.items.map(renderItem)}
+              </div>
+            </React.Fragment>
+          ))}
+        </main>
+      </div>
+    );
+  }
   
   const YouAndAisha = () => (
     <div className="space-y-6" id="you-and-aisha">
@@ -603,7 +682,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex h-full bg-background text-foreground">
-      <aside className="w-64 border-r border-border p-4 flex flex-col">
+      <aside className="w-64 border-r border-border p-4 flex-col hidden md:flex">
         <div className="px-2 pb-4">
           <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
         </div>
@@ -626,7 +705,7 @@ export default function SettingsPage() {
 
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
-          <div className="w-full max-w-lg mb-8">
+          <div className="w-full max-w-lg mb-8 hidden md:block">
             <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input placeholder="Search settings" className="pl-10 h-10 bg-secondary border-none" />
@@ -638,4 +717,6 @@ export default function SettingsPage() {
     </div>
   );
 }
+    
+
     
