@@ -1693,19 +1693,14 @@ const BrowserApp = () => {
         <header className="flex-shrink-0">
           <div className="flex items-end h-10 pt-1 px-1 bg-background draggable">
             <div className="flex items-end non-draggable">
-                <div className="md:hidden self-center">
-                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => { setMobileSheetContent('nav'); setMobileMenuOpen(true); }}>
-                        <Menu className="w-5 h-5" />
-                    </Button>
-                </div>
                 {tabs.map((tab) => (
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer border border-b-0
+                        className={`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer
                         ${activeTabId === tab.id
                             ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
-                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'}`
+                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r`
                         }`}
                     >
                         {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
