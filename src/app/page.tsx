@@ -280,10 +280,10 @@ const AishaAssistant = React.memo(({
     <div className="flex items-center p-2 border-b shrink-0">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={() => {
-          if (isMobile && setIsAssistantOpen && setMobileMenuOpen) {
+          if (isMobile) {
             setMobileSheetContent('chat');
             setMobileMenuOpen(true);
-          } else if (toggleMainSidebar) {
+          } else {
             toggleMainSidebar();
           }
         }}>
@@ -1717,7 +1717,7 @@ const BrowserApp = () => {
                         onClick={() => setActiveTabId(tab.id)}
                         className={`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer
                         ${activeTabId === tab.id
-                            ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
+                            ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r border-border`
                         }`}
                     >
@@ -1736,7 +1736,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <Card className={`flex items-center gap-2 p-2 rounded-t-none ${isIncognito ? 'bg-gray-800' : 'bg-card text-card-foreground'}`}>
+          <Card className={`flex items-center gap-2 p-2 rounded-t-none ${isIncognito ? 'bg-gray-800' : 'bg-card'}`}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -1812,6 +1812,16 @@ const BrowserApp = () => {
             </div>
             
             <div className="flex items-center gap-2 ml-2">
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => window.print()}>
+                          <Download className="w-5 h-5"/>
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>Download page</p>
+                  </TooltipContent>
+              </Tooltip>
               {showBookmarksButton && <Tooltip>
                   <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
@@ -2404,6 +2414,7 @@ export default function BrowserPage() {
 
 
       
+
 
 
 
