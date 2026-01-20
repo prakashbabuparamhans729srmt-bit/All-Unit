@@ -250,6 +250,9 @@ const AishaAssistant = React.memo(({
   setMobileMenuOpen,
   toggleMainSidebar,
   setMobileSheetContent,
+  handleInstallClick,
+  handleAssistantSearch,
+  handleAttachment,
 }: {
   isMobile?: boolean;
   assistantMessages: AssistantMessage[];
@@ -265,6 +268,9 @@ const AishaAssistant = React.memo(({
   setMobileMenuOpen: (open: boolean) => void;
   toggleMainSidebar: () => void;
   setMobileSheetContent: (content: 'nav' | 'chat') => void;
+  handleInstallClick: () => void;
+  handleAssistantSearch: () => void;
+  handleAttachment: () => void;
 }) => (
   <aside className={cn("flex flex-col",
       isMobile
@@ -276,7 +282,6 @@ const AishaAssistant = React.memo(({
         <Button variant="ghost" size="icon" onClick={() => {
           if (isMobile && setIsAssistantOpen && setMobileMenuOpen) {
             setMobileSheetContent('chat');
-            setIsAssistantOpen(false);
             setMobileMenuOpen(true);
           } else if (toggleMainSidebar) {
             toggleMainSidebar();
@@ -284,7 +289,7 @@ const AishaAssistant = React.memo(({
         }}>
             <Menu className="w-5 h-5 text-muted-foreground" />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => toast({ title: "Get App is not implemented." })}>
+        <Button variant="outline" size="sm" onClick={handleInstallClick}>
             <Laptop className="w-4 h-4 mr-2"/>
             Get App
         </Button>
@@ -366,13 +371,13 @@ const AishaAssistant = React.memo(({
       />
       <div className="mt-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-           <Button variant="secondary" size="sm" onClick={() => toast({ title: 'Search in assistant is not implemented.' })}>
+           <Button variant="secondary" size="sm" onClick={handleAssistantSearch}>
             <Globe className="mr-2 h-4 w-4" />
             Search
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Attachments are not implemented.' })}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAttachment}>
               <Paperclip className="w-5 h-5 text-muted-foreground" />
           </Button>
           {assistantInput.trim() ? (
@@ -442,6 +447,7 @@ const BrowserApp = () => {
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSheetContent, setMobileSheetContent] = useState<'nav' | 'chat'>('nav');
   const isMobile = useIsMobile();
@@ -453,6 +459,66 @@ const BrowserApp = () => {
   const assistantRecognitionRef = useRef<any>(null);
   const [isAssistantListening, setIsAssistantListening] = useState(false);
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
+  
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = () => {
+    if (!installPrompt) {
+        toast({ title: "App cannot be installed", description: "This app may already be installed or your browser may not support this feature." });
+        return;
+    }
+    (installPrompt as any).prompt();
+  };
+
+  const handleShare = () => {
+    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
+        navigator.share({
+            title: activeTab.title,
+            text: `Check out this page: ${activeTab.title}`,
+            url: currentUrl,
+        })
+        .then(() => console.log('Shared successfully'))
+        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
+    } else {
+        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
+    }
+  };
+
+  const handleAttachment = () => {
+    attachmentInputRef.current?.click();
+  };
+
+  const handleAttachmentFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+        const fileName = event.target.files[0].name;
+        toast({
+            title: "File selected",
+            description: `${fileName} is ready. Attaching files is a conceptual feature in this prototype.`,
+        });
+    }
+    event.target.value = '';
+  };
+  
+  const handleAssistantSearch = () => {
+    if (assistantInput.trim()) {
+        handleNavigation(activeTabId, assistantInput.trim());
+        setIsAssistantOpen(false);
+    } else {
+        toast({ title: "Nothing to search", description: "Please type something in the assistant box to search." });
+    }
+  }
+
 
   const handleAssistantVoiceSearch = () => {
     if (isAssistantListening) {
@@ -1085,7 +1151,7 @@ const BrowserApp = () => {
   };
 
   const mobileNavItems = [
-    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:blank') },
+    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:media') },
     { icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
     { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
     { icon: Bookmark, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
@@ -1093,7 +1159,7 @@ const BrowserApp = () => {
   ];
 
   const navItems = [
-    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:blank') },
+    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:media') },
     { icon: History, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
     { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
     { icon: Bookmark, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
@@ -1442,6 +1508,12 @@ const BrowserApp = () => {
             return <BookmarksPage />;
         case 'about:downloads':
             return <GenericInternalPage title="Downloads" icon={Download}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Download className="w-16 h-16 mb-4"/><p>There are no downloads to show.</p></div></GenericInternalPage>;
+        case 'about:media':
+            return <GenericInternalPage title="Media" icon={Play}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Play className="w-16 h-16 mb-4"/><p>There is no media content to show.</p></div></GenericInternalPage>;
+        case 'about:passwords':
+            return <GenericInternalPage title="Password Manager" icon={KeyRound}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><KeyRound className="w-16 h-16 mb-4"/><p>A full password manager is not implemented in this prototype.</p><p className="text-sm mt-2">In a real browser, this page would list your saved credentials.</p></div></GenericInternalPage>;
+        case 'about:performance':
+            return <GenericInternalPage title="Performance" icon={Gauge}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Gauge className="w-16 h-16 mb-4"/><p>Performance settings are conceptual in this prototype.</p><p className="text-sm mt-2">Here you would manage memory and energy saver modes.</p></div></GenericInternalPage>;
         case 'about:about':
             return <GenericInternalPage title="About Aisha" icon={Info}>
                 <div className="flex flex-col h-full items-center justify-center text-center">
@@ -1553,7 +1625,7 @@ const BrowserApp = () => {
             </div>
         </ScrollArea>
         <div className="mt-auto px-4">
-            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
+            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented in this prototype.' })}>
                 <LogOut className="h-6 w-6" />
                 <span className="ml-4">Logout</span>
             </button>
@@ -1578,7 +1650,7 @@ const BrowserApp = () => {
           ))}
       </nav>
       <div className="mt-auto px-4">
-            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented.' })}>
+            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented in this prototype.' })}>
               <LogOut className="h-6 w-6" />
               <span className="ml-4">Logout</span>
           </button>
@@ -1606,7 +1678,7 @@ const BrowserApp = () => {
                   <SidebarMenuItem>
                       <SidebarMenuButton
                           tooltip={{ children: 'Logout', side: 'right' }}
-                           onClick={() => toast({ title: 'Logout is not implemented.' })}
+                           onClick={() => toast({ title: 'Logout is not implemented in this prototype.' })}
                           className="w-full justify-center data-[state=open]:justify-start h-12"
                       >
                           <LogOut className="size-6" />
@@ -1787,11 +1859,11 @@ const BrowserApp = () => {
                   </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => toast({title: 'Profile management not implemented.'})}>
+                      <DropdownMenuItem onClick={() => toast({title: 'Profile management is a concept for this prototype.'})}>
                           <User className="mr-2 h-4 w-4"/>
                           <span>Manage Profile</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented.'})}>
+                      <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented in this prototype.'})}>
                           <LogOut className="mr-2 h-4 w-4"/>
                           <span>Sign Out</span>
                       </DropdownMenuItem>
@@ -1874,7 +1946,7 @@ const BrowserApp = () => {
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                                <DropdownMenuItem onSelect={() => toast({title: "Tab groups are not implemented in this prototype."})}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     <span>Create new tab group</span>
                                 </DropdownMenuItem>
@@ -1888,7 +1960,7 @@ const BrowserApp = () => {
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                            <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported."})}>
+                            <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported in this prototype."})}>
                                 <Puzzle className="mr-2 h-4 w-4" />
                                 <span>Manage Extensions</span>
                             </DropdownMenuItem>
@@ -1900,7 +1972,7 @@ const BrowserApp = () => {
                         {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                         <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => toast({title: "Password manager is not available."})}>
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
                             <KeyRound className="mr-2 h-4 w-4" />
                             <span>Passwords and autofill</span>
                         </DropdownMenuItem>
@@ -1985,7 +2057,7 @@ const BrowserApp = () => {
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                             <DropdownMenuSubContent className="w-80">
-                                <DropdownMenuItem onSelect={() => toast({title: "Casting is not available in this browser."})}>
+                                <DropdownMenuItem onSelect={() => toast({title: "Casting is not supported in this prototype."})}>
                                     <Cast className="mr-2 h-4 w-4" />
                                     <span>Cast...</span>
                                 </DropdownMenuItem>
@@ -2004,7 +2076,7 @@ const BrowserApp = () => {
                                     <LinkIcon className="mr-2 h-4 w-4" />
                                     <span>Copy link</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => toast({title: "This feature is only a placeholder."})}>
+                                <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
                                     <Computer className="mr-2 h-4 w-4" />
                                     <span>Send to your devices</span>
                                 </DropdownMenuItem>
@@ -2027,7 +2099,7 @@ const BrowserApp = () => {
                                 <span>Customize Aisha</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:performance')}>
                                 <Gauge className="mr-2 h-4 w-4" />
                                 <span>Performance</span>
                             </DropdownMenuItem>
@@ -2062,7 +2134,7 @@ const BrowserApp = () => {
                         </DropdownMenuPortal>
                         </DropdownMenuSub>
 
-                        <DropdownMenuItem onSelect={() => toast({title: "You can't exit the app from here."})}>
+                        <DropdownMenuItem onSelect={() => toast({title: "Exit is not available in a web application."})}>
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Exit</span>
                         </DropdownMenuItem>
@@ -2098,12 +2170,12 @@ const BrowserApp = () => {
                               <Star className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Bookmarks</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => toast({ title: "Recent tabs not implemented." })}>
+                          <DropdownMenuItem onSelect={() => toast({ title: "Recent tabs are not implemented in this prototype." })}>
                               <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Recent tabs</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => toast({ title: "Share feature not implemented." })}>
+                          <DropdownMenuItem onSelect={handleShare}>
                               <Share className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Share...</span>
                           </DropdownMenuItem>
@@ -2123,7 +2195,7 @@ const BrowserApp = () => {
                               <span>Translate...</span>
                           </DropdownMenuItem>
                            <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => toast({ title: "Add to Home Screen not implemented." })}>
+                          <DropdownMenuItem onSelect={handleInstallClick}>
                               <PlusSquare className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Add to Home screen</span>
                           </DropdownMenuItem>
@@ -2193,6 +2265,9 @@ const BrowserApp = () => {
             setMobileMenuOpen={setMobileMenuOpen}
             toggleMainSidebar={toggleMainSidebar}
             setMobileSheetContent={setMobileSheetContent}
+            handleInstallClick={handleInstallClick}
+            handleAssistantSearch={handleAssistantSearch}
+            handleAttachment={handleAttachment}
           />}
         </div>
       </div>
@@ -2210,7 +2285,13 @@ const BrowserApp = () => {
           </div>
         </DialogContent>
       </Dialog>
-
+      
+      <input
+        type="file"
+        ref={attachmentInputRef}
+        onChange={handleAttachmentFileChange}
+        className="hidden"
+      />
 
       <DeveloperConsole />
       <FeedbackSheet />
@@ -2243,6 +2324,9 @@ const BrowserApp = () => {
                     setMobileMenuOpen={setMobileMenuOpen}
                     toggleMainSidebar={toggleMainSidebar}
                     setMobileSheetContent={setMobileSheetContent}
+                    handleInstallClick={handleInstallClick}
+                    handleAssistantSearch={handleAssistantSearch}
+                    handleAttachment={handleAttachment}
                   />
               </DialogContent>
           </Dialog>
@@ -2299,3 +2383,5 @@ export default function BrowserPage() {
 
 
 
+
+      
