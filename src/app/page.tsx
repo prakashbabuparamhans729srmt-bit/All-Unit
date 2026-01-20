@@ -509,6 +509,7 @@ const BrowserApp = () => {
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
+  const voiceSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -531,165 +532,10 @@ const BrowserApp = () => {
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
 
-  const handleAssistantSubmit = useCallback(async (text?: string) => {
-    const currentInput = text || assistantInput;
-    if (!currentInput.trim()) return;
-
-    const userInput = currentInput;
-    const userMessage: AssistantMessage = { role: 'user', content: userInput };
-
-    const newMessages: AssistantMessage[] = [
-      ...assistantMessages,
-      userMessage,
-    ];
-    setAssistantMessages(newMessages);
-    setAssistantInput('');
-    setIsAssistantLoading(true);
-
-    try {
-      const result = await summarizeText({ text: userInput });
-      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
-      
-      setAssistantMessages([...newMessages, assistantMessage]);
-
-    } catch (error) {
-      console.error("Assistant error:", error);
-      toast({
-        title: "Assistant Error",
-        description: "Could not get a response from the assistant.",
-        variant: "destructive",
-      });
-      setAssistantMessages(assistantMessages);
-    } finally {
-      setIsAssistantLoading(false);
-    }
-  }, [assistantInput, assistantMessages, toast]);
-
-  const stopVoiceSearch = () => {
-    recognitionRef.current?.stop();
-    if(listeningState === 'listening') {
-      setListeningState('inactive');
-      setVoiceSearchSource(null);
-    }
-  };
-
-  const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
-    if (recognitionRef.current) {
-        recognitionRef.current.stop();
-    }
-    setInterimTranscript('');
-
-    setVoiceSearchSource(source);
-    setListeningState('listening');
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
-      setListeningState('inactive');
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognitionRef.current = recognition;
-
-    recognition.onend = () => {
-       // Do not set to inactive here, it might be an error state.
-    };
-
-    recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        setListeningState('error');
-      } else {
-        toast({ title: "Voice search error", description: event.error, variant: "destructive" });
-        stopVoiceSearch();
-      }
-    };
-
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      let currentInterimTranscript = '';
-      for (let i = 0; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          currentInterimTranscript += event.results[i][0].transcript;
-        }
-      }
-      
-      setInterimTranscript(currentInterimTranscript);
-
-      if (finalTranscript) {
-        if (source === 'address' && activeTab) {
-          setInputValue(finalTranscript);
-          handleNavigation(activeTab.id, finalTranscript);
-        } else if (source === 'assistant') {
-          handleAssistantSubmit(finalTranscript);
-        }
-        stopVoiceSearch();
-      }
-    };
-
-    recognition.start();
-  }, [activeTab, handleAssistantSubmit, toast, listeningState]);
-
-  useEffect(() => {
-    const authStatus = sessionStorage.getItem('aisha-auth');
-    if (authStatus !== 'true') {
-        window.location.href = '/welcome';
-    } else {
-        setIsAuthenticated(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-        e.preventDefault();
-        setInstallPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => {
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = () => {
-    if (!installPrompt) {
-        toast({ title: "App cannot be installed", description: "This app may already be installed or your browser may not support this feature." });
-        return;
-    }
-    (installPrompt as any).prompt();
-  };
-
-  const handleShare = () => {
-    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
-        navigator.share({
-            title: activeTab.title,
-            text: `Check out this page: ${activeTab.title}`,
-            url: currentUrl,
-        })
-        .then(() => console.log('Shared successfully'))
-        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
-    } else {
-        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
-    }
-  };
-
-  const handleAttachment = () => {
-    attachmentInputRef.current?.click();
-  };
-
-  const handleAttachmentFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-        const fileName = event.target.files[0].name;
-        toast({
-            title: "File selected",
-            description: `${fileName} is ready. Attaching files is a conceptual feature in this prototype.`,
-        });
-    }
-    event.target.value = '';
+  const updateTab = (id: string, updates: Partial<Tab>) => {
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
+    );
   };
   
   const handleNavigation = (tabId: string, url: string) => {
@@ -748,6 +594,185 @@ const BrowserApp = () => {
         loadFailed: false,
     });
     setInputValue(newUrl);
+  };
+
+  const handleAssistantSubmit = useCallback(async (text?: string) => {
+    const currentInput = text || assistantInput;
+    if (!currentInput.trim()) return;
+
+    const userInput = currentInput;
+    const userMessage: AssistantMessage = { role: 'user', content: userInput };
+
+    const newMessages: AssistantMessage[] = [
+      ...assistantMessages,
+      userMessage,
+    ];
+    setAssistantMessages(newMessages);
+    setAssistantInput('');
+    setIsAssistantLoading(true);
+
+    try {
+      const result = await summarizeText({ text: userInput });
+      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
+      
+      setAssistantMessages([...newMessages, assistantMessage]);
+
+    } catch (error) {
+      console.error("Assistant error:", error);
+      toast({
+        title: "Assistant Error",
+        description: "Could not get a response from the assistant.",
+        variant: "destructive",
+      });
+      setAssistantMessages(assistantMessages);
+    } finally {
+      setIsAssistantLoading(false);
+    }
+  }, [assistantInput, assistantMessages, toast]);
+
+  const stopVoiceSearch = useCallback(() => {
+    if (voiceSearchTimeoutRef.current) {
+        clearTimeout(voiceSearchTimeoutRef.current);
+    }
+    recognitionRef.current?.stop();
+    if(listeningState === 'listening') {
+      setListeningState('inactive');
+      setVoiceSearchSource(null);
+    }
+  }, [listeningState]);
+
+  const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
+    setInterimTranscript('');
+
+    setVoiceSearchSource(source);
+    setListeningState('listening');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
+      setListeningState('inactive');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognitionRef.current = recognition;
+
+    recognition.onend = () => {
+      if (voiceSearchTimeoutRef.current) {
+        clearTimeout(voiceSearchTimeoutRef.current);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (voiceSearchTimeoutRef.current) {
+        clearTimeout(voiceSearchTimeoutRef.current);
+      }
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        setListeningState('error');
+      } else {
+        toast({ title: "Voice search error", description: event.error, variant: "destructive" });
+        stopVoiceSearch();
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      if (voiceSearchTimeoutRef.current) {
+        clearTimeout(voiceSearchTimeoutRef.current);
+      }
+
+      let transcript = "";
+      for (let i = 0; i < event.results.length; ++i) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInterimTranscript(transcript);
+      
+      const executeSearch = (searchText: string) => {
+        if (!searchText.trim()) {
+            stopVoiceSearch();
+            return;
+        }
+        if (source === 'address' && activeTab) {
+          setInputValue(searchText);
+          handleNavigation(activeTabId, searchText);
+        } else if (source === 'assistant') {
+          handleAssistantSubmit(searchText);
+        }
+        stopVoiceSearch();
+      };
+
+      if (event.results[0].isFinal) {
+        executeSearch(transcript);
+      } else if (transcript.trim()){
+        voiceSearchTimeoutRef.current = setTimeout(() => {
+          executeSearch(transcript);
+        }, 2000);
+      }
+    };
+
+    recognition.start();
+  }, [activeTab, activeTabId, handleNavigation, handleAssistantSubmit, stopVoiceSearch, toast]);
+
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('aisha-auth');
+    if (authStatus !== 'true') {
+        window.location.href = '/welcome';
+    } else {
+        setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = () => {
+    if (!installPrompt) {
+        toast({ title: "App cannot be installed", description: "This app may already be installed or your browser may not support this feature." });
+        return;
+    }
+    (installPrompt as any).prompt();
+  };
+
+  const handleShare = () => {
+    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
+        navigator.share({
+            title: activeTab.title,
+            text: `Check out this page: ${activeTab.title}`,
+            url: currentUrl,
+        })
+        .then(() => console.log('Shared successfully'))
+        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
+    } else {
+        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
+    }
+  };
+
+  const handleAttachment = () => {
+    attachmentInputRef.current?.click();
+  };
+
+  const handleAttachmentFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+        const fileName = event.target.files[0].name;
+        toast({
+            title: "File selected",
+            description: `${fileName} is ready. Attaching files is a conceptual feature in this prototype.`,
+        });
+    }
+    event.target.value = '';
   };
   
   const handleAssistantSearch = () => {
@@ -809,7 +834,7 @@ const BrowserApp = () => {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [activeTabId, tabs]);
+  }, [activeTabId, tabs, handleNavigation]);
 
   useEffect(() => {
     const handleStorageChange = (e?: StorageEvent) => {
@@ -899,12 +924,6 @@ const BrowserApp = () => {
     }
   }, [activeTab]);
 
-
-  const updateTab = (id: string, updates: Partial<Tab>) => {
-    setTabs((prevTabs) =>
-      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
-    );
-  };
 
   const goBack = () => {
     if (!activeTab) return;
@@ -2539,5 +2558,7 @@ export default function BrowserPage() {
 
 
     
+
+
 
 
