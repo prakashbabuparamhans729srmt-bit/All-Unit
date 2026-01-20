@@ -461,6 +461,16 @@ const BrowserApp = () => {
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
   
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('aisha-auth');
+    if (authStatus !== 'true') {
+        window.location.href = '/welcome';
+    } else {
+        setIsAuthenticated(true);
+    }
+  }, []);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -1657,6 +1667,14 @@ const BrowserApp = () => {
       </div>
     </div>
   );
+  
+  if (isAuthenticated === null) {
+    return (
+        <div className="flex h-screen w-screen items-center justify-center bg-background">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
@@ -1718,7 +1736,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none ${isIncognito ? 'bg-gray-800' : 'bg-card text-card-foreground'}`}>
+          <Card className={`flex items-center gap-2 p-2 rounded-t-none ${isIncognito ? 'bg-gray-800' : 'bg-card text-card-foreground'}`}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2386,5 +2404,6 @@ export default function BrowserPage() {
 
 
       
+
 
 

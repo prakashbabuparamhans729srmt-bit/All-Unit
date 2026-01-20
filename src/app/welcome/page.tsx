@@ -25,6 +25,11 @@ const DecorativeShapes = () => (
 
 
 const WelcomePage = () => {
+  const handleLogin = () => {
+    sessionStorage.setItem('aisha-auth', 'true');
+    window.location.href = '/';
+  };
+
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground overflow-hidden">
       <header className="absolute top-0 left-0 p-6 flex items-center gap-2">
@@ -43,7 +48,7 @@ const WelcomePage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {/* Existing Profile */}
-            <div className="flex flex-col items-center gap-3 cursor-pointer group" onClick={() => window.location.href = '/'}>
+            <div className="flex flex-col items-center gap-3 cursor-pointer group" onClick={handleLogin}>
                 <Avatar className="w-24 h-24 ring-2 ring-transparent group-hover:ring-primary transition-all">
                     <AvatarImage src="https://picsum.photos/seed/avatar1/100/100" />
                     <AvatarFallback><User/></AvatarFallback>
@@ -62,7 +67,7 @@ const WelcomePage = () => {
       </main>
 
       <footer className="absolute bottom-0 w-full p-6 flex justify-between items-center z-10">
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleLogin}>
           <Shield className="w-4 h-4 mr-2" />
           Guest mode
         </Button>
