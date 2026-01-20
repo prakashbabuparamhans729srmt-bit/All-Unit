@@ -117,6 +117,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -503,6 +504,7 @@ const BrowserApp = () => {
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [findInput, setFindInput] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [isTranslateOpen, setIsTranslateOpen] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const { toast } = useToast();
@@ -565,12 +567,16 @@ const BrowserApp = () => {
 
   const stopVoiceSearch = () => {
     recognitionRef.current?.stop();
-    setListeningState('inactive');
-    setVoiceSearchSource(null);
+    if(listeningState === 'listening') {
+      setListeningState('inactive');
+      setVoiceSearchSource(null);
+    }
   };
 
   const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
-    recognitionRef.current?.stop();
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
     setInterimTranscript('');
 
     setVoiceSearchSource(source);
@@ -590,7 +596,7 @@ const BrowserApp = () => {
     recognitionRef.current = recognition;
 
     recognition.onend = () => {
-      // recognitionRef.current = null;
+       // Do not set to inactive here, it might be an error state.
     };
 
     recognition.onerror = (event: any) => {
@@ -627,7 +633,7 @@ const BrowserApp = () => {
     };
 
     recognition.start();
-  }, [activeTab, handleAssistantSubmit, toast]);
+  }, [activeTab, handleAssistantSubmit, toast, listeningState]);
 
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
@@ -1767,11 +1773,11 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer
-                        ${activeTabId === tab.id
-                            ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
+                        className={cn(`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer`,
+                          activeTabId === tab.id
+                            ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r border-border`
-                        }`}
+                        )}
                     >
                         {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
                         <span className="truncate max-w-[150px]">
@@ -1788,7 +1794,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <div className={`flex items-center gap-2 p-2 rounded-none ${isIncognito ? 'bg-gray-800' : 'bg-card'}`}>
+          <div className={cn(`flex items-center gap-2 p-2 rounded-none`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -1839,22 +1845,70 @@ const BrowserApp = () => {
                    </TooltipTrigger>
                    <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
-                 <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" 
-                      onClick={() => {
-                        if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                          const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                          handleNavigation(activeTabId, googleTranslateUrl);
-                        } else {
-                          toast({ title: "Can't translate internal pages." });
-                        }
-                      }}>
-                      <Languages className="w-5 h-5 text-muted-foreground"/>
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Translate this page</p></TooltipContent>
-                </Tooltip>
+                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" 
+                        onClick={() => {
+                          if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                            setIsTranslateOpen(v => !v);
+                          } else {
+                            toast({ title: "Can't translate internal pages." });
+                          }
+                        }}>
+                        <Languages className="w-5 h-5 text-muted-foreground"/>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-auto p-0">
+                      <div className="flex items-center gap-1 p-1">
+                          <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-auto px-3 py-1 text-sm border-primary"
+                              onClick={() => {
+                                   const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                                   handleNavigation(activeTabId, googleTranslateUrl);
+                                   setIsTranslateOpen(false);
+                              }}
+                          >
+                              English
+                          </Button>
+                          <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-auto px-3 py-1 text-sm"
+                               onClick={() => {
+                                   const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=hi&u=${encodeURIComponent(currentUrl)}`;
+                                   handleNavigation(activeTabId, googleTranslateUrl);
+                                   setIsTranslateOpen(false);
+                              }}
+                          >
+                              Hindi
+                          </Button>
+                          
+                          <div className='flex-grow' />
+
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                                      <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>Choose another language</DropdownMenuItem>
+                                  <DropdownMenuItem>Never translate this site</DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsTranslateOpen(false)}>
+                              <X className="w-4 h-4" />
+                          </Button>
+                      </div>
+                      <Separator />
+                      <div className="p-2">
+                           <p className="text-xs text-muted-foreground">Google Translate</p>
+                      </div>
+                  </PopoverContent>
+                 </Popover>
               </div>
               <Separator orientation="vertical" className="h-6 mx-1" />
               <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
@@ -2485,4 +2539,5 @@ export default function BrowserPage() {
 
 
     
+
 
