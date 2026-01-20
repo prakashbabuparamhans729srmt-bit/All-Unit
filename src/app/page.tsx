@@ -115,6 +115,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -235,6 +236,55 @@ type AssistantMessage = {
   content: string;
 }
 
+const VoiceSearchOverlay = ({
+  state,
+  onClose,
+  onRetry,
+}: {
+  state: 'listening' | 'error' | 'inactive';
+  onClose: () => void;
+  onRetry: () => void;
+}) => {
+  if (state === 'inactive') return null;
+
+  return (
+    <Dialog open={state !== 'inactive'} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-black/90 border-none shadow-none text-white h-screen w-screen max-w-full flex flex-col items-center justify-center gap-8 rounded-none">
+          <DialogClose asChild>
+              <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+          </DialogClose>
+          
+          {state === 'listening' ? (
+            <>
+              <h2 className="text-3xl font-light">Listening...</h2>
+              <div className="relative w-40 h-40">
+                <div className="absolute inset-0 bg-red-500 rounded-full animate-pulse"></div>
+                <div className="relative w-full h-full flex items-center justify-center bg-red-600 rounded-full">
+                  <Mic className="w-20 h-20" />
+                </div>
+              </div>
+            </>
+          ) : ( // state === 'error'
+            <div className="flex flex-col items-center justify-center text-center gap-8">
+              <div className="w-40 h-40 flex items-center justify-center rounded-full border border-gray-600">
+                <Mic className="w-20 h-20 text-gray-300" />
+              </div>
+              <h2 className="text-3xl font-light">
+                Didn&apos;t get that.{' '}
+                <button onClick={onRetry} className="underline hover:text-gray-300">
+                  Try again
+                </button>
+              </h2>
+            </div>
+          )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
 const AishaAssistant = React.memo(({
   isMobile = false,
   assistantMessages,
@@ -244,8 +294,9 @@ const AishaAssistant = React.memo(({
   setAssistantInput,
   handleAssistantSubmit,
   toast,
-  isAssistantListening,
-  handleAssistantVoiceSearch,
+  startVoiceSearch,
+  listeningState,
+  voiceSearchSource,
   setIsAssistantOpen,
   setMobileMenuOpen,
   toggleMainSidebar,
@@ -262,8 +313,9 @@ const AishaAssistant = React.memo(({
   setAssistantInput: (value: string) => void;
   handleAssistantSubmit: () => void;
   toast: (options: any) => void;
-  isAssistantListening: boolean;
-  handleAssistantVoiceSearch: () => void;
+  startVoiceSearch: (source: 'address' | 'assistant') => void;
+  listeningState: 'listening' | 'error' | 'inactive';
+  voiceSearchSource: 'address' | 'assistant' | null;
   setIsAssistantOpen: (open: boolean) => void;
   setMobileMenuOpen: (open: boolean) => void;
   toggleMainSidebar: () => void;
@@ -393,8 +445,8 @@ const AishaAssistant = React.memo(({
             <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`h-8 w-8 ${isAssistantListening ? 'bg-red-500/20 text-red-500' : ''}`}
-                onClick={handleAssistantVoiceSearch}
+                className={`h-8 w-8 ${listeningState === 'listening' && voiceSearchSource === 'assistant' ? 'bg-red-500/20 text-red-500' : ''}`}
+                onClick={() => startVoiceSearch('assistant')}
             >
                 <Mic className="w-5 h-5" />
             </Button>
@@ -433,7 +485,6 @@ const BrowserApp = () => {
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [assistantInput, setAssistantInput] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
@@ -456,12 +507,50 @@ const BrowserApp = () => {
   const [showHomeButton, setShowHomeButton] = useState(true);
   const [showBookmarksButton, setShowBookmarksButton] = useState(true);
   
-  const assistantRecognitionRef = useRef<any>(null);
-  const [isAssistantListening, setIsAssistantListening] = useState(false);
+  const [listeningState, setListeningState] = useState<'listening' | 'error' | 'inactive'>('inactive');
+  const [voiceSearchSource, setVoiceSearchSource] = useState<'address' | 'assistant' | null>(null);
+
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
   
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
+
+  const handleAssistantSubmit = useCallback(async (text?: string) => {
+    const currentInput = text || assistantInput;
+    if (!currentInput.trim()) return;
+
+    const userInput = currentInput;
+    const userMessage: AssistantMessage = { role: 'user', content: userInput };
+
+    const newMessages: AssistantMessage[] = [
+      ...assistantMessages,
+      userMessage,
+    ];
+    setAssistantMessages(newMessages);
+    setAssistantInput('');
+    setIsAssistantLoading(true);
+
+    try {
+      const result = await summarizeText({ text: userInput });
+      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
+      
+      setAssistantMessages([...newMessages, assistantMessage]);
+
+    } catch (error) {
+      console.error("Assistant error:", error);
+      toast({
+        title: "Assistant Error",
+        description: "Could not get a response from the assistant.",
+        variant: "destructive",
+      });
+      setAssistantMessages(assistantMessages);
+    } finally {
+      setIsAssistantLoading(false);
+    }
+  }, [assistantInput, assistantMessages, toast]);
 
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
@@ -520,6 +609,64 @@ const BrowserApp = () => {
     event.target.value = '';
   };
   
+  const handleNavigation = (tabId: string, url: string) => {
+    let newUrl = url.trim();
+    if (!newUrl) return;
+
+    if (newUrl.startsWith('aisha:')) {
+      newUrl = newUrl.replace('aisha://', 'about:');
+    }
+    
+    if (newUrl.startsWith("about:")) {
+        if (isIncognito && (newUrl === 'about:history' || newUrl === 'about:bookmarks')) {
+             toast({ title: "History and Bookmarks are disabled in Incognito mode." });
+             return;
+        }
+        const currentTab = tabs.find(t => t.id === tabId);
+        if (!currentTab) return;
+        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
+        newHistory.push(newUrl);
+
+        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
+        updateTab(tabId, { 
+            history: newHistory,
+            currentIndex: newHistory.length - 1,
+            isLoading: false,
+            title: pageTitle,
+            loadFailed: false,
+        });
+        return;
+    }
+
+    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?=&%#:-]*)*\/?$/;
+    const isLocalhost = newUrl.includes('localhost');
+    const isUrl = isUrlRegex.test(newUrl) || isLocalhost;
+
+    if (isUrl) {
+      if (!/^(https?:\/\/)/i.test(newUrl)) {
+          newUrl = `https://${newUrl}`;
+      }
+    } else {
+      const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
+      newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
+    }
+    
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    
+    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
+    newHistory.push(newUrl);
+
+    updateTab(tabId, { 
+        history: newHistory,
+        currentIndex: newHistory.length - 1,
+        isLoading: true,
+        title: "Loading...",
+        loadFailed: false,
+    });
+    setInputValue(newUrl);
+  };
+  
   const handleAssistantSearch = () => {
     if (assistantInput.trim()) {
         handleNavigation(activeTabId, assistantInput.trim());
@@ -529,48 +676,64 @@ const BrowserApp = () => {
     }
   }
 
+  const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
+    recognitionRef.current?.stop();
 
-  const handleAssistantVoiceSearch = () => {
-    if (isAssistantListening) {
-      assistantRecognitionRef.current?.stop();
-      return;
-    }
+    setVoiceSearchSource(source);
+    setListeningState('listening');
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
+      setListeningState('inactive');
       return;
     }
 
-    assistantRecognitionRef.current = new SpeechRecognition();
-    assistantRecognitionRef.current.continuous = false;
-    assistantRecognitionRef.current.interimResults = false;
-    assistantRecognitionRef.current.lang = 'en-US';
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognitionRef.current = recognition;
 
-    assistantRecognitionRef.current.onstart = () => {
-      setIsAssistantListening(true);
-      toast({ title: "Assistant is Listening...", description: "Speak your query now." });
+    recognition.onend = () => {
+      // recognitionRef.current = null;
     };
 
-    assistantRecognitionRef.current.onend = () => {
-      setIsAssistantListening(false);
-    };
-
-    assistantRecognitionRef.current.onerror = (event: any) => {
-      toast({ title: "Voice search error", description: event.error, variant: "destructive" });
-      setIsAssistantListening(false);
-    };
-
-    assistantRecognitionRef.current.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setAssistantInput(transcript);
-      if(transcript) {
-        handleAssistantSubmit(transcript);
+    recognition.onerror = (event: any) => {
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        setListeningState('error');
+      } else {
+        toast({ title: "Voice search error", description: event.error, variant: "destructive" });
+        stopVoiceSearch();
       }
     };
 
-    assistantRecognitionRef.current.start();
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (source === 'address' && activeTab) {
+        setInputValue(transcript);
+        handleNavigation(activeTab.id, transcript);
+      } else if (source === 'assistant') {
+        handleAssistantSubmit(transcript);
+      }
+      stopVoiceSearch();
+    };
+
+    recognition.start();
+  }, [activeTab, handleAssistantSubmit]);
+
+  const stopVoiceSearch = () => {
+    recognitionRef.current?.stop();
+    setListeningState('inactive');
+    setVoiceSearchSource(null);
   };
+
+  const retryVoiceSearch = () => {
+    if (voiceSearchSource) {
+      startVoiceSearch(voiceSearchSource);
+    }
+  };
+
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -693,9 +856,6 @@ const BrowserApp = () => {
         setTheme('light');
     }
   };
-
-  const activeTab = tabs.find((tab) => tab.id === activeTabId);
-  const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
   
   useEffect(() => {
     if (activeTab) {
@@ -713,64 +873,6 @@ const BrowserApp = () => {
     setTabs((prevTabs) =>
       prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
     );
-  };
-  
-  const handleNavigation = (tabId: string, url: string) => {
-    let newUrl = url.trim();
-    if (!newUrl) return;
-
-    if (newUrl.startsWith('aisha:')) {
-      newUrl = newUrl.replace('aisha://', 'about:');
-    }
-    
-    if (newUrl.startsWith("about:")) {
-        if (isIncognito && (newUrl === 'about:history' || newUrl === 'about:bookmarks')) {
-             toast({ title: "History and Bookmarks are disabled in Incognito mode." });
-             return;
-        }
-        const currentTab = tabs.find(t => t.id === tabId);
-        if (!currentTab) return;
-        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
-        newHistory.push(newUrl);
-
-        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
-        updateTab(tabId, { 
-            history: newHistory,
-            currentIndex: newHistory.length - 1,
-            isLoading: false,
-            title: pageTitle,
-            loadFailed: false,
-        });
-        return;
-    }
-
-    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?=&%:-]*)*\/?$/;
-    const isLocalhost = newUrl.includes('localhost');
-    const isUrl = isUrlRegex.test(newUrl) || isLocalhost;
-
-    if (isUrl) {
-      if (!/^(https?:\/\/)/i.test(newUrl)) {
-          newUrl = `https://${newUrl}`;
-      }
-    } else {
-      const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
-      newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
-    }
-    
-    const tab = tabs.find(t => t.id === tabId);
-    if (!tab) return;
-    
-    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
-    newHistory.push(newUrl);
-
-    updateTab(tabId, { 
-        history: newHistory,
-        currentIndex: newHistory.length - 1,
-        isLoading: true,
-        title: "Loading...",
-        loadFailed: false,
-    });
-    setInputValue(newUrl);
   };
 
   const goBack = () => {
@@ -1023,47 +1125,6 @@ const BrowserApp = () => {
     setIsAddShortcutOpen(false);
   };
   
-  const handleVoiceSearch = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
-      return;
-    }
-
-    recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.continuous = false;
-    recognitionRef.current.interimResults = false;
-    recognitionRef.current.lang = 'en-US';
-
-    recognitionRef.current.onstart = () => {
-      setIsListening(true);
-      toast({ title: "Listening...", description: "Speak your search query now." });
-    };
-
-    recognitionRef.current.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current.onerror = (event: any) => {
-      toast({ title: "Voice search error", description: event.error, variant: "destructive" });
-    };
-
-    recognitionRef.current.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInputValue(transcript);
-      if (activeTab) {
-        handleNavigation(activeTab.id, transcript);
-      }
-    };
-
-    recognitionRef.current.start();
-  };
-
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -1103,40 +1164,6 @@ const BrowserApp = () => {
     }
     event.target.value = '';
   };
-
-  const handleAssistantSubmit = useCallback(async (text?: string) => {
-    const currentInput = text || assistantInput;
-    if (!currentInput.trim()) return;
-
-    const userInput = currentInput;
-    const userMessage: AssistantMessage = { role: 'user', content: userInput };
-
-    const newMessages: AssistantMessage[] = [
-      ...assistantMessages,
-      userMessage,
-    ];
-    setAssistantMessages(newMessages);
-    setAssistantInput('');
-    setIsAssistantLoading(true);
-
-    try {
-      const result = await summarizeText({ text: userInput });
-      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
-      
-      setAssistantMessages([...newMessages, assistantMessage]);
-
-    } catch (error) {
-      console.error("Assistant error:", error);
-      toast({
-        title: "Assistant Error",
-        description: "Could not get a response from the assistant.",
-        variant: "destructive",
-      });
-      setAssistantMessages(assistantMessages);
-    } finally {
-      setIsAssistantLoading(false);
-    }
-  }, [assistantInput, assistantMessages, toast]);
 
   const handleFind = () => {
     if(!isFindOpen) {
@@ -1193,7 +1220,7 @@ const BrowserApp = () => {
                 autoFocus
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <Button variant="ghost" size="icon" className={`w-8 h-8 ${isListening ? 'bg-red-500/20 text-red-500' : ''}`} onClick={handleVoiceSearch}>
+                <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
                   <Mic className="w-5 h-5" />
                 </Button>
                 <Dialog>
@@ -1736,7 +1763,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <Card className={`flex items-center gap-2 p-2 rounded-t-none ${isIncognito ? 'bg-gray-800' : 'bg-card'}`}>
+          <Card className={`flex items-center gap-2 p-2 rounded-none ${isIncognito ? 'bg-gray-800' : 'bg-card'}`}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2282,8 +2309,9 @@ const BrowserApp = () => {
             setAssistantInput={setAssistantInput}
             handleAssistantSubmit={() => handleAssistantSubmit()}
             toast={toast}
-            isAssistantListening={isAssistantListening}
-            handleAssistantVoiceSearch={handleAssistantVoiceSearch}
+            startVoiceSearch={startVoiceSearch}
+            listeningState={listeningState}
+            voiceSearchSource={voiceSearchSource}
             setIsAssistantOpen={setIsAssistantOpen}
             setMobileMenuOpen={setMobileMenuOpen}
             toggleMainSidebar={toggleMainSidebar}
@@ -2318,6 +2346,11 @@ const BrowserApp = () => {
 
       <DeveloperConsole />
       <FeedbackSheet />
+      <VoiceSearchOverlay 
+        state={listeningState}
+        onClose={stopVoiceSearch}
+        onRetry={retryVoiceSearch}
+      />
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
               <SheetHeader className="sr-only">
@@ -2347,8 +2380,9 @@ const BrowserApp = () => {
                     setAssistantInput={setAssistantInput}
                     handleAssistantSubmit={() => handleAssistantSubmit()}
                     toast={toast}
-                    isAssistantListening={isAssistantListening}
-                    handleAssistantVoiceSearch={handleAssistantVoiceSearch}
+                    startVoiceSearch={startVoiceSearch}
+                    listeningState={listeningState}
+                    voiceSearchSource={voiceSearchSource}
                     setIsAssistantOpen={setIsAssistantOpen}
                     setMobileMenuOpen={setMobileMenuOpen}
                     toggleMainSidebar={toggleMainSidebar}
@@ -2414,6 +2448,8 @@ export default function BrowserPage() {
 
 
       
+
+
 
 
 
