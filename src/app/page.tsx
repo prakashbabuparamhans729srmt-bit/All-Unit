@@ -744,7 +744,7 @@ const BrowserApp = () => {
         return;
     }
 
-    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?=&%:-]*)*\/?$/;
     const isLocalhost = newUrl.includes('localhost');
     const isUrl = isUrlRegex.test(newUrl) || isLocalhost;
 
@@ -1718,7 +1718,7 @@ const BrowserApp = () => {
                         className={`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer
                         ${activeTabId === tab.id
                             ? `z-10 -mb-px ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card text-card-foreground'}`
-                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r`
+                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r border-border`
                         }`}
                     >
                         {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
@@ -2404,6 +2404,7 @@ export default function BrowserPage() {
 
 
       
+
 
 
 
