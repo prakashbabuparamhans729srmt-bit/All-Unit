@@ -273,16 +273,16 @@ const VoiceSearchOverlay = ({
               </div>
             </>
           ) : ( // state === 'error'
-            <div className="flex flex-col items-center justify-center text-center gap-8">
-              <div className="w-40 h-40 flex items-center justify-center rounded-full border border-gray-600">
-                <Mic className="w-20 h-20 text-gray-300" />
-              </div>
-              <h2 className="text-3xl font-light">
+            <div className="flex flex-row items-center justify-center gap-16">
+              <h2 className="text-3xl font-light text-gray-300">
                 Didn&apos;t get that.{' '}
-                <button onClick={onRetry} className="underline hover:text-gray-300">
+                <button onClick={onRetry} className="underline text-gray-400 hover:text-white">
                   Try again
                 </button>
               </h2>
+              <div className="w-32 h-32 flex items-center justify-center rounded-full border border-gray-500">
+                <Mic className="w-14 h-14 text-gray-400" />
+              </div>
             </div>
           )}
       </DialogContent>
@@ -1769,7 +1769,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <Card className={`flex items-center gap-2 p-2 rounded-none ${isIncognito ? 'bg-gray-800' : 'bg-card'}`}>
+          <div className={`flex items-center gap-2 p-2 rounded-none ${isIncognito ? 'bg-gray-800' : 'bg-card'}`}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2280,7 +2280,7 @@ const BrowserApp = () => {
                   </DropdownMenu>
               </div>
             </div>
-          </Card>
+          </div>
         </header>
         <div className="flex-1 flex overflow-hidden">
           <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
@@ -2462,3 +2462,6 @@ export default function BrowserPage() {
 
 
 
+
+
+    
