@@ -250,6 +250,12 @@ const VoiceSearchOverlay = ({
   return (
     <Dialog open={state !== 'inactive'} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="bg-black/90 border-none shadow-none text-white h-screen w-screen max-w-full flex flex-col items-center justify-center gap-8 rounded-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Voice Search</DialogTitle>
+            <DialogDescription>
+              {state === 'listening' ? 'The browser is listening for voice input.' : 'There was an error. Please try again.'}
+            </DialogDescription>
+          </DialogHeader>
           <DialogClose asChild>
               <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
                 <X className="w-6 h-6" />
@@ -552,6 +558,52 @@ const BrowserApp = () => {
     }
   }, [assistantInput, assistantMessages, toast]);
 
+  const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
+    recognitionRef.current?.stop();
+
+    setVoiceSearchSource(source);
+    setListeningState('listening');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
+      setListeningState('inactive');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognitionRef.current = recognition;
+
+    recognition.onend = () => {
+      // recognitionRef.current = null;
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        setListeningState('error');
+      } else {
+        toast({ title: "Voice search error", description: event.error, variant: "destructive" });
+        stopVoiceSearch();
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (source === 'address' && activeTab) {
+        setInputValue(transcript);
+        handleNavigation(activeTab.id, transcript);
+      } else if (source === 'assistant') {
+        handleAssistantSubmit(transcript);
+      }
+      stopVoiceSearch();
+    };
+
+    recognition.start();
+  }, [activeTab, handleAssistantSubmit, toast]);
+
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
     if (authStatus !== 'true') {
@@ -675,52 +727,6 @@ const BrowserApp = () => {
         toast({ title: "Nothing to search", description: "Please type something in the assistant box to search." });
     }
   }
-
-  const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
-    recognitionRef.current?.stop();
-
-    setVoiceSearchSource(source);
-    setListeningState('listening');
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ title: "Voice search not supported", description: "Your browser doesn't support the Web Speech API.", variant: "destructive" });
-      setListeningState('inactive');
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    recognitionRef.current = recognition;
-
-    recognition.onend = () => {
-      // recognitionRef.current = null;
-    };
-
-    recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        setListeningState('error');
-      } else {
-        toast({ title: "Voice search error", description: event.error, variant: "destructive" });
-        stopVoiceSearch();
-      }
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (source === 'address' && activeTab) {
-        setInputValue(transcript);
-        handleNavigation(activeTab.id, transcript);
-      } else if (source === 'assistant') {
-        handleAssistantSubmit(transcript);
-      }
-      stopVoiceSearch();
-    };
-
-    recognition.start();
-  }, [activeTab, handleAssistantSubmit]);
 
   const stopVoiceSearch = () => {
     recognitionRef.current?.stop();
@@ -2448,6 +2454,7 @@ export default function BrowserPage() {
 
 
       
+
 
 
 
