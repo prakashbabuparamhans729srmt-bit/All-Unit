@@ -240,10 +240,12 @@ const VoiceSearchOverlay = ({
   state,
   onClose,
   onRetry,
+  transcript,
 }: {
   state: 'listening' | 'error' | 'inactive';
   onClose: () => void;
   onRetry: () => void;
+  transcript: string;
 }) => {
   if (state === 'inactive') return null;
 
@@ -264,7 +266,7 @@ const VoiceSearchOverlay = ({
           
           {state === 'listening' ? (
             <>
-              <h2 className="text-3xl font-light">Listening...</h2>
+              <h2 className="text-3xl font-light h-16">Listening... <span className="text-gray-400">{transcript}</span></h2>
               <div className="relative w-40 h-40">
                 <div className="absolute inset-0 bg-red-500 rounded-full animate-pulse"></div>
                 <div className="relative w-full h-full flex items-center justify-center bg-red-600 rounded-full">
@@ -274,12 +276,14 @@ const VoiceSearchOverlay = ({
             </>
           ) : ( // state === 'error'
             <div className="flex flex-row items-center justify-center gap-16">
-              <h2 className="text-3xl font-light text-gray-300">
-                Didn&apos;t get that.{' '}
-                <button onClick={onRetry} className="underline text-gray-400 hover:text-white">
-                  Try again
-                </button>
-              </h2>
+              <div className='text-center'>
+                <h2 className="text-3xl font-light text-gray-300">
+                  Didn&apos;t get that.
+                </h2>
+                 <button onClick={onRetry} className="underline text-gray-400 hover:text-white mt-2">
+                    Try again
+                  </button>
+              </div>
               <div className="w-32 h-32 flex items-center justify-center rounded-full border border-gray-500">
                 <Mic className="w-14 h-14 text-gray-400" />
               </div>
@@ -515,6 +519,7 @@ const BrowserApp = () => {
   
   const [listeningState, setListeningState] = useState<'listening' | 'error' | 'inactive'>('inactive');
   const [voiceSearchSource, setVoiceSearchSource] = useState<'address' | 'assistant' | null>(null);
+  const [interimTranscript, setInterimTranscript] = useState('');
 
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
   
@@ -558,8 +563,16 @@ const BrowserApp = () => {
     }
   }, [assistantInput, assistantMessages, toast]);
 
+  const stopVoiceSearch = () => {
+    recognitionRef.current?.stop();
+    setListeningState('inactive');
+    setVoiceSearchSource(null);
+    setInterimTranscript('');
+  };
+
   const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
     recognitionRef.current?.stop();
+    setInterimTranscript('');
 
     setVoiceSearchSource(source);
     setListeningState('listening');
@@ -573,7 +586,7 @@ const BrowserApp = () => {
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognitionRef.current = recognition;
 
@@ -591,14 +604,27 @@ const BrowserApp = () => {
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (source === 'address' && activeTab) {
-        setInputValue(transcript);
-        handleNavigation(activeTab.id, transcript);
-      } else if (source === 'assistant') {
-        handleAssistantSubmit(transcript);
+      let finalTranscript = '';
+      let currentInterimTranscript = '';
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          currentInterimTranscript += event.results[i][0].transcript;
+        }
       }
-      stopVoiceSearch();
+      
+      setInterimTranscript(currentInterimTranscript);
+
+      if (finalTranscript) {
+        if (source === 'address' && activeTab) {
+          setInputValue(finalTranscript);
+          handleNavigation(activeTab.id, finalTranscript);
+        } else if (source === 'assistant') {
+          handleAssistantSubmit(finalTranscript);
+        }
+        stopVoiceSearch();
+      }
     };
 
     recognition.start();
@@ -727,12 +753,6 @@ const BrowserApp = () => {
         toast({ title: "Nothing to search", description: "Please type something in the assistant box to search." });
     }
   }
-
-  const stopVoiceSearch = () => {
-    recognitionRef.current?.stop();
-    setListeningState('inactive');
-    setVoiceSearchSource(null);
-  };
 
   const retryVoiceSearch = () => {
     if (voiceSearchSource) {
@@ -2356,6 +2376,7 @@ const BrowserApp = () => {
         state={listeningState}
         onClose={stopVoiceSearch}
         onRetry={retryVoiceSearch}
+        transcript={interimTranscript}
       />
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
