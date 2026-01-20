@@ -176,7 +176,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, open, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
     if (collapsible === "none") {
       return (
@@ -216,44 +216,23 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
-        className={cn(
-          "group peer hidden md:block text-sidebar-foreground",
-        )}
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
+        className={cn(
+          "group hidden md:flex h-svh flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
+          "data-[side=left]:border-r data-[side=right]:border-l border-sidebar-border",
+          // When expanded (state is 'expanded', data-collapsible is empty)
+          "data-[state=expanded]:w-[var(--sidebar-width)]",
+          // When collapsed (state is 'collapsed', data-collapsible is 'icon' or 'offcanvas')
+          "data-[collapsible=icon]:w-[var(--sidebar-width-icon)]",
+          "data-[collapsible=offcanvas]:w-0 data-[collapsible=offcanvas]:border-transparent",
+          className
+        )}
+        {...props}
       >
-        {/* This is what handles the sidebar gap on desktop */}
-        <div
-          className={cn(
-            "duration-200 relative h-svh bg-transparent transition-[width] ease-linear",
-             collapsible === 'offcanvas' && open ? "w-[--sidebar-width]" : "w-0",
-             collapsible === 'icon' ? "w-[var(--sidebar-width-icon)]" : "w-0",
-            "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
-          )}
-        />
-        <div
-          className={cn(
-            "duration-200 fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] ease-linear md:flex",
-            open ? "w-[--sidebar-width]" : "w-0",
-            side === "left"
-              ? "left-[var(--sidebar-width-icon)] group-data-[collapsible=offcanvas]:left-0"
-              : "right-[var(--sidebar-width-icon)] group-data-[collapsible=offcanvas]:right-0",
-            variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
-            className
-          )}
-          {...props}
-        >
-          <div
-            data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
-          >
-            {children}
-          </div>
-        </div>
+        {children}
       </div>
     )
   }
@@ -282,55 +261,6 @@ const SidebarTrigger = React.forwardRef<
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"
-
-const SidebarRail = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button">
->(({ className, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
-
-  return (
-    <button
-      ref={ref}
-      data-sidebar="rail"
-      aria-label="Toggle Sidebar"
-      tabIndex={-1}
-      onClick={toggleSidebar}
-      title="Toggle Sidebar"
-      className={cn(
-        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
-        "[[data-side=left]_&]:cursor-w-resize [[data-side=right]_&]:cursor-e-resize",
-        "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-        "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-sidebar",
-        "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
-        "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
-        className
-      )}
-      {...props}
-    />
-  )
-})
-SidebarRail.displayName = "SidebarRail"
-
-const SidebarInset = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"main">
->(({ className, ...props }, ref) => {
-    const { open } = useSidebar();
-    return (
-        <main
-        ref={ref}
-        className={cn(
-            "relative flex min-h-svh flex-1 flex-col bg-background transition-[margin-left]",
-            "md:ml-[var(--sidebar-width-icon)]",
-            open ? "md:ml-[calc(var(--sidebar-width-icon)+var(--sidebar-width))]" : "",
-            className
-        )}
-        {...props}
-        />
-    )
-})
-SidebarInset.displayName = "SidebarInset"
 
 const SidebarInput = React.forwardRef<
   React.ElementRef<typeof Input>,
@@ -745,7 +675,6 @@ export {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarInput,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,
@@ -756,7 +685,6 @@ export {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
-  SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
