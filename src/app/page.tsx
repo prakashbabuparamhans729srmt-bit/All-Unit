@@ -1718,7 +1718,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none border-t-border ${isIncognito ? 'bg-gray-800' : ''}`}>
+          <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none shadow-none ${isIncognito ? 'bg-gray-800' : 'bg-card text-card-foreground'}`}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2380,3 +2380,4 @@ export default function BrowserPage() {
 
 
       
+
