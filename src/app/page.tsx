@@ -266,7 +266,7 @@ const VoiceSearchOverlay = ({
           
           {state === 'listening' ? (
             <>
-              <h2 className="text-3xl font-light h-16">Listening... <span className="text-gray-400">{transcript}</span></h2>
+              <h2 className="text-3xl font-light min-h-16">Listening... <span className="text-gray-400">{transcript}</span></h2>
               <div className="relative w-40 h-40">
                 <div className="absolute inset-0 bg-red-500 rounded-full animate-pulse"></div>
                 <div className="relative w-full h-full flex items-center justify-center bg-red-600 rounded-full">
@@ -567,7 +567,6 @@ const BrowserApp = () => {
     recognitionRef.current?.stop();
     setListeningState('inactive');
     setVoiceSearchSource(null);
-    setInterimTranscript('');
   };
 
   const startVoiceSearch = useCallback((source: 'address' | 'assistant') => {
@@ -2486,3 +2485,4 @@ export default function BrowserPage() {
 
 
     
+
