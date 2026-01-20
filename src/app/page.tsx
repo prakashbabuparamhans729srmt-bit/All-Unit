@@ -124,7 +124,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { summarizeText } from "@/ai/flows/summarize-flow";
 import { describeImage } from "@/ai/flows/describe-image-flow";
-import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarRail } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -1718,7 +1718,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none shadow-none ${isIncognito ? 'bg-gray-800' : 'bg-card text-card-foreground'}`}>
+          <Card className={`flex items-center gap-2 p-2 rounded-b-lg rounded-t-none ${isIncognito ? 'bg-gray-800' : 'bg-card text-card-foreground'}`}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2292,6 +2292,12 @@ const BrowserApp = () => {
       <FeedbackSheet />
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Menu</SheetTitle>
+                <SheetDescription>
+                  {mobileSheetContent === 'chat' ? 'Chat History and options' : 'Main navigation and options'}
+                </SheetDescription>
+              </SheetHeader>
               {mobileSheetContent === 'chat' ? <ChatHistorySheetContent /> : <NavigationSheetContent />}
           </SheetContent>
       </Sheet>
@@ -2380,4 +2386,5 @@ export default function BrowserPage() {
 
 
       
+
 
