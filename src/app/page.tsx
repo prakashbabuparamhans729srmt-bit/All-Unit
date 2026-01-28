@@ -90,7 +90,8 @@ import {
   PanelLeft,
   Users,
   BrainCircuit,
-  ShoppingCart
+  ShoppingCart,
+  BookReader,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DotCircleIcon } from "@/components/icons/DotCircleIcon";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -212,20 +214,6 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
     if (shortcut.icon === 'Youtube') return <Youtube className="w-5 h-5" />;
     return shortcut.icon;
 };
-
-const OIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...props}
-    >
-        <circle cx="12" cy="12" r="8" />
-    </svg>
-);
 
 type Shortcut = {
     name: string;
@@ -611,7 +599,7 @@ const BrowserApp = () => {
         loadFailed: false,
     });
     setInputValue(newUrl);
-  }, [tabs, isIncognito, searchEngine]);
+  }, [tabs, isIncognito, searchEngine, toast]);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
@@ -1275,7 +1263,7 @@ const BrowserApp = () => {
   ];
 
   const navItems = [
-    { icon: OIcon, label: 'Discover', action: () => toast({ title: "Discover page is not implemented." }) },
+    { icon: DotCircleIcon, label: 'Discover', action: () => toast({ title: "Discover page is not implemented." }) },
     { icon: Users, label: 'Community', action: () => toast({ title: "Community page is not implemented." }) },
     { icon: BookOpen, label: 'Learn', action: () => toast({ title: "Learn page is not implemented." }) },
     { icon: BrainCircuit, label: 'AI Tools', action: () => toast({ title: "AI Tools page is not implemented." }) },
@@ -2588,9 +2576,3 @@ export default function BrowserPage() {
 
 
     
-
-
-
-
-
-
