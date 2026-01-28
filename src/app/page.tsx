@@ -1270,7 +1270,7 @@ const BrowserApp = () => {
   ];
 
   const navItems = [
-    { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://discover.google.com/') },
+    { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
     { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://whatsapp.com/') },
     { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
