@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
-import { AppWindow, Plus, User, Shield } from 'lucide-react';
+import { Plus, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
+import { AishaLogo } from '@/components/icons/AishaLogo';
 
 const DecorativeShapes = () => (
   <>
@@ -33,14 +34,14 @@ const WelcomePage = () => {
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground overflow-hidden">
       <header className="absolute top-0 left-0 p-6 flex items-center gap-2">
-         <AppWindow className="h-6 w-6 text-cyan-400" />
+         <AishaLogo style={{ height: 24, width: 24 }} />
         <h1 className="text-lg font-semibold" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
       </header>
 
       <DecorativeShapes />
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 z-10">
-        <AppWindow className="w-12 h-12 text-cyan-500 mb-6" />
+        <AishaLogo style={{ height: 48, width: 48 }} className="mb-6" />
         <h2 className="text-4xl font-semibold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Who's using Aisha?</h2>
         <p className="max-w-md text-muted-foreground mb-12">
           With Aisha profiles, you can separate all your stuff. Create profiles for friends and family, or split between work and fun.

@@ -71,7 +71,6 @@ import {
   Newspaper,
   Image as ImageIcon,
   Video,
-  AppWindow,
   ExternalLink,
   Menu,
   Play,
@@ -137,6 +136,7 @@ import { DotCircleIcon } from "@/components/icons/DotCircleIcon";
 import { CustomBookReaderIcon } from "@/components/icons/CustomBookReaderIcon";
 import { CustomCommunityIcon } from "@/components/icons/CustomCommunityIcon";
 import { CustomAiToolIcon } from "@/components/icons/CustomAiToolIcon";
+import { AishaLogo } from "@/components/icons/AishaLogo";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -1748,7 +1748,7 @@ const BrowserApp = () => {
     <div className="flex flex-col h-full py-4">
       <div className="mb-8 px-4">
           <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
-              <AppWindow className="h-7 w-7 text-cyan-400" />
+              <AishaLogo style={{ height: 28, width: 28 }} />
               <span className="ml-4 font-semibold text-lg">Aisha</span>
           </button>
       </div>
@@ -2132,18 +2132,18 @@ const BrowserApp = () => {
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
                         <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            <span>Extensions</span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                            <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported in this prototype."})}>
-                                <Puzzle className="mr-2 h-4 w-4" />
-                                <span>Manage Extensions</span>
-                            </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
+                            <DropdownMenuSubTrigger>
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                <span>Extensions</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported in this prototype."})}>
+                                    <Puzzle className="mr-2 h-4 w-4" />
+                                    <span>Manage Extensions</span>
+                                </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
                         </DropdownMenuSub>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={toggleTheme}>
