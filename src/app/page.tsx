@@ -1270,11 +1270,11 @@ const BrowserApp = () => {
   ];
 
   const navItems = [
-    { icon: DotCircleIcon, label: 'Discover', action: () => toast({ title: "Discover page is not implemented." }) },
-    { icon: CustomCommunityIcon, label: 'Community', action: () => toast({ title: "Community page is not implemented." }) },
-    { icon: CustomBookReaderIcon, label: 'Learn', action: () => toast({ title: "Learn page is not implemented." }) },
-    { icon: CustomAiToolIcon, label: 'AI Tools', action: () => toast({ title: "AI Tools page is not implemented." }) },
-    { icon: ShoppingCart, label: 'Store', action: () => toast({ title: "Store is not implemented." }) },
+    { icon: DotCircleIcon, label: 'U', action: () => toast({ title: "Discover page is not implemented." }) },
+    { icon: CustomCommunityIcon, label: 'W', action: () => toast({ title: "Community page is not implemented." }) },
+    { icon: CustomBookReaderIcon, label: 'R', action: () => toast({ title: "Learn page is not implemented." }) },
+    { icon: CustomAiToolIcon, label: 'M', action: () => toast({ title: "AI Tools page is not implemented." }) },
+    { icon: ShoppingCart, label: 'S', action: () => toast({ title: "Store is not implemented." }) },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
