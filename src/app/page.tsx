@@ -87,7 +87,10 @@ import {
   ArrowUp,
   Share,
   Laptop,
-  PanelLeft
+  PanelLeft,
+  Users,
+  BrainCircuit,
+  ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -209,6 +212,20 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
     if (shortcut.icon === 'Youtube') return <Youtube className="w-5 h-5" />;
     return shortcut.icon;
 };
+
+const OIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
+    >
+        <circle cx="12" cy="12" r="8" />
+    </svg>
+);
 
 type Shortcut = {
     name: string;
@@ -538,7 +555,7 @@ const BrowserApp = () => {
     );
   };
   
-  const handleNavigation = (tabId: string, url: string) => {
+  const handleNavigation = useCallback((tabId: string, url: string) => {
     let newUrl = url.trim();
     if (!newUrl) return;
 
@@ -594,7 +611,7 @@ const BrowserApp = () => {
         loadFailed: false,
     });
     setInputValue(newUrl);
-  };
+  }, [tabs, activeTabId, isIncognito, searchEngine]);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
@@ -1246,10 +1263,12 @@ const BrowserApp = () => {
   ];
 
   const navItems = [
-    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:media') },
-    { icon: History, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
-    { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
-    { icon: Bookmark, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { icon: Globe, label: 'Browse', action: () => handleNavigation(activeTabId, 'about:newtab') },
+    { icon: OIcon, label: 'Discover', action: () => toast({ title: "Discover page is not implemented." }) },
+    { icon: Users, label: 'Community', action: () => toast({ title: "Community page is not implemented." }) },
+    { icon: BookOpen, label: 'Learn', action: () => toast({ title: "Learn page is not implemented." }) },
+    { icon: BrainCircuit, label: 'AI Tools', action: () => toast({ title: "AI Tools page is not implemented." }) },
+    { icon: ShoppingCart, label: 'Store', action: () => toast({ title: "Store is not implemented." }) },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
@@ -2558,6 +2577,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
