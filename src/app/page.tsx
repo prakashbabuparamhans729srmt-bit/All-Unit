@@ -1270,11 +1270,11 @@ const BrowserApp = () => {
   ];
 
   const navItems = [
-    { icon: DotCircleIcon, label: 'U', action: () => toast({ title: "Discover page is not implemented." }) },
-    { icon: CustomCommunityIcon, label: 'W', action: () => toast({ title: "Community page is not implemented." }) },
-    { icon: CustomBookReaderIcon, label: 'R', action: () => toast({ title: "Learn page is not implemented." }) },
-    { icon: CustomAiToolIcon, label: 'M', action: () => toast({ title: "AI Tools page is not implemented." }) },
-    { icon: ShoppingCart, label: 'S', action: () => toast({ title: "Store is not implemented." }) },
+    { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://discover.google.com/') },
+    { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://whatsapp.com/') },
+    { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
+    { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
+    { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://play.google.com/store') },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
