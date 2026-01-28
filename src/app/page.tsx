@@ -611,7 +611,7 @@ const BrowserApp = () => {
         loadFailed: false,
     });
     setInputValue(newUrl);
-  }, [tabs, activeTabId, isIncognito, searchEngine]);
+  }, [tabs, isIncognito, searchEngine]);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
@@ -650,6 +650,7 @@ const BrowserApp = () => {
   const stopVoiceSearch = useCallback(() => {
     if (voiceSearchTimeoutRef.current) {
         clearTimeout(voiceSearchTimeoutRef.current);
+        voiceSearchTimeoutRef.current = null;
     }
     recognitionRef.current?.stop();
     if(listeningState === 'listening') {
@@ -675,7 +676,7 @@ const BrowserApp = () => {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognitionRef.current = recognition;
@@ -683,12 +684,14 @@ const BrowserApp = () => {
     recognition.onend = () => {
       if (voiceSearchTimeoutRef.current) {
         clearTimeout(voiceSearchTimeoutRef.current);
+        voiceSearchTimeoutRef.current = null;
       }
     };
 
     recognition.onerror = (event: any) => {
       if (voiceSearchTimeoutRef.current) {
         clearTimeout(voiceSearchTimeoutRef.current);
+        voiceSearchTimeoutRef.current = null;
       }
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
         setListeningState('error');
@@ -701,14 +704,20 @@ const BrowserApp = () => {
     recognition.onresult = (event: any) => {
       if (voiceSearchTimeoutRef.current) {
         clearTimeout(voiceSearchTimeoutRef.current);
+        voiceSearchTimeoutRef.current = null;
       }
 
       let transcript = "";
-      for (let i = 0; i < event.results.length; ++i) {
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
         transcript += event.results[i][0].transcript;
       }
-      setInterimTranscript(transcript);
+      setInterimTranscript(prev => prev + transcript);
       
+      const finalTranscript = Array.from(event.results)
+        .map((result: any) => result[0])
+        .map((result) => result.transcript)
+        .join("");
+        
       const executeSearch = (searchText: string) => {
         if (!searchText.trim()) {
             stopVoiceSearch();
@@ -722,12 +731,13 @@ const BrowserApp = () => {
         }
         stopVoiceSearch();
       };
-
-      if (event.results[0].isFinal) {
-        executeSearch(transcript);
-      } else if (transcript.trim()){
-        voiceSearchTimeoutRef.current = setTimeout(() => {
-          executeSearch(transcript);
+      
+      const result = event.results[event.results.length - 1];
+      if (result.isFinal) {
+        executeSearch(finalTranscript);
+      } else {
+         voiceSearchTimeoutRef.current = setTimeout(() => {
+          executeSearch(finalTranscript);
         }, 2000);
       }
     };
@@ -1255,15 +1265,16 @@ const BrowserApp = () => {
   };
 
   const mobileNavItems = [
-    { icon: Play, label: 'Media', action: () => handleNavigation(activeTabId, 'about:media') },
-    { icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
-    { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
-    { icon: Bookmark, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { icon: Share, label: 'Share', action: handleShare },
+    { icon: Search, label: 'Find in page', action: handleFind },
+    { icon: Languages, label: 'Translate', action: () => toast({title: 'Translate is not implemented on mobile yet.'}) },
+    { icon: PlusSquare, label: 'Add to Home', action: handleInstallClick },
+    { icon: Laptop, label: 'Recent tabs', action: () => toast({title: 'Recent tabs are not implemented.'}) },
+    { icon: HelpCircle, label: 'Help & feedback', action: () => setIsFeedbackOpen(true) },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
   const navItems = [
-    { icon: Globe, label: 'Browse', action: () => handleNavigation(activeTabId, 'about:newtab') },
     { icon: OIcon, label: 'Discover', action: () => toast({ title: "Discover page is not implemented." }) },
     { icon: Users, label: 'Community', action: () => toast({ title: "Community page is not implemented." }) },
     { icon: BookOpen, label: 'Learn', action: () => toast({ title: "Learn page is not implemented." }) },
@@ -1679,12 +1690,12 @@ const BrowserApp = () => {
     <>
       <SidebarHeader>
           <SidebarMenuButton
-              onClick={() => handleNavigation(activeTabId, 'about:about')}
-              tooltip={{ children: 'About Aisha', side: 'right' }}
+              onClick={() => handleNavigation(activeTabId, 'about:newtab')}
+              tooltip={{ children: 'Browse', side: 'right' }}
               className="w-full justify-center data-[state=open]:justify-start h-12"
           >
-              <AppWindow className="h-7 w-7 text-cyan-400 shrink-0" />
-              <span className="font-semibold text-lg">Aisha</span>
+              <Globe className="h-7 w-7 text-cyan-400 shrink-0" />
+              <span className="font-semibold text-lg">Browse</span>
           </SidebarMenuButton>
       </SidebarHeader>
       <SidebarContent>
@@ -2577,6 +2588,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
