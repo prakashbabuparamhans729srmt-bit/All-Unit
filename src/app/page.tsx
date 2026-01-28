@@ -1748,7 +1748,7 @@ const BrowserApp = () => {
     <div className="flex flex-col h-full py-4">
       <div className="mb-8 px-4">
           <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
-              <AishaLogo style={{ height: 28, width: 28 }} />
+              <AishaLogo width={28} height={28} />
               <span className="ml-4 font-semibold text-lg">Aisha</span>
           </button>
       </div>

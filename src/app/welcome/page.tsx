@@ -34,14 +34,14 @@ const WelcomePage = () => {
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground overflow-hidden">
       <header className="absolute top-0 left-0 p-6 flex items-center gap-2">
-         <AishaLogo style={{ height: 24, width: 24 }} />
+         <AishaLogo width={24} height={24} />
         <h1 className="text-lg font-semibold" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
       </header>
 
       <DecorativeShapes />
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 z-10">
-        <AishaLogo style={{ height: 48, width: 48 }} className="mb-6" />
+        <AishaLogo width={48} height={48} className="mb-6" />
         <h2 className="text-4xl font-semibold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Who's using Aisha?</h2>
         <p className="max-w-md text-muted-foreground mb-12">
           With Aisha profiles, you can separate all your stuff. Create profiles for friends and family, or split between work and fun.
