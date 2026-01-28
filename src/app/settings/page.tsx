@@ -492,10 +492,13 @@ export default function SettingsPage() {
 
   const Appearance = () => {
     const [theme, setTheme] = useState('dark');
+    const [fontSize, setFontSize] = useState('medium');
     
     useEffect(() => {
         const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         setTheme(currentTheme);
+        const savedFontSize = localStorage.getItem('aisha-font-size');
+        setFontSize(savedFontSize ? JSON.parse(savedFontSize) : 'medium');
     }, []);
 
     const handleThemeChange = (newTheme: string) => {
@@ -508,6 +511,11 @@ export default function SettingsPage() {
             document.documentElement.style.colorScheme = 'light';
         }
     };
+
+    const handleFontSizeChange = (value: string) => {
+      setFontSize(value);
+      updateSetting('aisha-font-size', value);
+    }
 
     return (
         <div className="space-y-6" id="appearance">
@@ -550,7 +558,7 @@ export default function SettingsPage() {
                     <div>
                     <h3 className="font-medium">Font size</h3>
                     </div>
-                    <Select defaultValue="medium" onValueChange={(v) => toast({title: `Font size set to ${v}`})}>
+                    <Select value={fontSize} onValueChange={handleFontSizeChange}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue />
                     </SelectTrigger>

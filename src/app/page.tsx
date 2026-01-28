@@ -31,13 +31,6 @@ import {
   Trash2,
   ZoomIn,
   ZoomOut,
-  Printer,
-  Languages,
-  Cast,
-  Settings,
-  HelpCircle,
-  LogOut,
-  Minus,
   Square,
   Sun,
   Moon,
@@ -91,7 +84,13 @@ import {
   Users,
   BrainCircuit,
   ShoppingCart,
-  BookReader,
+  Printer,
+  Languages,
+  Cast,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -533,6 +532,7 @@ const BrowserApp = () => {
   
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [fontSize, setFontSize] = useState('medium');
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
@@ -863,6 +863,10 @@ const BrowserApp = () => {
       if (!e || e.key === 'aisha-show-bookmarks-bar') {
         const savedShowBookmarks = localStorage.getItem('aisha-show-bookmarks-bar');
         setShowBookmarksButton(savedShowBookmarks ? JSON.parse(savedShowBookmarks) : true);
+      }
+      if (!e || e.key === 'aisha-font-size') {
+        const savedFontSize = localStorage.getItem('aisha-font-size');
+        setFontSize(savedFontSize ? JSON.parse(savedFontSize) : 'medium');
       }
     };
 
@@ -1771,8 +1775,14 @@ const BrowserApp = () => {
     );
   }
 
+  const fontSizeClass = {
+    small: 'text-sm',
+    medium: 'text-base',
+    large: 'text-lg',
+  }[fontSize] || 'text-base';
+
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className={cn("flex h-screen bg-background text-foreground overflow-hidden", fontSizeClass)}>
       <Sidebar collapsible="icon">
           {isAssistantOpen ? <ChatHistorySidebarContent/> : <NavigationSidebarContent />}
           <SidebarFooter>
@@ -1810,7 +1820,7 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center text-sm font-medium h-9 px-4 rounded-t-lg cursor-pointer`,
+                        className={cn(`relative flex items-center font-medium h-9 px-4 rounded-t-lg cursor-pointer`,
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r border-border`
@@ -1846,7 +1856,7 @@ const BrowserApp = () => {
                 <Home className="w-5 h-5" />
               </Button>)}
             </div>
-            <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5 text-sm">
+            <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5">
               {isInternalPage ? (
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
