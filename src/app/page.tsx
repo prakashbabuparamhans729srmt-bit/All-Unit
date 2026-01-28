@@ -136,6 +136,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DotCircleIcon } from "@/components/icons/DotCircleIcon";
 import { CustomBookReaderIcon } from "@/components/icons/CustomBookReaderIcon";
+import { CustomCommunityIcon } from "@/components/icons/CustomCommunityIcon";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -1269,7 +1270,7 @@ const BrowserApp = () => {
 
   const navItems = [
     { icon: DotCircleIcon, label: 'Discover', action: () => toast({ title: "Discover page is not implemented." }) },
-    { icon: Users, label: 'Community', action: () => toast({ title: "Community page is not implemented." }) },
+    { icon: CustomCommunityIcon, label: 'Community', action: () => toast({ title: "Community page is not implemented." }) },
     { icon: CustomBookReaderIcon, label: 'Learn', action: () => toast({ title: "Learn page is not implemented." }) },
     { icon: BrainCircuit, label: 'AI Tools', action: () => toast({ title: "AI Tools page is not implemented." }) },
     { icon: ShoppingCart, label: 'Store', action: () => toast({ title: "Store is not implemented." }) },
