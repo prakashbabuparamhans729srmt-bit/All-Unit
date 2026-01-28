@@ -11,7 +11,7 @@ interface AishaLogoProps {
 export const AishaLogo = (props: AishaLogoProps) => {
   return (
     <Image
-      src="/aisha-logo.svg"
+      src="/aisha-logo.svg?v=1"
       alt="Aisha Logo"
       width={props.width}
       height={props.height}
