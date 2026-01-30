@@ -138,6 +138,7 @@ import { CustomAiToolIcon } from "@/components/icons/CustomAiToolIcon";
 import { AishaLogo } from "@/components/icons/AishaLogo";
 import { AppGridIcon } from '@/components/icons/AppGridIcon';
 import { CustomAboutIcon } from "@/components/icons/CustomAboutIcon";
+import { CustomGroupIcon } from "@/components/icons/CustomGroupIcon";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -1273,6 +1274,7 @@ const BrowserApp = () => {
     { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
     { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
     { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
+    { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'https://google.com/') },
     { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://play.google.com/store') },
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
