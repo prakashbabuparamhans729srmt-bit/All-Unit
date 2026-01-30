@@ -137,6 +137,7 @@ import { CustomCommunityIcon } from "@/components/icons/CustomCommunityIcon";
 import { CustomAiToolIcon } from "@/components/icons/CustomAiToolIcon";
 import { AishaLogo } from "@/components/icons/AishaLogo";
 import { AppGridIcon } from '@/components/icons/AppGridIcon';
+import { CustomAboutIcon } from "@/components/icons/CustomAboutIcon";
 
 
 const DEFAULT_URL = "about:newtab";
@@ -1274,6 +1275,7 @@ const BrowserApp = () => {
     { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
     { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://play.google.com/store') },
+    { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
