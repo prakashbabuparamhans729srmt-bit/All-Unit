@@ -64,7 +64,6 @@ import {
   Terminal,
   ChevronUp,
   MessageSquare,
-  LayoutGrid,
   Mail,
   Youtube,
   Map as MapIcon,
@@ -137,6 +136,7 @@ import { CustomBookReaderIcon } from "@/components/icons/CustomBookReaderIcon";
 import { CustomCommunityIcon } from "@/components/icons/CustomCommunityIcon";
 import { CustomAiToolIcon } from "@/components/icons/CustomAiToolIcon";
 import { AishaLogo } from "@/components/icons/AishaLogo";
+import { AppGridIcon } from '@/components/icons/AppGridIcon';
 
 
 const DEFAULT_URL = "about:newtab";
@@ -2005,7 +2005,7 @@ const BrowserApp = () => {
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9">
-                      <LayoutGrid className="w-5 h-5" />
+                      <AppGridIcon className="w-5 h-5" />
                   </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-80">
