@@ -538,6 +538,13 @@ const BrowserApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [fontSize, setFontSize] = useState('medium');
 
+  // FAB states
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const [isFabDragging, setIsFabDragging] = useState(false);
+  const [fabPosition, setFabPosition] = useState({ x: 24, y: 24 }); // right, bottom in px
+  const fabDragOffset = useRef({ x: 0, y: 0 });
+  const wasFabDragged = useRef(false);
+
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
 
@@ -736,6 +743,62 @@ const BrowserApp = () => {
 
     recognition.start();
   }, [activeTab, activeTabId, handleNavigation, handleAssistantSubmit, stopVoiceSearch, toast]);
+
+    const handleFabDragStart = (clientX: number, clientY: number) => {
+        if (!fabRef.current) return;
+        wasFabDragged.current = false;
+        setIsFabDragging(true);
+        const rect = fabRef.current.getBoundingClientRect();
+        fabDragOffset.current = {
+            x: clientX - rect.left,
+            y: clientY - rect.top,
+        };
+    };
+
+    const handleFabDragMove = (clientX: number, clientY: number) => {
+        if (!isFabDragging || !fabRef.current) return;
+        wasFabDragged.current = true;
+
+        const newX = window.innerWidth - clientX - (fabRef.current.offsetWidth - fabDragOffset.current.x);
+        const newY = window.innerHeight - clientY - (fabRef.current.offsetHeight - fabDragOffset.current.y);
+        
+        const boundedX = Math.max(8, Math.min(newX, window.innerWidth - fabRef.current.offsetWidth - 8));
+        const boundedY = Math.max(8, Math.min(newY, window.innerHeight - fabRef.current.offsetHeight - 8));
+
+        setFabPosition({ x: boundedX, y: boundedY });
+    };
+
+    const handleFabDragEnd = () => {
+        setIsFabDragging(false);
+    };
+
+    const handleFabMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+        handleFabDragStart(e.clientX, e.clientY);
+        e.preventDefault();
+    };
+
+    const handleFabTouchStart = (e: React.TouchEvent<HTMLButtonElement>) => {
+        handleFabDragStart(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => handleFabDragMove(e.clientX, e.clientY);
+        const handleTouchMove = (e: TouchEvent) => handleFabDragMove(e.touches[0].clientX, e.touches[0].clientY);
+
+        if (isFabDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleFabDragEnd);
+            window.addEventListener('touchmove', handleTouchMove);
+            window.addEventListener('touchend', handleFabDragEnd);
+        }
+    
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleFabDragEnd);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleFabDragEnd);
+        };
+    }, [isFabDragging]);
 
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
@@ -1273,8 +1336,8 @@ const BrowserApp = () => {
   const navItems = [
     { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
     { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
-    { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
     { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'https://google.com/') },
+    { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
     { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://play.google.com/store') },
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
@@ -2528,12 +2591,29 @@ const BrowserApp = () => {
           </Dialog>
       )}
       <Button
-        variant="secondary"
+        ref={fabRef}
+        variant="default"
         size="icon"
-        className="md:hidden fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
-        onClick={() => { setMobileSheetContent('nav'); setMobileMenuOpen(true); }}
+        className={cn(
+            "md:hidden fixed z-50 h-12 w-12 rounded-full shadow-lg",
+            isFabDragging ? "cursor-grabbing" : "cursor-grab"
+        )}
+        style={{
+            right: `${fabPosition.x}px`,
+            bottom: `${fabPosition.y}px`,
+            touchAction: 'none'
+        }}
+        onMouseDown={handleFabMouseDown}
+        onTouchStart={handleFabTouchStart}
+        onClick={() => {
+            if (wasFabDragged.current) {
+                return;
+            }
+            setMobileSheetContent('nav'); 
+            setMobileMenuOpen(true); 
+        }}
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-5 h-5" />
       </Button>
     </div>
   );
