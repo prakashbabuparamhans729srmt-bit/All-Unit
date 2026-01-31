@@ -2592,7 +2592,7 @@ const BrowserApp = () => {
       )}
       <Button
         ref={fabRef}
-        variant="default"
+        variant="secondary"
         size="icon"
         className={cn(
             "md:hidden fixed z-50 h-12 w-12 rounded-full shadow-lg",
