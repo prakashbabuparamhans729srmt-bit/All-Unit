@@ -541,9 +541,11 @@ const BrowserApp = () => {
   // FAB states
   const fabRef = useRef<HTMLButtonElement>(null);
   const [isFabDragging, setIsFabDragging] = useState(false);
-  const [fabPosition, setFabPosition] = useState({ x: 24, y: 24 }); // right, bottom in px
+  const DEFAULT_FAB_POSITION = { x: 24, y: 24 };
+  const [fabPosition, setFabPosition] = useState(DEFAULT_FAB_POSITION); // right, bottom in px
   const fabDragOffset = useRef({ x: 0, y: 0 });
   const wasFabDragged = useRef(false);
+  const fabResetTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
@@ -745,6 +747,10 @@ const BrowserApp = () => {
   }, [activeTab, activeTabId, handleNavigation, handleAssistantSubmit, stopVoiceSearch, toast]);
 
     const handleFabDragStart = (clientX: number, clientY: number) => {
+        if (fabResetTimerRef.current) {
+            clearTimeout(fabResetTimerRef.current);
+            fabResetTimerRef.current = null;
+        }
         if (!fabRef.current) return;
         wasFabDragged.current = false;
         setIsFabDragging(true);
@@ -770,6 +776,14 @@ const BrowserApp = () => {
 
     const handleFabDragEnd = () => {
         setIsFabDragging(false);
+        if (wasFabDragged.current) {
+            if (fabResetTimerRef.current) {
+                clearTimeout(fabResetTimerRef.current);
+            }
+            fabResetTimerRef.current = setTimeout(() => {
+                setFabPosition(DEFAULT_FAB_POSITION);
+            }, 10000);
+        }
     };
 
     const handleFabMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -2670,5 +2684,7 @@ export default function BrowserPage() {
 
 
 
+
+    
 
     
