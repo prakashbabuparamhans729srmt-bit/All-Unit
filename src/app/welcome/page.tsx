@@ -32,8 +32,7 @@ const WelcomePage = () => {
   };
 
   const handleAddProfile = () => {
-    alert("Adding a new profile is a conceptual feature. For this prototype, this will start a new session.");
-    handleLogin();
+    window.location.href = '/signup';
   };
 
   return (
