@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,9 +54,9 @@ const SignupPage = () => {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <a href="/welcome" className="underline">
+            <Link href="/welcome" className="underline">
               Sign in
-            </a>
+            </Link>
           </div>
         </CardContent>
       </Card>
