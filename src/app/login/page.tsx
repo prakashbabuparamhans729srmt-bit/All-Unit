@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,12 +11,13 @@ import { AishaLogo } from '@/components/icons/AishaLogo';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 
 const LoginPage = () => {
+  const router = useRouter();
   const handleAuth = (event: React.FormEvent) => {
     event.preventDefault();
     // In a real app, you'd handle auth logic here.
     // For this prototype, we'll just log in the user.
     sessionStorage.setItem('aisha-auth', 'true');
-    window.location.href = '/';
+    router.push('/');
   };
 
   return (
