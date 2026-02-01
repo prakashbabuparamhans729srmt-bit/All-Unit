@@ -1458,9 +1458,8 @@ const BrowserApp = () => {
         {shortcuts.length < 100 && !isIncognito && (
             <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" className="mt-4">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Shortcut
+                <Button variant="ghost" size="icon" className="mt-4">
+                  <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
@@ -2228,7 +2227,7 @@ const BrowserApp = () => {
                         </DropdownMenuSub>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={toggleTheme}>
-                        {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                        {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
                         <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
