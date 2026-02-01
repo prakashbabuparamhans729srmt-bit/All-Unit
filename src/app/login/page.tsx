@@ -55,7 +55,6 @@ const LoginPage = () => {
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  required
                 />
               </div>
               <div className="grid gap-2">
@@ -65,7 +64,7 @@ const LoginPage = () => {
                     Forgot your password?
                   </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" />
               </div>
               <Button type="submit" className="w-full">
                 Login

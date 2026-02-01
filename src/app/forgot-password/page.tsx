@@ -40,7 +40,6 @@ const ForgotPasswordPage = () => {
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  required
                 />
               </div>
               <Button type="submit" className="w-full">
