@@ -271,12 +271,12 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
                <Avatar className="h-10 w-10">
-                  <AvatarImage src="https://picsum.photos/seed/prakashbabu/40/40" alt="User avatar" />
+                  <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" alt="User avatar" />
                   <AvatarFallback>U</AvatarFallback>
                </Avatar>
               <div>
-                <p className="font-semibold">Energy burner of motivation</p>
-                <p className="text-xs text-muted-foreground">prakashbabuparamhans729srmt@gmail.com</p>
+                <p className="font-semibold">Prakash Babu</p>
+                <p className="text-xs text-muted-foreground">prakash@example.com</p>
               </div>
             </div>
             <div className="flex gap-2">

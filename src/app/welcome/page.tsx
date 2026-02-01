@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -57,7 +58,7 @@ const WelcomePage = () => {
                     <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
                     <AvatarFallback><User/></AvatarFallback>
                 </Avatar>
-                <p className="font-medium">Energy burner...</p>
+                <p className="font-medium">Prakash Babu</p>
             </Link>
 
             {/* Add Profile */}

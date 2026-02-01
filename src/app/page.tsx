@@ -405,7 +405,7 @@ const AishaAssistant = React.memo(({
               </div>
                {message.role === 'user' && (
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="https://picsum.photos/seed/prakashbabu/32/32" />
+                  <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
                   <AvatarFallback><User/></AvatarFallback>
                 </Avatar>
               )}
@@ -2111,7 +2111,7 @@ const BrowserApp = () => {
                   <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                       <Avatar className="w-7 h-7">
-                      <AvatarImage src="https://picsum.photos/seed/prakashbabu/32/32" />
+                      <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
                       <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
                       </Avatar>
                   </Button>
