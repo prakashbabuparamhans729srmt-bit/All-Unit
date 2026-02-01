@@ -54,7 +54,7 @@ const WelcomePage = () => {
             {/* Existing Profile */}
             <Link href="/login" className="flex flex-col items-center gap-3 cursor-pointer group">
                 <Avatar className="w-24 h-24 ring-2 ring-transparent group-hover:ring-primary transition-all">
-                    <AvatarImage src="https://picsum.photos/seed/avatar1/100/100" />
+                    <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
                     <AvatarFallback><User/></AvatarFallback>
                 </Avatar>
                 <p className="font-medium">Energy burner...</p>
