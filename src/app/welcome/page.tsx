@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,9 +28,10 @@ const DecorativeShapes = () => (
 
 
 const WelcomePage = () => {
+  const router = useRouter();
   const handleGuestLogin = () => {
     sessionStorage.setItem('aisha-auth', 'true');
-    window.location.href = '/';
+    router.push('/');
   };
 
   return (
