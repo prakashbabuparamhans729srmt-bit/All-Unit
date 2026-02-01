@@ -31,6 +31,11 @@ const WelcomePage = () => {
     window.location.href = '/';
   };
 
+  const handleAddProfile = () => {
+    alert("Adding a new profile is a conceptual feature. For this prototype, this will start a new session.");
+    handleLogin();
+  };
+
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground overflow-hidden">
       <header className="absolute top-0 left-0 p-6 flex items-center gap-2">
@@ -58,7 +63,7 @@ const WelcomePage = () => {
             </div>
 
             {/* Add Profile */}
-            <div className="flex flex-col items-center justify-center gap-3 cursor-pointer group" onClick={handleLogin}>
+            <div className="flex flex-col items-center justify-center gap-3 cursor-pointer group" onClick={handleAddProfile}>
                  <Card className="w-24 h-24 flex items-center justify-center border-2 border-dashed bg-transparent group-hover:border-primary transition-all">
                     <Plus className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-all" />
                 </Card>
