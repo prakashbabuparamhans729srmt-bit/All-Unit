@@ -7,10 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AishaLogo } from '@/components/icons/AishaLogo';
-import { Separator } from '@/components/ui/separator';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 
-const SignupPage = () => {
+const LoginPage = () => {
   const handleAuth = (event: React.FormEvent) => {
     event.preventDefault();
     // In a real app, you'd handle auth logic here.
@@ -20,19 +19,19 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <AishaLogo width={40} height={40} />
           </div>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Enter your details below to create your account</CardDescription>
+          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardDescription>Enter your email below to log in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth}>
             <div className="grid gap-4">
-               <Button variant="outline" type="button" onClick={handleAuth}>
+              <Button variant="outline" type="button" onClick={handleAuth}>
                 <GoogleIcon className="mr-2 h-4 w-4" />
                 Continue with Google
               </Button>
@@ -47,17 +46,7 @@ const SignupPage = () => {
                   </span>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" placeholder="Max" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" placeholder="Robinson" required />
-                </div>
-              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -68,20 +57,25 @@ const SignupPage = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
+                    Forgot your password?
+                  </Link>
+                </div>
                 <Input id="password" type="password" required />
               </div>
               <Button type="submit" className="w-full">
-                Create an account
+                Login
               </Button>
             </div>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center text-sm">
             <p className="text-muted-foreground">
-                Already have an account?{' '}
-                <Link href="/login" className="underline font-medium text-primary">
-                Sign in
+                Don't have an account?{' '}
+                <Link href="/signup" className="underline font-medium text-primary">
+                    Sign up
                 </Link>
             </p>
         </CardFooter>
@@ -90,4 +84,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default LoginPage;

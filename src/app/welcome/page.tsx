@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Plus, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,13 +27,9 @@ const DecorativeShapes = () => (
 
 
 const WelcomePage = () => {
-  const handleLogin = () => {
+  const handleGuestLogin = () => {
     sessionStorage.setItem('aisha-auth', 'true');
     window.location.href = '/';
-  };
-
-  const handleAddProfile = () => {
-    window.location.href = '/signup';
   };
 
   return (
@@ -53,26 +50,26 @@ const WelcomePage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {/* Existing Profile */}
-            <div className="flex flex-col items-center gap-3 cursor-pointer group" onClick={handleLogin}>
+            <Link href="/login" className="flex flex-col items-center gap-3 cursor-pointer group">
                 <Avatar className="w-24 h-24 ring-2 ring-transparent group-hover:ring-primary transition-all">
                     <AvatarImage src="https://picsum.photos/seed/avatar1/100/100" />
                     <AvatarFallback><User/></AvatarFallback>
                 </Avatar>
                 <p className="font-medium">Energy burner...</p>
-            </div>
+            </Link>
 
             {/* Add Profile */}
-            <div className="flex flex-col items-center justify-center gap-3 cursor-pointer group" onClick={handleAddProfile}>
+            <Link href="/signup" className="flex flex-col items-center justify-center gap-3 cursor-pointer group">
                  <Card className="w-24 h-24 flex items-center justify-center border-2 border-dashed bg-transparent group-hover:border-primary transition-all">
                     <Plus className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-all" />
                 </Card>
                 <p className="font-medium">Add</p>
-            </div>
+            </Link>
         </div>
       </main>
 
       <footer className="absolute bottom-0 w-full p-6 flex justify-between items-center z-10">
-        <Button variant="outline" onClick={handleLogin}>
+        <Button variant="outline" onClick={handleGuestLogin}>
           <Shield className="w-4 h-4 mr-2" />
           Guest mode
         </Button>
