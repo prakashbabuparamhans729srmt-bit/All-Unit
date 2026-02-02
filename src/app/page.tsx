@@ -1975,12 +1975,13 @@ const BrowserApp = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
           <div className="flex items-end h-10 pt-1 px-1 bg-background draggable">
-            <div className="flex items-end non-draggable">
+            <div className="flex-1 flex items-end non-draggable overflow-hidden">
+              <div className="flex items-end overflow-x-auto scrollbar-hide">
                 {tabs.map((tab) => (
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer text-xs`,
+                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer text-xs flex-shrink-0`,
                           'font-light',
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
@@ -1996,6 +1997,9 @@ const BrowserApp = () => {
                         </Button>
                     </div>
                 ))}
+              </div>
+            </div>
+            <div className="non-draggable">
                 <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center" onClick={addTab}>
                     <Plus className="w-4 h-4" />
                 </Button>
@@ -2774,6 +2778,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
