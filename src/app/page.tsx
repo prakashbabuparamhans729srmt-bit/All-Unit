@@ -604,6 +604,7 @@ const BrowserApp = () => {
             title: pageTitle,
             loadFailed: false,
         });
+        setInputValue(newUrl);
         return;
     }
 
@@ -641,7 +642,7 @@ const BrowserApp = () => {
         loadFailed: false,
     });
     setInputValue(newUrl);
-  }, [tabs, isIncognito, searchEngine, toast]);
+  }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
@@ -1065,14 +1066,17 @@ const BrowserApp = () => {
   };
   
   useEffect(() => {
-    if (currentUrl === DEFAULT_URL) {
+    if (activeTab) {
+      const newUrl = activeTab.history[activeTab.currentIndex];
+      if (newUrl === DEFAULT_URL) {
         if (!isSearchFocused) {
           setInputValue("");
         }
-    } else {
-      setInputValue(currentUrl);
+      } else {
+        setInputValue(newUrl);
+      }
     }
-  }, [currentUrl, isSearchFocused]);
+  }, [activeTab, isSearchFocused]);
 
 
   const goBack = () => {
@@ -1121,7 +1125,15 @@ const BrowserApp = () => {
   const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && activeTab) {
       handleNavigation(activeTabId, inputValue);
-      setIsSearchFocused(false);
+      e.currentTarget.blur();
+    }
+  };
+
+  const handleNtpInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && activeTab) {
+        handleNavigation(activeTabId, ntpInputValue);
+        e.currentTarget.blur();
+        setIsSearchFocused(false);
     }
   };
 
@@ -1494,7 +1506,7 @@ const BrowserApp = () => {
 
   const NewTabPage = () => {
     return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
+    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground py-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
@@ -1513,12 +1525,7 @@ const BrowserApp = () => {
                     )}
                     value={ntpInputValue}
                     onChange={(e) => setNtpInputValue(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && activeTab) {
-                            handleNavigation(activeTabId, ntpInputValue);
-                            setIsSearchFocused(false);
-                        }
-                    }}
+                    onKeyDown={handleNtpInputKeyDown}
                     onFocus={() => setIsSearchFocused(true)}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
@@ -1669,12 +1676,12 @@ const BrowserApp = () => {
   };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
-    <div className="flex-1 flex flex-col bg-background text-foreground p-8 overflow-y-auto">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto">
+      <div className="flex items-center gap-4 mb-8 px-8">
         <Icon className="w-8 h-8 text-muted-foreground"/>
         <h1 className="text-3xl font-bold">{title}</h1>
       </div>
-      <Card className="flex-1">
+      <Card className="flex-1 mx-8">
         <CardContent className="p-6">
           {children}
         </CardContent>
@@ -2268,7 +2275,7 @@ const BrowserApp = () => {
                  <Tooltip>
                    <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'}`} fill={isBookmarked ? 'currentColor' : 'none'} />
+                      <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
                     </Button>
                    </TooltipTrigger>
                    <TooltipContent><p>Bookmark this tab</p></TooltipContent>
@@ -2716,7 +2723,7 @@ const BrowserApp = () => {
           </div>
         </header>
         <div className="flex-1 flex overflow-hidden">
-          <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative transition-all duration-300">
+          <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -2956,6 +2963,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 

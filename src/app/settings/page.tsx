@@ -822,8 +822,8 @@ export default function SettingsPage() {
         </div>
       </aside>
 
-      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
+      <main className="flex-1 py-6 lg:py-8 overflow-y-auto">
+        <div className="">
           <div className="w-full mb-8 md:hidden">
             <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -844,4 +844,5 @@ export default function SettingsPage() {
     
 
     
+
 
