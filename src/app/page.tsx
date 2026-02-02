@@ -1482,81 +1482,62 @@ const BrowserApp = () => {
             </div>
             {isSearchFocused && (
                 <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
-                    <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
-                         <ul className="py-2">
-                            {searchHistory.map((item, index) => (
-                                <li
-                                    key={index}
-                                    className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
-                                    onClick={() => {
-                                        const query = item.type === 'app' ? item.name : item.query;
-                                        handleNavigation(activeTabId, query);
-                                        setIsSearchFocused(false);
-                                    }}
-                                >
-                                    {item.type === 'app' ? (
-                                        <Image src={item.icon} alt={item.name} width={24} height={24} className="rounded-md" />
-                                    ) : (
-                                        <HistoryIcon className="w-5 h-5 text-muted-foreground" />
-                                    )}
-                                    <div className="flex-1 truncate">
-                                        <p className="truncate text-sm">
-                                            {item.type === 'app' ? item.name : item.query}
-                                            {item.type === 'history' && item.mode && (
-                                                <span className="text-muted-foreground ml-2 text-sm">- {item.mode}</span>
-                                            )}
-                                        </p>
-                                        {item.type === 'app' && <p className="text-xs text-muted-foreground">{item.category}</p>}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                        <Separator />
-                        <div className="p-4">
-                          <div className="grid grid-cols-5 gap-x-8 gap-y-4">
-                              {shortcuts.map((shortcut, index) => (
-                                  <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); setIsSearchFocused(false); }}>
-                                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                                          {renderShortcutIcon(shortcut)}
+                    <CardContent className="p-0">
+                         <ScrollArea className="max-h-[60vh]">
+                            <ul className="py-2">
+                                {searchHistory.map((item, index) => (
+                                    <li
+                                        key={index}
+                                        className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
+                                        onClick={() => {
+                                            const query = item.type === 'app' ? item.name : item.query;
+                                            handleNavigation(activeTabId, query);
+                                            setIsSearchFocused(false);
+                                        }}
+                                    >
+                                        {item.type === 'app' ? (
+                                            <Image src={item.icon} alt={item.name} width={24} height={24} className="rounded-md" />
+                                        ) : (
+                                            <HistoryIcon className="w-5 h-5 text-muted-foreground" />
+                                        )}
+                                        <div className="flex-1 truncate">
+                                            <p className="truncate text-sm font-light">
+                                                {item.type === 'app' ? item.name : item.query}
+                                                {item.type === 'history' && item.mode && (
+                                                    <span className="text-muted-foreground ml-2 text-sm font-light">- {item.mode}</span>
+                                                )}
+                                            </p>
+                                            {item.type === 'app' && <p className="text-xs font-light text-muted-foreground">{item.category}</p>}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Separator />
+                            <div className="p-4">
+                              <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                                  {shortcuts.map((shortcut, index) => (
+                                      <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); setIsSearchFocused(false); }}>
+                                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+                                              {renderShortcutIcon(shortcut)}
+                                          </div>
+                                          <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
                                       </div>
-                                      <span className="text-xs truncate w-20 text-muted-foreground">{shortcut.name}</span>
-                                  </div>
-                              ))}
-                              {shortcuts.length < 100 && !isIncognito && (
-                                <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
-                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
-                                        <Plus className="w-6 h-6 text-muted-foreground" />
+                                  ))}
+                                  {shortcuts.length < 100 && !isIncognito && (
+                                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                                            <Plus className="w-6 h-6 text-muted-foreground" />
+                                        </div>
+                                        <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">Add shortcut</span>
-                                </div>
-                              )}
-                          </div>
-                        </div>
+                                  )}
+                              </div>
+                            </div>
+                        </ScrollArea>
                     </CardContent>
                 </Card>
             )}
         </div>
-        <div className={cn("max-w-3xl w-full mt-8 flex flex-col items-center", isSearchFocused && "invisible")}>
-        <ScrollArea className="w-full max-w-lg h-40 scrollbar-hide">
-          <div className="grid grid-cols-5 gap-x-8 gap-y-4">
-              {shortcuts.map((shortcut, index) => (
-                  <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                          {renderShortcutIcon(shortcut)}
-                      </div>
-                      <span className="text-xs truncate w-20 text-muted-foreground">{shortcut.name}</span>
-                  </div>
-              ))}
-              {shortcuts.length < 100 && !isIncognito && (
-                <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
-                        <Plus className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <span className="text-xs text-muted-foreground">Add shortcut</span>
-                </div>
-              )}
-          </div>
-        </ScrollArea>
         <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -1584,7 +1565,6 @@ const BrowserApp = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
     </div>
   );
   }
@@ -2056,22 +2036,12 @@ const BrowserApp = () => {
               />
               <div className="flex items-center gap-1">
                 <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                </Tooltip>
-
-                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                       <Sparkles className="w-4 h-4 mr-2" />
-                       Assistant
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>Open Assistant</p></TooltipContent>
+                  <TooltipContent><p>Copy link</p></TooltipContent>
                 </Tooltip>
 
                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
@@ -2138,14 +2108,24 @@ const BrowserApp = () => {
                       </div>
                   </PopoverContent>
                  </Popover>
-                
+
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                       <Sparkles className="w-4 h-4 mr-2" />
+                       Assistant
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>Copy link</p></TooltipContent>
+                  <TooltipContent><p>Open Assistant</p></TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+                    </Button>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -2791,6 +2771,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
