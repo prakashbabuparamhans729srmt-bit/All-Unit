@@ -1389,7 +1389,7 @@ const BrowserApp = () => {
     ];
   
     return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4">
+    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
@@ -1443,7 +1443,7 @@ const BrowserApp = () => {
                     </Dialog>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true)}}>
+                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
                               <Sparkles className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>
@@ -1483,7 +1483,7 @@ const BrowserApp = () => {
             {isSearchFocused && (
                 <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
                     <CardContent className="p-0">
-                         <ScrollArea className="max-h-[60vh]">
+                         <ScrollArea className="max-h-[60vh] scrollbar-hide">
                             <ul className="py-2">
                                 {searchHistory.map((item, index) => (
                                     <li
@@ -2108,6 +2108,15 @@ const BrowserApp = () => {
                       </div>
                   </PopoverContent>
                  </Popover>
+                
+                <Tooltip>
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+                    </Button>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
+                </Tooltip>
 
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -2119,14 +2128,6 @@ const BrowserApp = () => {
                   <TooltipContent><p>Open Assistant</p></TooltipContent>
                 </Tooltip>
 
-                <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                </Tooltip>
               </div>
             </div>
             
@@ -2771,6 +2772,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
