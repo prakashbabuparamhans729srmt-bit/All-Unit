@@ -1516,7 +1516,7 @@ const BrowserApp = () => {
             )}
         </div>
         <div className="max-w-3xl w-full mt-8 flex flex-col items-center">
-        <ScrollArea className="w-full max-w-lg h-40">
+        <ScrollArea className="w-full max-w-lg h-40 scrollbar-hide">
           <div className="grid grid-cols-5 gap-x-8 gap-y-4">
               {shortcuts.map((shortcut, index) => (
                   <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => handleNavigation(activeTabId, shortcut.url || shortcut.name)}>
@@ -2018,7 +2018,7 @@ const BrowserApp = () => {
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
                           <Globe className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">Aisha</span>
+                          <span className="text-sm font-medium text-muted-foreground">Aisha</span>
                       </div>
                   </div>
               ) : (
@@ -2034,21 +2034,12 @@ const BrowserApp = () => {
               />
               <div className="flex items-center gap-1">
                 <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                </Tooltip>
-                
-                <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="icon" className="h-7 w-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                       <Sparkles className="w-5 h-5 text-muted-foreground" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>Open Assistant</p></TooltipContent>
+                  <TooltipContent><p>Copy link</p></TooltipContent>
                 </Tooltip>
 
                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
@@ -2118,11 +2109,21 @@ const BrowserApp = () => {
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                       <Sparkles className="w-4 h-4 mr-2" />
+                       Assistant
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>Copy link</p></TooltipContent>
+                  <TooltipContent><p>Open Assistant</p></TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+                    </Button>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -2768,6 +2769,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
