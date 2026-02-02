@@ -515,8 +515,10 @@ const BrowserApp = () => {
   const [findInput, setFindInput] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [isTranslateOpen, setIsTranslateOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
   const voiceSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -815,6 +817,18 @@ const BrowserApp = () => {
             window.removeEventListener('touchend', handleFabDragEnd);
         };
     }, [isFabDragging]);
+  
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+        if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+            setIsSearchFocused(false);
+        }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
@@ -1362,90 +1376,146 @@ const BrowserApp = () => {
 
   const isInternalPage = currentUrl.startsWith('about:');
 
-  const NewTabPage = () => (
+  const NewTabPage = () => {
+    const searchHistory = [
+      { type: 'app' as const, name: 'WhatsApp', category: 'Company', icon: 'https://www.google.com/s2/favicons?sz=64&domain_url=whatsapp.com' },
+      { type: 'history' as const, query: 'kisi bhi icon ke SVG code kaise nikale', mode: 'AI Mode' },
+      { type: 'history' as const, query: 'translate in hindi', mode: 'Google Search' },
+      { type: 'history' as const, query: 'game' },
+      { type: 'history' as const, query: 'google map' },
+      { type: 'history' as const, query: 'pdf language translator' },
+      { type: 'history' as const, query: 'puri dunia me kul kitna QB data hai google ke pass kul kitne data storage karne ki ...', mode: 'AI M...' },
+      { type: 'history' as const, query: 'yt video downloader' },
+    ];
+  
+    return (
     <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
-        <div className="w-full max-w-2xl relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input 
-                type="text"
-                placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
-                className="w-full h-12 pl-12 pr-48 rounded-full bg-secondary border-none focus-visible:ring-0"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleInputKeyDown}
-                autoFocus
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
-                  <Mic className="w-5 h-5" />
-                </Button>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8"><Camera className="w-5 h-5" /></Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                       <DialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5" /> Search by Image</DialogTitle>
-                      <DialogDescription>
-                        Search using an image instead of text.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg h-40 flex flex-col justify-center items-center">
-                      <p className="text-sm text-muted-foreground">Drag and drop an image here</p>
-                      <p className="text-xs text-muted-foreground my-2">or</p>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        accept="image/*"
-                      />
-                      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>Upload a file</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => {
-                            setIsAssistantOpen(true);
-                            toast({ title: "AI Assistant opened" });
-                        }}>
-                          <Sparkles className="w-5 h-5" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Open AI Assistant</p>
-                    </TooltipContent>
-                </Tooltip>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64">
-                         <ScrollArea className="h-96">
-                            {Object.entries(aiTools).map(([category, tools]) => (
-                                <React.Fragment key={category}>
-                                    <DropdownMenuLabel>{category}</DropdownMenuLabel>
-                                    {tools.map(tool => (
-                                        <DropdownMenuItem key={tool.name} onSelect={() => handleNavigation(activeTabId, tool.url)}>
-                                            <Image 
-                                                src={`https://www.google.com/s2/favicons?sz=32&domain_url=${tool.url}`} 
-                                                alt={`${tool.name} logo`}
-                                                width={16}
-                                                height={16}
-                                                className="mr-2"
-                                            />
-                                            <span>{tool.name}</span>
-                                        </DropdownMenuItem>
-                                    ))}
-                                    <DropdownMenuSeparator />
-                                </React.Fragment>
-                            ))}
-                        </ScrollArea>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+        <div ref={searchContainerRef} className="w-full max-w-2xl relative">
+            <div className={cn(
+                "relative w-full",
+                isSearchFocused ? "rounded-t-3xl bg-card shadow-lg" : ""
+            )}>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-20" />
+                <Input 
+                    type="text"
+                    placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
+                    className={cn(
+                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10",
+                        isSearchFocused 
+                            ? "bg-card rounded-t-3xl" 
+                            : "bg-secondary rounded-full"
+                    )}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    onFocus={() => setIsSearchFocused(true)}
+                    autoFocus
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
+                    <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
+                      <Mic className="w-5 h-5" />
+                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="w-8 h-8"><Camera className="w-5 h-5" /></Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                           <DialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5" /> Search by Image</DialogTitle>
+                          <DialogDescription>
+                            Search using an image instead of text.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg h-40 flex flex-col justify-center items-center">
+                          <p className="text-sm text-muted-foreground">Drag and drop an image here</p>
+                          <p className="text-xs text-muted-foreground my-2">or</p>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            accept="image/*"
+                          />
+                          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>Upload a file</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => {
+                                setIsAssistantOpen(true);
+                            }}>
+                              <Sparkles className="w-5 h-5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Open AI Assistant</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64">
+                             <ScrollArea className="h-96">
+                                {Object.entries(aiTools).map(([category, tools]) => (
+                                    <React.Fragment key={category}>
+                                        <DropdownMenuLabel>{category}</DropdownMenuLabel>
+                                        {tools.map(tool => (
+                                            <DropdownMenuItem key={tool.name} onSelect={() => handleNavigation(activeTabId, tool.url)}>
+                                                <Image 
+                                                    src={`https://www.google.com/s2/favicons?sz=32&domain_url=${tool.url}`} 
+                                                    alt={`${tool.name} logo`}
+                                                    width={16}
+                                                    height={16}
+                                                    className="mr-2"
+                                                />
+                                                <span>{tool.name}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                        <DropdownMenuSeparator />
+                                    </React.Fragment>
+                                ))}
+                            </ScrollArea>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
+            {isSearchFocused && (
+                <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg overflow-hidden z-0 border-t">
+                    <CardContent className="p-0">
+                         <ul className="py-2">
+                            {searchHistory.map((item, index) => (
+                                <li
+                                    key={index}
+                                    className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
+                                    onClick={() => {
+                                        const query = item.type === 'app' ? item.name : item.query;
+                                        handleNavigation(activeTabId, query);
+                                        setIsSearchFocused(false);
+                                    }}
+                                >
+                                    {item.type === 'app' ? (
+                                        <Image src={item.icon} alt={item.name} width={24} height={24} className="rounded-md" />
+                                    ) : (
+                                        <HistoryIcon className="w-5 h-5 text-muted-foreground" />
+                                    )}
+                                    <div className="flex-1 truncate">
+                                        <p className="truncate text-sm">
+                                            {item.type === 'app' ? item.name : item.query}
+                                            {item.type === 'history' && item.mode && (
+                                                <span className="text-muted-foreground ml-2 text-sm">- {item.mode}</span>
+                                            )}
+                                        </p>
+                                        {item.type === 'app' && <p className="text-xs text-muted-foreground">{item.category}</p>}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
         </div>
         <div className="max-w-3xl w-full mt-8 flex flex-col items-center">
         <ScrollArea className="w-full max-w-lg h-40">
@@ -1498,6 +1568,7 @@ const BrowserApp = () => {
         </div>
     </div>
   );
+  }
 
   const SettingsPage = () => {
     try {
@@ -2693,4 +2764,5 @@ export default function BrowserPage() {
     
 
     
+
 
