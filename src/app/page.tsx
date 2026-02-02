@@ -379,8 +379,8 @@ const AishaAssistant = React.memo(({
         {assistantMessages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
             <Sparkles className="w-16 h-16 text-muted-foreground/50 mb-4" />
-            <h2 className="text-2xl font-bold text-muted-foreground/80">Assistant</h2>
-            <p className="text-lg text-muted-foreground mt-2">How can I help you?</p>
+            <h2 className="text-xl font-light text-muted-foreground/80">Assistant</h2>
+            <p className="text-base font-light text-muted-foreground mt-2">How can I help you?</p>
           </div>
         ) : (
           assistantMessages.map((message, index) => (
@@ -396,7 +396,7 @@ const AishaAssistant = React.memo(({
                 </Avatar>
               )}
               <div
-                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-xs font-light ${
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-secondary'
@@ -430,7 +430,7 @@ const AishaAssistant = React.memo(({
     <div className="p-2 bg-background/70 rounded-lg mt-2">
       <Textarea
         placeholder="Ask anything..."
-        className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none"
+        className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none text-sm font-light"
         value={assistantInput}
         onChange={(e) => setAssistantInput(e.target.value)}
         onKeyDown={(e) => {
@@ -1401,7 +1401,7 @@ const BrowserApp = () => {
                     type="text"
                     placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
                     className={cn(
-                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10 font-light placeholder:font-light",
+                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10 font-light placeholder:font-light text-sm",
                         isSearchFocused 
                             ? "bg-card rounded-t-3xl" 
                             : "bg-secondary rounded-full"
@@ -1482,7 +1482,7 @@ const BrowserApp = () => {
             </div>
             {isSearchFocused && (
                 <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
-                    <CardContent className="p-0 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                    <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
                          <ul className="py-2">
                             {searchHistory.map((item, index) => (
                                 <li
@@ -1998,7 +1998,7 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer`,
+                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer text-xs`,
                           'font-light',
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
@@ -2051,17 +2051,27 @@ const BrowserApp = () => {
                 value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
-                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light"
+                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light text-sm"
                 placeholder="Ask anything or navigate..."
               />
               <div className="flex items-center gap-1">
                 <Tooltip>
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
+                    </Button>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
+                </Tooltip>
+
+                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                       <Sparkles className="w-4 h-4 mr-2" />
+                       Assistant
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>Copy link</p></TooltipContent>
+                  <TooltipContent><p>Open Assistant</p></TooltipContent>
                 </Tooltip>
 
                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
@@ -2131,21 +2141,11 @@ const BrowserApp = () => {
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                       <Sparkles className="w-4 h-4 mr-2" />
-                       Assistant
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>Open Assistant</p></TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
+                  <TooltipContent><p>Copy link</p></TooltipContent>
                 </Tooltip>
               </div>
             </div>
@@ -2791,6 +2791,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
