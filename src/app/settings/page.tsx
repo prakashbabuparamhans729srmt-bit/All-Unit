@@ -194,9 +194,9 @@ export default function SettingsPage() {
         header: 'Basics',
         items: [
           { title: 'Search engine', subtitle: 'Google', onClick: () => toast({title: "You can change the search engine from the main settings page."}) },
-          { title: 'Passwords', onClick: () => toast({title: "Password manager is not available."}) },
-          { title: 'Payment methods', onClick: () => toast({title: "Payment methods are not saved."}) },
-          { title: 'Addresses and more', onClick: () => toast({title: "Address management is not implemented."}) },
+          { title: 'Passwords', onClick: () => handleNavigate('about:passwords') },
+          { title: 'Payment methods', onClick: () => handleNavigate('about:payments') },
+          { title: 'Addresses and more', onClick: () => handleNavigate('about:addresses') },
         ]
       },
       {
@@ -303,9 +303,9 @@ export default function SettingsPage() {
       <h2 className="text-2xl font-semibold">Autofill and passwords</h2>
       <Card>
         <CardContent className="pt-6">
-          <SettingsItem icon={KeyRound} title="Aisha Password Manager" onClick={() => toast({title: "Password manager is not available."})} />
-          <SettingsItem icon={CreditCard} title="Payment methods" onClick={() => toast({title: "Payment methods are not saved."})} />
-          <SettingsItem icon={MapPin} title="Addresses and more" onClick={() => toast({title: "Address management is not implemented."})} />
+          <SettingsItem icon={KeyRound} title="Aisha Password Manager" onClick={() => handleNavigate('about:passwords')} />
+          <SettingsItem icon={CreditCard} title="Payment methods" onClick={() => handleNavigate('about:payments')} />
+          <SettingsItem icon={MapPin} title="Addresses and more" onClick={() => handleNavigate('about:addresses')} />
           <SettingsItem icon={BookMarked} title="Bookmarks" description="Your saved bookmarks" onClick={() => handleNavigate('about:bookmarks')}/>
         </CardContent>
       </Card>

@@ -1474,7 +1474,7 @@ const BrowserApp = () => {
         }
     }},
     { icon: PlusSquare, label: 'Add to Home', action: handleInstallClick },
-    { icon: Laptop, label: 'Recent tabs', action: () => toast({title: 'Recent tabs are not implemented.'}) },
+    { icon: Laptop, label: 'Recent tabs', action: () => handleNavigation(activeTabId, 'about:tabs') },
     { icon: HelpCircle, label: 'Help & feedback', action: () => setIsFeedbackOpen(true) },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
@@ -1733,6 +1733,33 @@ const BrowserApp = () => {
       </GenericInternalPage>
   );
 
+  const TabsPage = ({ tabs, setActiveTabId }: { tabs: Tab[], setActiveTabId: (id: string) => void }) => (
+      <GenericInternalPage title="Recent Tabs" icon={Laptop}>
+        {tabs.length > 0 ? (
+          <div className="space-y-2">
+            {tabs.map((tab) => (
+              <div key={tab.id} className="p-3 flex items-center justify-between rounded-md hover:bg-muted/50 cursor-pointer"
+                onClick={() => setActiveTabId(tab.id)}
+              >
+                <div className="flex items-center gap-4">
+                   <Globe className="w-5 h-5 text-muted-foreground" />
+                   <div>
+                      <p className="font-semibold truncate">{tab.title}</p>
+                      <p className="text-sm text-muted-foreground truncate">{tab.history[tab.currentIndex]}</p>
+                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center">
+            <Laptop className="w-16 h-16 mb-4"/>
+            <p>No open tabs.</p>
+          </div>
+        )}
+      </GenericInternalPage>
+    );
+
   const DeveloperConsole = () => (
     <Sheet open={isConsoleOpen} onOpenChange={setIsConsoleOpen}>
       <SheetContent side="bottom" className="h-1/2 flex flex-col p-0">
@@ -1848,12 +1875,18 @@ const BrowserApp = () => {
             return <HistoryPage />;
         case 'about:bookmarks':
             return <BookmarksPage />;
+        case 'about:tabs':
+            return <TabsPage tabs={tabs} setActiveTabId={setActiveTabId} />;
         case 'about:downloads':
             return <GenericInternalPage title="Downloads" icon={Download}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Download className="w-16 h-16 mb-4"/><p>There are no downloads to show.</p></div></GenericInternalPage>;
         case 'about:media':
             return <GenericInternalPage title="Media" icon={Play}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Play className="w-16 h-16 mb-4"/><p>There is no media content to show.</p></div></GenericInternalPage>;
         case 'about:passwords':
             return <GenericInternalPage title="Password Manager" icon={KeyRound}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><KeyRound className="w-16 h-16 mb-4"/><p>A full password manager is not implemented in this prototype.</p><p className="text-sm mt-2">In a real browser, this page would list your saved credentials.</p></div></GenericInternalPage>;
+        case 'about:payments':
+            return <GenericInternalPage title="Payment Methods" icon={CreditCard}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><CreditCard className="w-16 h-16 mb-4"/><p>Your saved payment methods would appear here.</p><p className="text-sm mt-2">This is not implemented in this prototype.</p></div></GenericInternalPage>;
+        case 'about:addresses':
+            return <GenericInternalPage title="Addresses and more" icon={MapPin}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><MapPin className="w-16 h-16 mb-4"/><p>Your saved addresses would appear here.</p><p className="text-sm mt-2">This is not implemented in this prototype.</p></div></GenericInternalPage>;
         case 'about:performance':
             return <GenericInternalPage title="Performance" icon={Gauge}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Gauge className="w-16 h-16 mb-4"/><p>Performance settings are conceptual in this prototype.</p><p className="text-sm mt-2">Here you would manage memory and energy saver modes.</p></div></GenericInternalPage>;
         case 'about:about':
@@ -2610,7 +2643,7 @@ const BrowserApp = () => {
                               <Star className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Bookmarks</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => toast({ title: "Recent tabs are not implemented in this prototype." })}>
+                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:tabs')}>
                               <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Recent tabs</span>
                           </DropdownMenuItem>
@@ -2907,6 +2940,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
