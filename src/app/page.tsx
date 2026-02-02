@@ -1407,12 +1407,15 @@ const BrowserApp = () => {
                 </Dialog>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toast({title: "AI Mode activated!"})}>
+                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => {
+                            setIsAssistantOpen(true);
+                            toast({ title: "AI Assistant opened" });
+                        }}>
                           <Sparkles className="w-5 h-5" />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>AI Mode</p>
+                        <p>Open AI Assistant</p>
                     </TooltipContent>
                 </Tooltip>
                 <DropdownMenu>
@@ -1455,42 +1458,43 @@ const BrowserApp = () => {
                       <span className="text-xs truncate w-20">{shortcut.name}</span>
                   </div>
               ))}
+              {shortcuts.length < 100 && !isIncognito && (
+                <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                        <Plus className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <span className="text-xs">Add shortcut</span>
+                </div>
+              )}
           </div>
         </ScrollArea>
-        {shortcuts.length < 100 && !isIncognito && (
-            <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="mt-4">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add shortcut</DialogTitle>
-                  <DialogDescription>
-                    Enter a name and URL for your new shortcut.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="url" className="text-right">
-                      URL
-                    </Label>
-                    <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleAddShortcut}>Add Shortcut</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
+        <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add shortcut</DialogTitle>
+              <DialogDescription>
+                Enter a name and URL for your new shortcut.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="url" className="text-right">
+                  URL
+                </Label>
+                <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddShortcut}>Add Shortcut</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
     </div>
   );
@@ -2689,3 +2693,4 @@ export default function BrowserPage() {
     
 
     
+
