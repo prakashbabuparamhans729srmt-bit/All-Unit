@@ -1481,8 +1481,8 @@ const BrowserApp = () => {
                 </div>
             </div>
             {isSearchFocused && (
-                <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg overflow-hidden z-0 border-t">
-                    <CardContent className="p-0">
+                <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
+                    <CardContent className="p-0 max-h-[60vh] overflow-y-auto scrollbar-hide">
                          <ul className="py-2">
                             {searchHistory.map((item, index) => (
                                 <li
@@ -1511,11 +1511,32 @@ const BrowserApp = () => {
                                 </li>
                             ))}
                         </ul>
+                        <Separator />
+                        <div className="p-4">
+                          <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                              {shortcuts.map((shortcut, index) => (
+                                  <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); setIsSearchFocused(false); }}>
+                                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+                                          {renderShortcutIcon(shortcut)}
+                                      </div>
+                                      <span className="text-xs truncate w-20 text-muted-foreground">{shortcut.name}</span>
+                                  </div>
+                              ))}
+                              {shortcuts.length < 100 && !isIncognito && (
+                                <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                                        <Plus className="w-6 h-6 text-muted-foreground" />
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">Add shortcut</span>
+                                </div>
+                              )}
+                          </div>
+                        </div>
                     </CardContent>
                 </Card>
             )}
         </div>
-        <div className="max-w-3xl w-full mt-8 flex flex-col items-center">
+        <div className={cn("max-w-3xl w-full mt-8 flex flex-col items-center", isSearchFocused && "invisible")}>
         <ScrollArea className="w-full max-w-lg h-40 scrollbar-hide">
           <div className="grid grid-cols-5 gap-x-8 gap-y-4">
               {shortcuts.map((shortcut, index) => (
@@ -1977,7 +1998,8 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center font-light h-9 px-4 rounded-t-lg cursor-pointer`,
+                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer`,
+                          'font-light',
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
@@ -2769,6 +2791,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
