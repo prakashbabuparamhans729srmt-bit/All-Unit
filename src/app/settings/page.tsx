@@ -272,7 +272,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
                <Avatar className="h-10 w-10">
                   <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" alt="User avatar" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarFallback>PB</AvatarFallback>
                </Avatar>
               <div>
                 <p className="font-semibold">Prakash Babu</p>
@@ -290,7 +290,7 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="pt-6">
           <SettingsItem title="Sync and Aisha services" description="Services for search suggestions, security, and more" onClick={() => toast({title: "This feature is not implemented."})} />
-          <SettingsItem title="Manage your Account" description="Control your data, privacy, and security" externalLink onClick={() => window.open('https://myaccount.google.com/', '_blank')} />
+          <SettingsItem title="Manage your Account" description="Control your data, privacy, and security" externalLink onClick={() => handleNavigate('https://myaccount.google.com/')} />
           <SettingsItem title="Customize your Aisha profile" description="Choose a profile name and picture" onClick={() => toast({title: "Profile customization is not implemented."})} />
           <SettingsItem title="Import bookmarks and settings" description="Get your favorites, history, and passwords from another browser" onClick={() => toast({title: "Importing is not implemented."})} />
         </CardContent>

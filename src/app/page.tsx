@@ -799,7 +799,7 @@ const BrowserApp = () => {
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => handleFabDragMove(e.clientX, e.clientY);
-        const handleTouchMove = (e: TouchEvent) => handleFabDragMove(e.touches[0].clientX, e.touches[0].clientY);
+        const handleTouchMove = (e: TouchEvent) => handleFabDragMove(e.touches[0].clientX, e.clientY);
 
         if (isFabDragging) {
             window.addEventListener('mousemove', handleMouseMove);
@@ -2096,7 +2096,7 @@ const BrowserApp = () => {
                       {companyApps.map((app) => (
                           <button
                           key={app.name}
-                          onClick={() => window.open(app.url, '_blank')}
+                          onClick={() => handleNavigation(activeTabId, app.url)}
                           className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent text-center"
                           >
                           <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-full">
