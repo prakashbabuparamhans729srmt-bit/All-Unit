@@ -118,6 +118,16 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -521,6 +531,7 @@ const BrowserApp = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [isTranslateOpen, setIsTranslateOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isClearDataOpen, setIsClearDataOpen] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -1375,6 +1386,79 @@ const BrowserApp = () => {
     }
   };
 
+  const bookmarkAllTabs = () => {
+    if (isIncognito) {
+      toast({ title: "Can't add bookmarks in Incognito mode." });
+      return;
+    }
+    const tabsToBookmark = tabs.filter(tab => tab.history[tab.currentIndex] !== DEFAULT_URL && !tab.history[tab.currentIndex].startsWith('about:'));
+    if (tabsToBookmark.length === 0) {
+        toast({ title: "No bookmarkable tabs open." });
+        return;
+    }
+
+    let newBookmarks = [...bookmarks];
+    let addedCount = 0;
+    
+    tabsToBookmark.forEach(tab => {
+        const url = tab.history[tab.currentIndex];
+        const isAlreadyBookmarked = newBookmarks.some(b => b.url === url);
+        if (!isAlreadyBookmarked) {
+            newBookmarks.push({
+                url: url,
+                title: tab.title,
+            });
+            addedCount++;
+        }
+    });
+
+    if (addedCount > 0) {
+        setBookmarks(newBookmarks);
+        localStorage.setItem('aisha-bookmarks', JSON.stringify(newBookmarks));
+        toast({ title: "Tabs bookmarked!", description: `${addedCount} new bookmark(s) added.` });
+    } else {
+        toast({ title: "All tabs already bookmarked." });
+    }
+  };
+
+  const handleClearBrowsingData = () => {
+    if (isIncognito) {
+        toast({ title: "Cannot clear data in Incognito mode." });
+        setIsClearDataOpen(false);
+        return;
+    }
+    localStorage.removeItem('aisha-bookmarks');
+    localStorage.removeItem('aisha-shortcuts');
+    localStorage.removeItem('aisha-search-history');
+    
+    setBookmarks([]);
+    setSearchHistory([]);
+    setShortcuts(initialShortcuts);
+    
+    setTabs(prevTabs => 
+        prevTabs.map(tab => ({
+            ...tab,
+            history: [DEFAULT_URL],
+            currentIndex: 0,
+            title: "New Tab",
+        }))
+    );
+    
+    if (tabs.length > 0) {
+        setActiveTabId(tabs[0].id);
+        handleNavigation(tabs[0].id, DEFAULT_URL);
+    }
+
+    toast({ title: "Browsing data cleared", description: "Your bookmarks, shortcuts, and history have been removed." });
+    setIsClearDataOpen(false);
+  };
+
+  const handleSignOut = () => {
+    sessionStorage.removeItem('aisha-auth');
+    router.push('/welcome');
+  };
+
+
   const mobileNavItems = [
     { icon: Share, label: 'Share', action: handleShare },
     { icon: Search, label: 'Find in page', action: handleFind },
@@ -1893,7 +1977,7 @@ const BrowserApp = () => {
             </div>
         </ScrollArea>
         <div className="mt-auto px-4">
-            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented in this prototype.' })}>
+            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={handleSignOut}>
                 <LogOut className="h-6 w-6" />
                 <span className="ml-4">Logout</span>
             </button>
@@ -1918,7 +2002,7 @@ const BrowserApp = () => {
           ))}
       </nav>
       <div className="mt-auto px-4">
-            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => toast({ title: 'Logout is not implemented in this prototype.' })}>
+            <button className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={handleSignOut}>
               <LogOut className="h-6 w-6" />
               <span className="ml-4">Logout</span>
           </button>
@@ -1960,7 +2044,7 @@ const BrowserApp = () => {
                   <SidebarMenuItem>
                       <SidebarMenuButton
                           tooltip={{ children: 'Logout', side: 'right' }}
-                           onClick={() => toast({ title: 'Logout is not implemented in this prototype.' })}
+                           onClick={handleSignOut}
                           className="w-full justify-center data-[state=open]:justify-start h-12"
                       >
                           <LogOut className="size-6" />
@@ -2207,11 +2291,11 @@ const BrowserApp = () => {
                   </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => toast({title: 'Profile management is a concept for this prototype.'})}>
+                      <DropdownMenuItem onClick={() => handleNavigation(activeTabId, 'https://myaccount.google.com/')}>
                           <User className="mr-2 h-4 w-4"/>
                           <span>Manage Profile</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast({title: 'Signing out is not implemented in this prototype.'})}>
+                      <DropdownMenuItem onClick={handleSignOut}>
                           <LogOut className="mr-2 h-4 w-4"/>
                           <span>Sign Out</span>
                       </DropdownMenuItem>
@@ -2264,7 +2348,7 @@ const BrowserApp = () => {
                                 <span>Bookmark this tab...</span>
                                 <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                            <DropdownMenuItem onSelect={bookmarkAllTabs}>
                                 <BookCopy className="mr-2 h-4 w-4" />
                                 <span>Bookmark all tabs...</span>
                                 <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
@@ -2324,7 +2408,7 @@ const BrowserApp = () => {
                             <KeyRound className="mr-2 h-4 w-4" />
                             <span>Passwords and autofill</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => toast({title: "Clearing browsing data is not implemented."})}>
+                        <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Clear browsing data...</span>
                             <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
@@ -2621,6 +2705,21 @@ const BrowserApp = () => {
         </div>
       </div>
 
+      <AlertDialog open={isClearDataOpen} onOpenChange={setIsClearDataOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear browsing data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear your history, shortcuts, and bookmarks from this device. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearBrowsingData}>Clear data</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={!!qrCodeUrl} onOpenChange={(isOpen) => !isOpen && setQrCodeUrl('')}>
         <DialogContent>
           <DialogHeader>
@@ -2777,6 +2876,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
