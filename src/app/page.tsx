@@ -4,6 +4,7 @@
 
 import React, { useState, useRef, useEffect, KeyboardEvent, useCallback } from "react";
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -406,7 +407,7 @@ const AishaAssistant = React.memo(({
                {message.role === 'user' && (
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
-                  <AvatarFallback><User/></AvatarFallback>
+                  <AvatarFallback>PB</AvatarFallback>
                 </Avatar>
               )}
             </div>
@@ -478,6 +479,7 @@ const AishaAssistant = React.memo(({
 AishaAssistant.displayName = 'AishaAssistant';
 
 const BrowserApp = () => {
+  const router = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([
     {
       id: "tab-1",
@@ -817,11 +819,11 @@ const BrowserApp = () => {
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
     if (authStatus !== 'true') {
-        window.location.href = '/welcome';
+        router.push('/welcome');
     } else {
         setIsAuthenticated(true);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -2112,7 +2114,7 @@ const BrowserApp = () => {
                   <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                       <Avatar className="w-7 h-7">
                       <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
-                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
+                      <AvatarFallback>PB</AvatarFallback>
                       </Avatar>
                   </Button>
                   </DropdownMenuTrigger>
