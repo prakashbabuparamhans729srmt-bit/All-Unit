@@ -1065,7 +1065,9 @@ const BrowserApp = () => {
   
   useEffect(() => {
     if (currentUrl === DEFAULT_URL) {
-      setInputValue("");
+      if (document.activeElement !== searchContainerRef.current?.querySelector('input')) {
+        setInputValue("");
+      }
     } else {
       setInputValue(currentUrl);
     }
@@ -2706,7 +2708,7 @@ const BrowserApp = () => {
           </div>
         </header>
         <div className="flex-1 flex overflow-hidden">
-          <main id="browser-content-area" className="flex-1 bg-card rounded-lg overflow-auto relative transition-all duration-300">
+          <main id="browser-content-area" className="flex-1 bg-card overflow-auto relative transition-all duration-300">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -2946,6 +2948,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 

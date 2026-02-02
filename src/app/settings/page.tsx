@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -823,7 +824,7 @@ export default function SettingsPage() {
 
       <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
-          <div className="w-full max-w-lg mb-8 hidden md:block">
+          <div className="w-full mb-8 md:hidden">
             <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -843,3 +844,4 @@ export default function SettingsPage() {
     
 
     
+
