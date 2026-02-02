@@ -1889,6 +1889,8 @@ const BrowserApp = () => {
             return <GenericInternalPage title="Addresses and more" icon={MapPin}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><MapPin className="w-16 h-16 mb-4"/><p>Your saved addresses would appear here.</p><p className="text-sm mt-2">This is not implemented in this prototype.</p></div></GenericInternalPage>;
         case 'about:performance':
             return <GenericInternalPage title="Performance" icon={Gauge}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Gauge className="w-16 h-16 mb-4"/><p>Performance settings are conceptual in this prototype.</p><p className="text-sm mt-2">Here you would manage memory and energy saver modes.</p></div></GenericInternalPage>;
+        case 'about:extensions':
+            return <GenericInternalPage title="Extensions" icon={Puzzle}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Puzzle className="w-16 h-16 mb-4"/><p>Extensions are not available in this prototype.</p><p className="text-sm mt-2">In a real browser, this page would allow you to manage your extensions.</p></div></GenericInternalPage>;
         case 'about:about':
             return <GenericInternalPage title="About Aisha" icon={Info}>
                 <div className="flex flex-col h-full items-center justify-center text-center">
@@ -2433,7 +2435,7 @@ const BrowserApp = () => {
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => toast({title: "Extensions are not supported in this prototype."})}>
+                                <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:extensions')}>
                                     <Puzzle className="mr-2 h-4 w-4" />
                                     <span>Manage Extensions</span>
                                 </DropdownMenuItem>
@@ -2940,6 +2942,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 

@@ -104,6 +104,84 @@ const SettingsItem = ({ title, description, externalLink = false, icon: Icon, va
   </>
 )
 
+const DownloadsSettings = () => {
+    const [askBeforeDownloading, setAskBeforeDownloading] = useState(true);
+    const { toast } = useToast();
+    
+    return (
+        <div className="space-y-6" id="downloads">
+            <h2 className="text-2xl font-semibold">Downloads</h2>
+            <Card>
+                <CardContent className="pt-6">
+                    <SettingsItem title="Location" description="Files will be saved to the default Downloads folder.">
+                        <Button variant="outline" onClick={() => toast({ title: "Changing download location is not available in this prototype." })}>Change</Button>
+                    </SettingsItem>
+                    <SettingsItem title="Ask where to save each file before downloading">
+                        <Switch checked={askBeforeDownloading} onCheckedChange={setAskBeforeDownloading} />
+                    </SettingsItem>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+const LanguagesSettings = () => {
+    const { toast } = useToast();
+    const [offerToTranslate, setOfferToTranslate] = useState(true);
+
+    return (
+        <div className="space-y-6" id="languages">
+            <h2 className="text-2xl font-semibold">Languages</h2>
+            <Card>
+                <CardContent className="pt-6">
+                    <SettingsItem title="Preferred languages" description="Aisha will be displayed in the first language on the list that it supports.">
+                         <Button variant="outline" onClick={() => toast({ title: "Adding languages is not implemented." })}>Add languages</Button>
+                    </SettingsItem>
+                     <Separator />
+                     <div className="p-4">
+                        <p className="text-sm">1. English (United States)</p>
+                     </div>
+                    <SettingsItem title="Offer to translate pages that aren't in a language you read">
+                        <Switch checked={offerToTranslate} onCheckedChange={setOfferToTranslate} />
+                    </SettingsItem>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+
+const AccessibilitySettings = () => {
+    const [liveCaption, setLiveCaption] = useState(false);
+    const [showFocusHighlight, setShowFocusHighlight] = useState(true);
+
+    return (
+        <div className="space-y-6" id="accessibility">
+            <h2 className="text-2xl font-semibold">Accessibility</h2>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Captions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <SettingsItem title="Live Caption" description="Automatically creates captions for English audio and video.">
+                        <Switch checked={liveCaption} onCheckedChange={setLiveCaption} />
+                    </SettingsItem>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Navigation</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <SettingsItem title="Show a quick highlight on the focused object">
+                        <Switch checked={showFocusHighlight} onCheckedChange={setShowFocusHighlight} />
+                    </SettingsItem>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
 export default function SettingsPage() {
   const [activeMenu, setActiveMenu] = useState('you-and-aisha');
   const { toast } = useToast();
@@ -658,6 +736,12 @@ export default function SettingsPage() {
         return <SearchEngine />;
       case 'reset-settings':
         return <ResetSettings />;
+      case 'downloads':
+        return <DownloadsSettings />;
+      case 'languages':
+        return <LanguagesSettings />;
+      case 'accessibility':
+        return <AccessibilitySettings />;
       case 'about-aisha':
         return (
           <div className="flex flex-col h-full items-center justify-center text-center p-10" id="about-aisha">
