@@ -796,7 +796,7 @@ const BrowserApp = () => {
     };
 
     const handleFabTouchStart = (e: React.TouchEvent<HTMLButtonElement>) => {
-        handleFabDragStart(e.touches[0].clientX, e.touches[0].clientY);
+        handleFabDragStart(e.touches[0].clientX, e.clientY);
     };
 
     useEffect(() => {
@@ -2036,14 +2036,6 @@ const BrowserApp = () => {
               />
               <div className="flex items-center gap-1">
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Copy link</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
                    <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
                       <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
@@ -2051,7 +2043,17 @@ const BrowserApp = () => {
                    </TooltipTrigger>
                    <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
-                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="icon" className="h-7 w-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                      {isAssistantOpen ? <X className="w-5 h-5" /> : <Sparkles className="w-5 h-5 text-muted-foreground" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{isAssistantOpen ? 'Close Assistant' : 'Open Assistant'}</p></TooltipContent>
+                </Tooltip>
+
+                <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-7 w-7" 
                         onClick={() => {
@@ -2115,12 +2117,16 @@ const BrowserApp = () => {
                       </div>
                   </PopoverContent>
                  </Popover>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
+                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Copy link</p></TooltipContent>
+                </Tooltip>
               </div>
-              <Separator orientation="vertical" className="h-6 mx-1" />
-              <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                {isAssistantOpen ? <X className="w-4 h-4 mr-2"/> : <Sparkles className="w-4 h-4 mr-2" />}
-                Assistant
-              </Button>
             </div>
             
             <div className="flex items-center gap-2 ml-2">
@@ -2764,5 +2770,6 @@ export default function BrowserPage() {
     
 
     
+
 
 
