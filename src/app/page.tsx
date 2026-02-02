@@ -1845,13 +1845,13 @@ const BrowserApp = () => {
   const LoadFailedContent = ({ url }: { url: string }) => (
     <div className="flex-1 flex flex-col items-center justify-center bg-background text-foreground p-4 text-center">
       <MessageSquareWarning className="w-16 h-16 text-destructive mb-4" />
-      <h2 className="text-2xl font-bold mb-2">यह पेज नहीं दिखाया जा सकता</h2>
+      <h2 className="text-2xl font-bold mb-2">This page can't be displayed</h2>
       <p className="text-muted-foreground max-w-md mb-6">
-        जिस वेबसाइट को आप खोलने की कोशिश कर रहे हैं (<span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span>) वह सुरक्षा कारणों से इस ब्राउज़र के अंदर खुलने की अनुमति नहीं देती है।
+        The website you are trying to open (<span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span>) does not allow being embedded inside other browsers for security reasons.
       </p>
       <Button onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
         <ExternalLink className="w-4 h-4 mr-2" />
-        इसे एक नई टैब में खोलें
+        Open in a new tab
       </Button>
     </div>
   );
@@ -2082,7 +2082,7 @@ const BrowserApp = () => {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
-          <div className="flex items-end h-10 pt-1 px-1 bg-background draggable">
+          <div className="flex items-end h-10 pt-1 bg-background draggable">
             <div className="flex items-end non-draggable overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => (
                   <div
@@ -2942,6 +2942,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
