@@ -506,6 +506,7 @@ const BrowserApp = () => {
   ]);
   const [activeTabId, setActiveTabId] = useState("tab-1");
   const [inputValue, setInputValue] = useState("");
+  const [ntpInputValue, setNtpInputValue] = useState("");
   const [theme, setTheme] = useState('dark');
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -1065,13 +1066,13 @@ const BrowserApp = () => {
   
   useEffect(() => {
     if (currentUrl === DEFAULT_URL) {
-      if (document.activeElement !== searchContainerRef.current?.querySelector('input')) {
-        setInputValue("");
-      }
+        if (!isSearchFocused) {
+          setInputValue("");
+        }
     } else {
       setInputValue(currentUrl);
     }
-  }, [currentUrl]);
+  }, [currentUrl, isSearchFocused]);
 
 
   const goBack = () => {
@@ -1510,9 +1511,14 @@ const BrowserApp = () => {
                             ? "bg-card rounded-t-3xl" 
                             : "bg-secondary rounded-full"
                     )}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleInputKeyDown}
+                    value={ntpInputValue}
+                    onChange={(e) => setNtpInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && activeTab) {
+                            handleNavigation(activeTabId, ntpInputValue);
+                            setIsSearchFocused(false);
+                        }
+                    }}
                     onFocus={() => setIsSearchFocused(true)}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
@@ -2082,12 +2088,12 @@ const BrowserApp = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
           <div className="flex items-end h-10 pt-1 bg-background draggable">
-            <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide">
+            <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide h-full">
               {tabs.map((tab) => (
                   <div
                       key={tab.id}
                       onClick={() => setActiveTabId(tab.id)}
-                      className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer flex-shrink-0`,
+                      className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0`,
                         'font-light text-xs',
                         activeTabId === tab.id
                           ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
@@ -2103,9 +2109,11 @@ const BrowserApp = () => {
                       </Button>
                   </div>
               ))}
-              <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0" onClick={addTab}>
-                  <Plus className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center self-center h-full">
+                <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0" onClick={addTab}>
+                    <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
             <div className="flex-grow h-full" />
           </div>
@@ -2708,7 +2716,7 @@ const BrowserApp = () => {
           </div>
         </header>
         <div className="flex-1 flex overflow-hidden">
-          <main id="browser-content-area" className="flex-1 bg-card overflow-auto relative transition-all duration-300">
+          <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative transition-all duration-300">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -2948,6 +2956,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
