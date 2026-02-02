@@ -246,6 +246,10 @@ type AssistantMessage = {
   content: string;
 }
 
+type SearchHistoryItem = {
+  query: string;
+};
+
 const VoiceSearchOverlay = ({
   state,
   onClose,
@@ -502,6 +506,7 @@ const BrowserApp = () => {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [shortcuts, setShortcuts] = useState<Shortcut[]>(initialShortcuts);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [isAddShortcutOpen, setIsAddShortcutOpen] = useState(false);
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
@@ -598,6 +603,13 @@ const BrowserApp = () => {
           newUrl = `https://${newUrl}`;
       }
     } else {
+      if (!isIncognito) {
+          setSearchHistory(prevHistory => {
+              const updatedHistory = [{ query: newUrl }, ...prevHistory.filter(item => item.query.toLowerCase() !== newUrl.toLowerCase())].slice(0, 8);
+              localStorage.setItem('aisha-search-history', JSON.stringify(updatedHistory));
+              return updatedHistory;
+          });
+      }
       const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
       newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
     }
@@ -980,6 +992,16 @@ const BrowserApp = () => {
     setTheme(isDark ? 'dark' : 'light');
     
     if (isIncognito) return;
+
+    try {
+      const savedHistory = localStorage.getItem('aisha-search-history');
+      if (savedHistory) {
+        setSearchHistory(JSON.parse(savedHistory));
+      }
+    } catch (e) {
+      console.error("Failed to parse search history from localStorage", e);
+      setSearchHistory([]);
+    }
 
     const savedBookmarks = localStorage.getItem('aisha-bookmarks');
     if (savedBookmarks) {
@@ -1377,17 +1399,6 @@ const BrowserApp = () => {
   const isInternalPage = currentUrl.startsWith('about:');
 
   const NewTabPage = () => {
-    const searchHistory = [
-      { type: 'app' as const, name: 'WhatsApp', category: 'Company', icon: 'https://www.google.com/s2/favicons?sz=64&domain_url=whatsapp.com' },
-      { type: 'history' as const, query: 'kisi bhi icon ke SVG code kaise nikale', mode: 'AI Mode' },
-      { type: 'history' as const, query: 'translate in hindi', mode: 'Google Search' },
-      { type: 'history' as const, query: 'game' },
-      { type: 'history' as const, query: 'google map' },
-      { type: 'history' as const, query: 'pdf language translator' },
-      { type: 'history' as const, query: 'puri dunia me kul kitna QB data hai google ke pass kul kitne data storage karne ki ...', mode: 'AI M...' },
-      { type: 'history' as const, query: 'yt video downloader' },
-    ];
-  
     return (
     <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4 overflow-hidden">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
@@ -1490,24 +1501,15 @@ const BrowserApp = () => {
                                         key={index}
                                         className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
                                         onClick={() => {
-                                            const query = item.type === 'app' ? item.name : item.query;
-                                            handleNavigation(activeTabId, query);
+                                            handleNavigation(activeTabId, item.query);
                                             setIsSearchFocused(false);
                                         }}
                                     >
-                                        {item.type === 'app' ? (
-                                            <Image src={item.icon} alt={item.name} width={24} height={24} className="rounded-md" />
-                                        ) : (
-                                            <HistoryIcon className="w-5 h-5 text-muted-foreground" />
-                                        )}
+                                        <HistoryIcon className="w-5 h-5 text-muted-foreground" />
                                         <div className="flex-1 truncate">
                                             <p className="truncate text-sm font-light">
-                                                {item.type === 'app' ? item.name : item.query}
-                                                {item.type === 'history' && item.mode && (
-                                                    <span className="text-muted-foreground ml-2 text-sm font-light">- {item.mode}</span>
-                                                )}
+                                                {item.query}
                                             </p>
-                                            {item.type === 'app' && <p className="text-xs font-light text-muted-foreground">{item.category}</p>}
                                         </div>
                                     </li>
                                 ))}
@@ -2772,6 +2774,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
