@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   User,
   KeyRound,
@@ -190,6 +190,16 @@ export default function SettingsPage() {
   const [showHomeButton, setShowHomeButton] = useState(true);
   const [showBookmarksBar, setShowBookmarksBar] = useState(true);
   const isMobile = useIsMobile();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredMenuItems = useMemo(() => {
+    if (!searchQuery) {
+      return menuItems;
+    }
+    return menuItems.filter(item =>
+      item.text.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
 
 
   useEffect(() => {
@@ -778,9 +788,20 @@ export default function SettingsPage() {
         <div className="px-2 pb-4">
           <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
         </div>
+        <div className="w-full mb-4">
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search settings"
+              className="pl-10 h-10 bg-secondary border-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
         <div className="relative flex-1">
           <div className="absolute inset-0 overflow-y-auto pr-2 space-y-1">
-            {menuItems.map(({ id, icon: Icon, text }) => (
+            {filteredMenuItems.map(({ id, icon: Icon, text }) => (
               <Button
                 key={id}
                 variant={activeMenu === id ? 'secondary' : 'ghost'}
@@ -791,6 +812,11 @@ export default function SettingsPage() {
                 <span>{text}</span>
               </Button>
             ))}
+            {filteredMenuItems.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground p-4">
+                No results found.
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -800,7 +826,12 @@ export default function SettingsPage() {
           <div className="w-full max-w-lg mb-8 hidden md:block">
             <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input placeholder="Search settings" className="pl-10 h-10 bg-secondary border-none" />
+                <Input
+                  placeholder="Search settings"
+                  className="pl-10 h-10 bg-secondary border-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
             </div>
           </div>
           {renderContent()}
