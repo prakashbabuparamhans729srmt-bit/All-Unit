@@ -1401,7 +1401,7 @@ const BrowserApp = () => {
                     type="text"
                     placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
                     className={cn(
-                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10",
+                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10 font-light placeholder:font-light",
                         isSearchFocused 
                             ? "bg-card rounded-t-3xl" 
                             : "bg-secondary rounded-full"
@@ -1443,7 +1443,7 @@ const BrowserApp = () => {
                     </Dialog>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsAssistantOpen(true)}>
+                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true)}}>
                               <Sparkles className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>
@@ -1977,7 +1977,7 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center font-medium h-9 px-4 rounded-t-lg cursor-pointer`,
+                        className={cn(`relative flex items-center font-light h-9 px-4 rounded-t-lg cursor-pointer`,
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
@@ -2018,7 +2018,7 @@ const BrowserApp = () => {
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
                           <Globe className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium text-muted-foreground">Aisha</span>
+                          <span className="text-sm font-light text-muted-foreground">Aisha</span>
                       </div>
                   </div>
               ) : (
@@ -2029,7 +2029,7 @@ const BrowserApp = () => {
                 value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
-                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light"
                 placeholder="Ask anything or navigate..."
               />
               <div className="flex items-center gap-1">
@@ -2109,7 +2109,7 @@ const BrowserApp = () => {
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
                        <Sparkles className="w-4 h-4 mr-2" />
                        Assistant
                     </Button>
@@ -2769,6 +2769,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
