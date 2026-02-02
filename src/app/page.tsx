@@ -1443,9 +1443,7 @@ const BrowserApp = () => {
                     </Dialog>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => {
-                                setIsAssistantOpen(true);
-                            }}>
+                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsAssistantOpen(true)}>
                               <Sparkles className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>
@@ -1525,7 +1523,7 @@ const BrowserApp = () => {
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
                           {renderShortcutIcon(shortcut)}
                       </div>
-                      <span className="text-xs truncate w-20">{shortcut.name}</span>
+                      <span className="text-xs truncate w-20 text-muted-foreground">{shortcut.name}</span>
                   </div>
               ))}
               {shortcuts.length < 100 && !isIncognito && (
@@ -1533,7 +1531,7 @@ const BrowserApp = () => {
                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
                         <Plus className="w-6 h-6 text-muted-foreground" />
                     </div>
-                    <span className="text-xs">Add shortcut</span>
+                    <span className="text-xs text-muted-foreground">Add shortcut</span>
                 </div>
               )}
           </div>
@@ -1748,7 +1746,7 @@ const BrowserApp = () => {
       <p className="text-muted-foreground max-w-md mb-6">
         जिस वेबसाइट को आप खोलने की कोशिश कर रहे हैं (<span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span>) वह सुरक्षा कारणों से इस ब्राउज़र के अंदर खुलने की अनुमति नहीं देती है।
       </p>
-      <Button onClick={() => window.open(url, '_blank')}>
+      <Button onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
         <ExternalLink className="w-4 h-4 mr-2" />
         इसे एक नई टैब में खोलें
       </Button>
@@ -1982,7 +1980,7 @@ const BrowserApp = () => {
                         className={cn(`relative flex items-center font-medium h-9 px-4 rounded-t-lg cursor-pointer`,
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
-                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-secondary-foreground hover:bg-card/80'} border-r border-border`
+                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
                         )}
                     >
                         {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
@@ -2043,14 +2041,14 @@ const BrowserApp = () => {
                    </TooltipTrigger>
                    <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
-
+                
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="icon" className="h-7 w-7" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                      {isAssistantOpen ? <X className="w-5 h-5" /> : <Sparkles className="w-5 h-5 text-muted-foreground" />}
+                       <Sparkles className="w-5 h-5 text-muted-foreground" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent><p>{isAssistantOpen ? 'Close Assistant' : 'Open Assistant'}</p></TooltipContent>
+                  <TooltipContent><p>Open Assistant</p></TooltipContent>
                 </Tooltip>
 
                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
@@ -2770,6 +2768,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
