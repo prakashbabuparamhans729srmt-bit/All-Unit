@@ -1064,15 +1064,12 @@ const BrowserApp = () => {
   };
   
   useEffect(() => {
-    if (activeTab) {
-      const newUrl = activeTab.history[activeTab.currentIndex];
-      if (newUrl === DEFAULT_URL) {
-        setInputValue("");
-      } else {
-        setInputValue(newUrl);
-      }
+    if (currentUrl === DEFAULT_URL) {
+      setInputValue("");
+    } else {
+      setInputValue(currentUrl);
     }
-  }, [activeTab]);
+  }, [currentUrl]);
 
 
   const goBack = () => {
@@ -2949,6 +2946,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
