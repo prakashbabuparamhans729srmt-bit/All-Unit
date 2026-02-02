@@ -2085,12 +2085,10 @@ const BrowserApp = () => {
                         </Button>
                     </div>
                 ))}
-              </div>
-            </div>
-            <div className="non-draggable">
-                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center" onClick={addTab}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center flex-shrink-0" onClick={addTab}>
                     <Plus className="w-4 h-4" />
                 </Button>
+              </div>
             </div>
             <div className="flex-grow h-full" />
           </div>
@@ -2903,6 +2901,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
