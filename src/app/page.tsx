@@ -532,6 +532,7 @@ const BrowserApp = () => {
   const [isTranslateOpen, setIsTranslateOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isClearDataOpen, setIsClearDataOpen] = useState(false);
+  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -1363,6 +1364,7 @@ const BrowserApp = () => {
       reader.readAsDataURL(file);
     }
     event.target.value = '';
+    setIsImageSearchOpen(false);
   };
 
   const handleFind = () => {
@@ -1463,7 +1465,14 @@ const BrowserApp = () => {
   const mobileNavItems = [
     { icon: Share, label: 'Share', action: handleShare },
     { icon: Search, label: 'Find in page', action: handleFind },
-    { icon: Languages, label: 'Translate', action: () => toast({title: 'Translate is not implemented on mobile yet.'}) },
+    { icon: Languages, label: 'Translate', action: () => {
+        if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+            const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+            handleNavigation(activeTabId, googleTranslateUrl);
+        } else {
+            toast({ title: "Can't translate internal pages." });
+        }
+    }},
     { icon: PlusSquare, label: 'Add to Home', action: handleInstallClick },
     { icon: Laptop, label: 'Recent tabs', action: () => toast({title: 'Recent tabs are not implemented.'}) },
     { icon: HelpCircle, label: 'Help & feedback', action: () => setIsFeedbackOpen(true) },
@@ -1474,7 +1483,7 @@ const BrowserApp = () => {
     { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
     { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
     { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
-    { icon: CustomGroupIcon, label: 'G', action: () => toast({title: "This feature is not implemented."}) },
+    { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'https://groups.google.com/') },
     { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://play.google.com/store') },
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
@@ -1511,31 +1520,7 @@ const BrowserApp = () => {
                     <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
                       <Mic className="w-5 h-5" />
                     </Button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8"><Camera className="w-5 h-5" /></Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                           <DialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5" /> Search by Image</DialogTitle>
-                          <DialogDescription>
-                            Search using an image instead of text.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg h-40 flex flex-col justify-center items-center">
-                          <p className="text-sm text-muted-foreground">Drag and drop an image here</p>
-                          <p className="text-xs text-muted-foreground my-2">or</p>
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleImageUpload}
-                            className="hidden"
-                            accept="image/*"
-                          />
-                          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>Upload a file</Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
@@ -2063,32 +2048,30 @@ const BrowserApp = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
           <div className="flex items-end h-10 pt-1 px-1 bg-background draggable">
-            <div className="flex-1 flex items-end non-draggable overflow-hidden">
-              <div className="flex items-end overflow-x-auto scrollbar-hide">
-                {tabs.map((tab) => (
-                    <div
-                        key={tab.id}
-                        onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer flex-shrink-0`,
-                          'font-light text-xs',
-                          activeTabId === tab.id
-                            ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
-                            : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
-                        )}
-                    >
-                        {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
-                        <span className="truncate max-w-[150px]">
-                            {tab.isLoading ? "Loading..." : tab.title}
-                        </span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
-                ))}
-                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1 self-center flex-shrink-0" onClick={addTab}>
-                    <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="flex items-end non-draggable overflow-x-auto scrollbar-hide">
+              {tabs.map((tab) => (
+                  <div
+                      key={tab.id}
+                      onClick={() => setActiveTabId(tab.id)}
+                      className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer flex-shrink-0`,
+                        'font-light text-xs',
+                        activeTabId === tab.id
+                          ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
+                          : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
+                      )}
+                  >
+                      {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
+                      <span className="truncate max-w-[150px]">
+                          {tab.isLoading ? "Loading..." : tab.title}
+                      </span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
+                          <X className="w-4 h-4" />
+                      </Button>
+                  </div>
+              ))}
+              <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0" onClick={addTab}>
+                  <Plus className="w-4 h-4" />
+              </Button>
             </div>
             <div className="flex-grow h-full" />
           </div>
@@ -2456,7 +2439,7 @@ const BrowserApp = () => {
                             <span>Print...</span>
                             <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => toast({title: "This feature is not implemented."})}>
+                        <DropdownMenuItem onSelect={() => setIsImageSearchOpen(true)}>
                             <Search className="mr-2 h-4 w-4" />
                             <span>Search with Google Lens</span>
                         </DropdownMenuItem>
@@ -2759,6 +2742,29 @@ const BrowserApp = () => {
         </DialogContent>
       </Dialog>
       
+      <Dialog open={isImageSearchOpen} onOpenChange={setIsImageSearchOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2"><Camera className="w-5 h-5" /> Search by Image</DialogTitle>
+                <DialogDescription>
+                Search using an image instead of text.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg h-40 flex flex-col justify-center items-center">
+                <p className="text-sm text-muted-foreground">Drag and drop an image here</p>
+                <p className="text-xs text-muted-foreground my-2">or</p>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    accept="image/*"
+                />
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>Upload a file</Button>
+            </div>
+        </DialogContent>
+      </Dialog>
+
       <input
         type="file"
         ref={attachmentInputRef}
@@ -2901,6 +2907,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
