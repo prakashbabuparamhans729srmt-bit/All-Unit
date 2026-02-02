@@ -1483,7 +1483,7 @@ const BrowserApp = () => {
             {isSearchFocused && (
                 <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
                     <CardContent className="p-0">
-                         <ScrollArea className="max-h-[60vh] scrollbar-hide">
+                         <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
                             <ul className="py-2">
                                 {searchHistory.map((item, index) => (
                                     <li
@@ -1533,7 +1533,7 @@ const BrowserApp = () => {
                                   )}
                               </div>
                             </div>
-                        </ScrollArea>
+                        </div>
                     </CardContent>
                 </Card>
             )}
@@ -2109,7 +2109,7 @@ const BrowserApp = () => {
                   </PopoverContent>
                  </Popover>
                 
-                <Tooltip>
+                 <Tooltip>
                    <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
                       <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
@@ -2772,6 +2772,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
