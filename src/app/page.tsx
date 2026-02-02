@@ -1847,7 +1847,7 @@ const BrowserApp = () => {
       <MessageSquareWarning className="w-16 h-16 text-destructive mb-4" />
       <h2 className="text-2xl font-bold mb-2">This page can't be displayed</h2>
       <p className="text-muted-foreground max-w-md mb-6">
-        The website you are trying to open (<span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span>) does not allow being embedded inside other browsers for security reasons.
+        The website at <span className="font-mono bg-muted p-1 rounded-md text-sm">{url}</span> may not allow itself to be embedded in other pages. Try opening it in a new window.
       </p>
       <Button onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
         <ExternalLink className="w-4 h-4 mr-2" />
@@ -2083,7 +2083,7 @@ const BrowserApp = () => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex-shrink-0">
           <div className="flex items-end h-10 pt-1 bg-background draggable">
-            <div className="flex items-end non-draggable overflow-x-auto scrollbar-hide">
+            <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => (
                   <div
                       key={tab.id}
@@ -2225,8 +2225,15 @@ const BrowserApp = () => {
                                   </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>Choose another language</DropdownMenuItem>
-                                  <DropdownMenuItem>Never translate this site</DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => {
+                                      const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&u=${encodeURIComponent(currentUrl)}`;
+                                      handleNavigation(activeTabId, googleTranslateUrl);
+                                      setIsTranslateOpen(false);
+                                  }}>Choose another language</DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => {
+                                      toast({ title: "This feature is not fully implemented in the prototype." });
+                                      setIsTranslateOpen(false);
+                                  }}>Never translate this site</DropdownMenuItem>
                               </DropdownMenuContent>
                           </DropdownMenu>
 
@@ -2241,15 +2248,6 @@ const BrowserApp = () => {
                   </PopoverContent>
                  </Popover>
                 
-                 <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 text-muted-foreground transition-colors ${isBookmarked ? 'text-yellow-400 fill-yellow-400' : 'hover:text-yellow-400'}`} />
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                </Tooltip>
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
@@ -2258,6 +2256,15 @@ const BrowserApp = () => {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent><p>Open Assistant</p></TooltipContent>
+                </Tooltip>
+
+                 <Tooltip>
+                   <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'}`} fill={isBookmarked ? 'currentColor' : 'none'} />
+                    </Button>
+                   </TooltipTrigger>
+                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                 </Tooltip>
 
               </div>
@@ -2942,6 +2949,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
