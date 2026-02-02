@@ -1389,7 +1389,7 @@ const BrowserApp = () => {
     ];
   
     return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4">
+    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4 overflow-hidden">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
@@ -2772,6 +2772,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
