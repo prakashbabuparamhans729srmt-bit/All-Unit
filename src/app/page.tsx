@@ -1120,6 +1120,7 @@ const BrowserApp = () => {
   const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && activeTab) {
       handleNavigation(activeTabId, inputValue);
+      setIsSearchFocused(false);
     }
   };
 
@@ -1484,7 +1485,7 @@ const BrowserApp = () => {
 
   const NewTabPage = () => {
     return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4 overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
@@ -1578,26 +1579,30 @@ const BrowserApp = () => {
                 <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
                     <CardContent className="p-0">
                          <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
-                            <ul className="py-2">
-                                {searchHistory.map((item, index) => (
-                                    <li
-                                        key={index}
-                                        className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
-                                        onClick={() => {
-                                            handleNavigation(activeTabId, item.query);
-                                            setIsSearchFocused(false);
-                                        }}
-                                    >
-                                        <HistoryIcon className="w-5 h-5 text-muted-foreground" />
-                                        <div className="flex-1 truncate">
-                                            <p className="truncate text-sm font-light">
-                                                {item.query}
-                                            </p>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                            <Separator />
+                            {searchHistory.length > 0 && (
+                                <>
+                                    <ul className="py-2">
+                                        {searchHistory.map((item, index) => (
+                                            <li
+                                                key={index}
+                                                className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
+                                                onClick={() => {
+                                                    handleNavigation(activeTabId, item.query);
+                                                    setIsSearchFocused(false);
+                                                }}
+                                            >
+                                                <HistoryIcon className="w-5 h-5 text-muted-foreground" />
+                                                <div className="flex-1 truncate">
+                                                    <p className="truncate text-sm font-light">
+                                                        {item.query}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <Separator />
+                                </>
+                            )}
                             <div className="p-4">
                               <div className="grid grid-cols-5 gap-x-8 gap-y-4">
                                   {shortcuts.map((shortcut, index) => (
@@ -2064,8 +2069,8 @@ const BrowserApp = () => {
                     <div
                         key={tab.id}
                         onClick={() => setActiveTabId(tab.id)}
-                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer text-xs flex-shrink-0`,
-                          'font-light',
+                        className={cn(`relative flex items-center h-9 px-4 rounded-t-lg cursor-pointer flex-shrink-0`,
+                          'font-light text-xs',
                           activeTabId === tab.id
                             ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
                             : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
@@ -2124,14 +2129,36 @@ const BrowserApp = () => {
                 placeholder="Ask anything or navigate..."
               />
               <div className="flex items-center gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyLink}>
-                      <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Share className="w-5 h-5 text-muted-foreground" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Copy link</p></TooltipContent>
-                </Tooltip>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={copyLink}>
+                      <LinkIcon className="mr-2 h-4 w-4" />
+                      <span>Copy Link</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={createQRCode}>
+                      <QrCode className="mr-2 h-4 w-4" />
+                      <span>Create QR Code</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleShare}>
+                      <Share className="mr-2 h-4 w-4" />
+                      <span>Share...</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => window.print()}>
+                        <Download className="mr-2 h-4 w-4" />
+                        <span>Save page as...</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
+                        <Computer className="mr-2 h-4 w-4" />
+                        <span>Send to your devices</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
                     <PopoverTrigger asChild>
@@ -2291,11 +2318,11 @@ const BrowserApp = () => {
                   </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleNavigation(activeTabId, 'https://myaccount.google.com/')}>
+                      <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'https://myaccount.google.com/')}>
                           <User className="mr-2 h-4 w-4"/>
                           <span>Manage Profile</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleSignOut}>
+                      <DropdownMenuItem onSelect={handleSignOut}>
                           <LogOut className="mr-2 h-4 w-4"/>
                           <span>Sign Out</span>
                       </DropdownMenuItem>
@@ -2876,6 +2903,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
