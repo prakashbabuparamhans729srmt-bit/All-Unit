@@ -1421,7 +1421,6 @@ const BrowserApp = () => {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleInputKeyDown}
                     onFocus={() => setIsSearchFocused(true)}
-                    autoFocus
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
                     <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
@@ -2778,6 +2777,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
