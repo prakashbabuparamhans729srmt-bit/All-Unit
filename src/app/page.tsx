@@ -489,7 +489,7 @@ AishaAssistant.displayName = 'AishaAssistant';
 
 const CustomizePanel = ({
   setIsOpen,
-  toggleTheme,
+  handleThemeChange,
   theme,
   isMobile = false,
   showShortcuts,
@@ -499,13 +499,13 @@ const CustomizePanel = ({
   showCards,
   setShowCards,
   handleResetToDefault,
+  followDeviceTheme,
+  setFollowDeviceTheme,
 }) => {
   const { toast } = useToast();
 
   const handleModeChange = (mode) => {
-    if ((mode === 'light' && theme === 'dark') || (mode === 'dark' && theme === 'light')) {
-      toggleTheme();
-    }
+    handleThemeChange(mode);
   };
 
   const handleShortcutSettingChange = (value: string) => {
@@ -546,18 +546,18 @@ const CustomizePanel = ({
               <CardTitle className="text-base">Appearance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => toast({ title: "Changing theme is not implemented." })}>
+              <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => {}}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> Change theme
               </Button>
 
               <div className="flex justify-between items-center p-1 rounded-full bg-secondary">
-                 <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
+                 <Button variant={!followDeviceTheme && theme === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
                   <Sun className="mr-2 h-4 w-4" /> Light
                 </Button>
-                <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
+                <Button variant={!followDeviceTheme && theme === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
                   <Moon className="mr-2 h-4 w-4" /> Dark
                 </Button>
-                <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-full" onClick={() => toast({ title: "Device theme not implemented." })}>
+                <Button variant={followDeviceTheme ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full" onClick={() => handleModeChange('device')}>
                   <Laptop className="mr-2 h-4 w-4" /> Device
                 </Button>
               </div>
@@ -568,7 +568,7 @@ const CustomizePanel = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button className="w-10 h-10 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
-                          onClick={() => toast({ title: "Color themes are not yet implemented." })}>
+                          onClick={() => {}}>
                           <div className="w-full h-full rounded-full" style={{ backgroundColor: color.bg }} />
                           {color.selected && (
                             <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
@@ -584,7 +584,7 @@ const CustomizePanel = ({
                  <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => toast({ title: "Custom colors are not yet implemented." })}>
+                      <button className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => {}}>
                         <Pencil className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </TooltipTrigger>
@@ -597,7 +597,7 @@ const CustomizePanel = ({
               
               <div className="flex items-center justify-between">
                 <Label htmlFor="follow-device" className="text-sm font-normal">Follow device colors</Label>
-                <Switch id="follow-device" onCheckedChange={() => toast({ title: "This feature is not yet implemented." })} />
+                <Switch id="follow-device" checked={followDeviceTheme} onCheckedChange={(checked) => handleThemeChange(checked ? 'device' : theme)} />
               </div>
               
               <Separator />
@@ -611,7 +611,7 @@ const CustomizePanel = ({
 
           <Card>
              <CardContent className="p-2">
-                <Button variant="ghost" className="w-full justify-between text-sm font-normal h-10" onClick={() => toast({ title: "Toolbar settings are not implemented." })}>
+                <Button variant="ghost" className="w-full justify-between text-sm font-normal h-10" onClick={() => {}}>
                     <span>Toolbar</span>
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </Button>
@@ -1041,6 +1041,7 @@ const BrowserApp = () => {
   const [showShortcutsOnNtp, setShowShortcutsOnNtp] = useState(true);
   const [shortcutSetting, setShortcutSetting] = useState("my-shortcuts");
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
+  const [followDeviceTheme, setFollowDeviceTheme] = useState(false);
 
   const updateTab = (id: string, updates: Partial<Tab>) => {
     setTabs((prevTabs) =>
@@ -1523,15 +1524,32 @@ const BrowserApp = () => {
     }
   }, [zoomLevel, activeTabId]);
   
-  const toggleTheme = () => {
-    if (theme === 'light') {
-        document.documentElement.classList.add('dark');
-        document.documentElement.style.colorScheme = 'dark';
-        setTheme('dark');
+  const applyTheme = (newTheme: 'light' | 'dark') => {
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    document.documentElement.style.colorScheme = newTheme;
+    setTheme(newTheme);
+  };
+
+  useEffect(() => {
+    if (!followDeviceTheme) return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      applyTheme(e.matches ? 'dark' : 'light');
+    };
+
+    handleChange({ matches: mediaQuery.matches } as MediaQueryListEvent); // apply initial
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [followDeviceTheme]);
+
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'device') => {
+    if (newTheme === 'device') {
+      setFollowDeviceTheme(true);
     } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.style.colorScheme = 'light';
-        setTheme('light');
+      setFollowDeviceTheme(false);
+      applyTheme(newTheme);
     }
   };
   
@@ -1976,9 +1994,8 @@ const BrowserApp = () => {
   };
   
   const handleResetToDefault = () => {
-    if (theme !== 'dark') {
-      toggleTheme();
-    }
+    handleThemeChange('dark');
+    setFollowDeviceTheme(false);
     setShowShortcutsOnNtp(true);
     setShortcutSetting("my-shortcuts");
     setShowCardsOnNtp(true);
@@ -2900,7 +2917,7 @@ const BrowserApp = () => {
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={toggleTheme}>
+                        <DropdownMenuItem onClick={() => handleThemeChange(theme === 'light' ? 'dark' : 'light')}>
                         {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
                         <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                         </DropdownMenuItem>
@@ -3188,7 +3205,7 @@ const BrowserApp = () => {
             <div className="flex flex-col">
               {isCustomizeOpen && <CustomizePanel 
                   setIsOpen={setIsCustomizeOpen} 
-                  toggleTheme={toggleTheme} 
+                  handleThemeChange={handleThemeChange}
                   theme={theme}
                   showShortcuts={showShortcutsOnNtp}
                   setShowShortcuts={setShowShortcutsOnNtp}
@@ -3197,6 +3214,8 @@ const BrowserApp = () => {
                   showCards={showCardsOnNtp}
                   setShowCards={setShowCardsOnNtp}
                   handleResetToDefault={handleResetToDefault}
+                  followDeviceTheme={followDeviceTheme}
+                  setFollowDeviceTheme={setFollowDeviceTheme}
               />}
               {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
                 isMobile={false}
@@ -3403,7 +3422,7 @@ const BrowserApp = () => {
               <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
                    <CustomizePanel 
                     setIsOpen={setIsCustomizeOpen} 
-                    toggleTheme={toggleTheme} 
+                    handleThemeChange={handleThemeChange} 
                     theme={theme} 
                     isMobile 
                     showShortcuts={showShortcutsOnNtp}
@@ -3413,6 +3432,8 @@ const BrowserApp = () => {
                     showCards={showCardsOnNtp}
                     setShowCards={setShowCardsOnNtp}
                     handleResetToDefault={handleResetToDefault}
+                    followDeviceTheme={followDeviceTheme}
+                    setFollowDeviceTheme={setFollowDeviceTheme}
                    />
               </DialogContent>
           </Dialog>
