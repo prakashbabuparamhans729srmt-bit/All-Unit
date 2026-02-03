@@ -2299,6 +2299,9 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
+              {showHomeButton && (<Button variant="ghost" size="icon" onClick={goHome}>
+                <Home className="w-5 h-5" />
+              </Button>)}
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -2308,9 +2311,6 @@ const BrowserApp = () => {
               <Button variant="ghost" size="icon" onClick={reload}>
                 {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
               </Button>
-              {showHomeButton && (<Button variant="ghost" size="icon" onClick={goHome}>
-                <Home className="w-5 h-5" />
-              </Button>)}
             </div>
             <div className="flex flex-1 items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full min-w-0 px-2 sm:px-4 py-1.5">
               {isInternalPage ? (
@@ -3138,6 +3138,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
