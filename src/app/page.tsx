@@ -497,7 +497,6 @@ const ToolbarSettingsPanel = ({
   isMobile = false,
   toast,
 }) => {
-    // Conceptual states, not hooked up to anything for now
   const [showPayments, setShowPayments] = React.useState(true);
   const [showAddresses, setShowAddresses] = React.useState(true);
   const [showReadingList, setShowReadingList] = React.useState(false);
@@ -3452,47 +3451,55 @@ const BrowserApp = () => {
               )}
           </main>
           <div className="flex-shrink-0">
-            {isCustomizeOpen && !isMobile && <CustomizePanel 
-                setIsOpen={setIsCustomizeOpen} 
-                handleThemeChange={handleThemeChange}
-                theme={theme}
-                showShortcuts={showShortcutsOnNtp}
-                setShowShortcuts={setShowShortcutsOnNtp}
-                shortcutSetting={shortcutSetting}
-                setShortcutSetting={setShortcutSetting}
-                showCards={showCardsOnNtp}
-                setShowCards={setShowCardsOnNtp}
-                showContinueWithTabs={showContinueWithTabsCard}
-                setShowContinueWithTabs={setShowContinueWithTabsCard}
-                handleResetToDefault={handleResetToDefault}
-                followDeviceTheme={followDeviceTheme}
-                setFollowDeviceTheme={setFollowDeviceTheme}
-                showHomeButton={showHomeButton}
-                setShowHomeButton={setShowHomeButton}
-                showBookmarksButton={showBookmarksButton}
-                setShowBookmarksButton={setShowBookmarksButton}
-                toast={toast}
-            />}
-            {isAssistantOpen && !isCustomizeOpen && !isMobile && <AishaAssistant
-              isMobile={false}
-              assistantMessages={assistantMessages}
-              setAssistantMessages={setAssistantMessages}
-              isAssistantLoading={isAssistantLoading}
-              assistantInput={assistantInput}
-              setAssistantInput={setAssistantInput}
-              handleAssistantSubmit={() => handleAssistantSubmit()}
-              toast={toast}
-              startVoiceSearch={startVoiceSearch}
-              listeningState={listeningState}
-              voiceSearchSource={voiceSearchSource}
-              setIsAssistantOpen={setIsAssistantOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
-              toggleMainSidebar={toggleMainSidebar}
-              setMobileSheetContent={setMobileSheetContent}
-              handleInstallClick={handleInstallClick}
-              handleAssistantSearch={handleAssistantSearch}
-              handleAttachment={handleAttachment}
-            />}
+            {isCustomizeOpen && !isMobile && (
+              <div className="h-full overflow-y-auto">
+                <CustomizePanel 
+                  setIsOpen={setIsCustomizeOpen} 
+                  handleThemeChange={handleThemeChange}
+                  theme={theme}
+                  showShortcuts={showShortcutsOnNtp}
+                  setShowShortcuts={setShowShortcutsOnNtp}
+                  shortcutSetting={shortcutSetting}
+                  setShortcutSetting={setShortcutSetting}
+                  showCards={showCardsOnNtp}
+                  setShowCards={setShowCardsOnNtp}
+                  showContinueWithTabs={showContinueWithTabsCard}
+                  setShowContinueWithTabs={setShowContinueWithTabsCard}
+                  handleResetToDefault={handleResetToDefault}
+                  followDeviceTheme={followDeviceTheme}
+                  setFollowDeviceTheme={setFollowDeviceTheme}
+                  showHomeButton={showHomeButton}
+                  setShowHomeButton={setShowHomeButton}
+                  showBookmarksButton={showBookmarksButton}
+                  setShowBookmarksButton={setShowBookmarksButton}
+                  toast={toast}
+                />
+              </div>
+            )}
+            {isAssistantOpen && !isCustomizeOpen && !isMobile && (
+              <div className="h-full overflow-y-auto">
+                <AishaAssistant
+                  isMobile={false}
+                  assistantMessages={assistantMessages}
+                  setAssistantMessages={setAssistantMessages}
+                  isAssistantLoading={isAssistantLoading}
+                  assistantInput={assistantInput}
+                  setAssistantInput={setAssistantInput}
+                  handleAssistantSubmit={() => handleAssistantSubmit()}
+                  toast={toast}
+                  startVoiceSearch={startVoiceSearch}
+                  listeningState={listeningState}
+                  voiceSearchSource={voiceSearchSource}
+                  setIsAssistantOpen={setIsAssistantOpen}
+                  setMobileMenuOpen={setMobileMenuOpen}
+                  toggleMainSidebar={toggleMainSidebar}
+                  setMobileSheetContent={setMobileSheetContent}
+                  handleInstallClick={handleInstallClick}
+                  handleAssistantSearch={handleAssistantSearch}
+                  handleAttachment={handleAttachment}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
