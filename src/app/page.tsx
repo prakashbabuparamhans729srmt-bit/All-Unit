@@ -2788,7 +2788,7 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden md:inline-flex')}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(!showHomeButton && "hidden", "md:hidden")}>
                 <Home className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
@@ -3421,7 +3421,7 @@ const BrowserApp = () => {
               )}
           </main>
           { !isMobile && (
-            <div className='flex'>
+            <div className="flex-shrink-0">
               {isCustomizeOpen && <CustomizePanel 
                   setIsOpen={setIsCustomizeOpen} 
                   handleThemeChange={handleThemeChange}
