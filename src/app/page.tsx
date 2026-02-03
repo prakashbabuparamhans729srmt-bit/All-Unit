@@ -487,20 +487,39 @@ const AishaAssistant = React.memo(({
 ));
 AishaAssistant.displayName = 'AishaAssistant';
 
-const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => {
+const CustomizePanel = ({
+  setIsOpen,
+  toggleTheme,
+  theme,
+  isMobile = false,
+  showShortcuts,
+  setShowShortcuts,
+  shortcutSetting,
+  setShortcutSetting,
+  showCards,
+  setShowCards,
+  handleResetToDefault,
+}) => {
   const { toast } = useToast();
-  const [currentMode, setCurrentMode] = React.useState(theme);
-  const [showShortcuts, setShowShortcuts] = React.useState(true);
-  const [shortcutSetting, setShortcutSetting] = React.useState("my-shortcuts");
-  const [showCards, setShowCards] = React.useState(true);
-  
+
   const handleModeChange = (mode) => {
     if ((mode === 'light' && theme === 'dark') || (mode === 'dark' && theme === 'light')) {
       toggleTheme();
     }
-    setCurrentMode(mode);
-  }
+  };
 
+  const handleShortcutSettingChange = (value: string) => {
+    setShortcutSetting(value);
+    if (value === 'most-visited') {
+      toast({ title: "Displaying most visited sites is not yet implemented." });
+    }
+  };
+
+  const handleShowCardsChange = (checked: boolean) => {
+    setShowCards(checked);
+    toast({ title: "Custom cards are not yet implemented.", description: "This setting is for display purposes." });
+  };
+  
   const colors = [
     { bg: '#fdd663', selected: false }, { bg: '#f28b82', selected: false }, { bg: '#d4e1f5', selected: false }, { bg: '#e8daef', selected: false },
     { bg: '#a3d1b0', selected: false }, { bg: '#fde293', selected: false }, { bg: '#e9a18d', selected: false }, { bg: '#d3bde0', selected: false },
@@ -532,10 +551,10 @@ const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => 
               </Button>
 
               <div className="flex justify-between items-center p-1 rounded-full bg-secondary">
-                 <Button variant={currentMode === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
+                 <Button variant={theme === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
                   <Sun className="mr-2 h-4 w-4" /> Light
                 </Button>
-                <Button variant={currentMode === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
+                <Button variant={theme === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
                   <Moon className="mr-2 h-4 w-4" /> Dark
                 </Button>
                 <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-full" onClick={() => toast({ title: "Device theme not implemented." })}>
@@ -583,7 +602,7 @@ const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => 
               
               <Separator />
 
-              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-9" onClick={() => toast({ title: "Resetting to default is not implemented." })}>
+              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-9" onClick={handleResetToDefault}>
                  <RefreshCw className="mr-2 h-4 w-4"/>
                  Reset to Default
               </Button>
@@ -608,7 +627,7 @@ const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => 
                   <Label htmlFor="show-shortcuts" className="text-sm font-normal">Show shortcuts</Label>
                   <Switch id="show-shortcuts" checked={showShortcuts} onCheckedChange={setShowShortcuts} />
                </div>
-               <RadioGroup disabled={!showShortcuts} value={shortcutSetting} onValueChange={setShortcutSetting}>
+               <RadioGroup disabled={!showShortcuts} value={shortcutSetting} onValueChange={handleShortcutSettingChange}>
                   <div className="flex items-start space-x-3 py-2">
                     <RadioGroupItem value="my-shortcuts" id="my-shortcuts" />
                     <div className="grid gap-1.5 leading-none">
@@ -634,7 +653,7 @@ const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => 
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="show-cards" className="text-sm font-normal">Show cards</Label>
-                  <Switch id="show-cards" checked={showCards} onCheckedChange={setShowCards} />
+                  <Switch id="show-cards" checked={showCards} onCheckedChange={handleShowCardsChange} />
                 </div>
                 <div className="flex items-center space-x-2">
                     <Checkbox id="continue-tabs" defaultChecked onCheckedChange={() => toast({ title: 'This feature is not implemented.' })}/>
@@ -669,7 +688,6 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const handleNavigation = (e: React.MouseEvent) => {
-    // Only navigate if the click is not on the menu button itself
     if (!(e.target as HTMLElement).closest('[data-popover-trigger]')) {
       onNavigate(shortcut.url || shortcut.name);
     }
@@ -677,8 +695,10 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
 
   return (
     <div
-      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={handleNavigation}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary)')}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -745,7 +765,8 @@ const NewTabPage = ({
     handleOpenAddShortcut,
     handleOpenEditShortcut,
     handleRemoveShortcut,
-    setIsCustomizeOpen
+    setIsCustomizeOpen,
+    showShortcuts,
 } : {
     searchContainerRef: React.RefObject<HTMLDivElement>;
     isSearchFocused: boolean;
@@ -770,6 +791,7 @@ const NewTabPage = ({
     handleOpenEditShortcut: (shortcut: Shortcut) => void;
     handleRemoveShortcut: (shortcut: Shortcut) => void;
     setIsCustomizeOpen: (value: boolean) => void;
+    showShortcuts: boolean;
 }) => {
     const isMobile = useIsMobile();
     return (
@@ -883,7 +905,7 @@ const NewTabPage = ({
                                   ))}
                                   {shortcuts.length < 100 && !isIncognito && (
                                     <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
-                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background/30 mb-2">
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary/50 mb-2">
                                             <Plus className="w-8 h-8 text-muted-foreground" />
                                         </div>
                                         <span className="text-sm font-light text-foreground">Add shortcut</span>
@@ -896,28 +918,37 @@ const NewTabPage = ({
                 </Card>
             )}
         </div>
-        <div className="w-full max-w-2xl mt-12 p-4">
-            <div className="grid grid-cols-5 gap-4">
-                {shortcuts.map((shortcut, index) => (
-                    <ShortcutItem
-                        key={`main-shortcut-${shortcut.name}-${index}`}
-                        shortcut={shortcut}
-                        onNavigate={(url) => handleNavigation(activeTabId, url)}
-                        onEdit={handleOpenEditShortcut}
-                        onRemove={handleRemoveShortcut}
-                        isIncognito={isIncognito}
-                    />
-                ))}
-                {shortcuts.length < 100 && !isIncognito && (
-                  <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background/30 mb-2">
-                          <Plus className="w-8 h-8 text-muted-foreground" />
+        {showShortcuts ? (
+            <div className="w-full max-w-2xl mt-12 p-4">
+                <div className="grid grid-cols-5 gap-4">
+                    {shortcuts.map((shortcut, index) => (
+                        <ShortcutItem
+                            key={`main-shortcut-${shortcut.name}-${index}`}
+                            shortcut={shortcut}
+                            onNavigate={(url) => handleNavigation(activeTabId, url)}
+                            onEdit={handleOpenEditShortcut}
+                            onRemove={handleRemoveShortcut}
+                            isIncognito={isIncognito}
+                        />
+                    ))}
+                    {shortcuts.length < 100 && !isIncognito && (
+                      <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary/50 mb-2">
+                              <Plus className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <span className="text-sm font-light text-foreground">Add shortcut</span>
                       </div>
-                      <span className="text-sm font-light text-foreground">Add shortcut</span>
-                  </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
+        ) : (
+             <div className="w-full max-w-2xl mt-12 p-4 text-center">
+                <p className="text-muted-foreground text-sm">Shortcuts are hidden.</p>
+                <Button variant="link" onClick={() => setIsCustomizeOpen(true)}>
+                    Show shortcuts
+                </Button>
+            </div>
+        )}
     </div>
   );
 }
@@ -1005,6 +1036,11 @@ const BrowserApp = () => {
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
+
+  // Customization State
+  const [showShortcutsOnNtp, setShowShortcutsOnNtp] = useState(true);
+  const [shortcutSetting, setShortcutSetting] = useState("my-shortcuts");
+  const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
 
   const updateTab = (id: string, updates: Partial<Tab>) => {
     setTabs((prevTabs) =>
@@ -1938,6 +1974,17 @@ const BrowserApp = () => {
     toast({ title: "Browsing data cleared", description: "Your bookmarks, shortcuts, and history have been removed." });
     setIsClearDataOpen(false);
   };
+  
+  const handleResetToDefault = () => {
+    if (theme !== 'dark') {
+      toggleTheme();
+    }
+    setShowShortcutsOnNtp(true);
+    setShortcutSetting("my-shortcuts");
+    setShowCardsOnNtp(true);
+    toast({ title: "Customizations reset to default" });
+  };
+
 
   const handleSignOut = () => {
     sessionStorage.removeItem('aisha-auth');
@@ -2196,6 +2243,7 @@ const BrowserApp = () => {
         handleOpenAddShortcut={handleOpenAddShortcut}
         handleOpenEditShortcut={handleOpenEditShortcut}
         handleRemoveShortcut={handleRemoveShortcut}
+        showShortcuts={showShortcutsOnNtp}
     />;
     const url = activeTab.history[activeTab.currentIndex];
 
@@ -2229,6 +2277,7 @@ const BrowserApp = () => {
               handleOpenAddShortcut={handleOpenAddShortcut}
               handleOpenEditShortcut={handleOpenEditShortcut}
               handleRemoveShortcut={handleRemoveShortcut}
+              showShortcuts={showShortcutsOnNtp}
             />;
         case 'about:settings':
             return <SettingsPage />;
@@ -2468,7 +2517,7 @@ const BrowserApp = () => {
       </Sidebar>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex-shrink-0">
+        <header className="flex-shrink-0 z-20">
           <div className="flex items-end h-10 pt-1 bg-background draggable">
             <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide h-full">
               {tabs.map((tab) => (
@@ -3136,8 +3185,19 @@ const BrowserApp = () => {
               )}
           </main>
           { !isMobile && (
-            <>
-              {isCustomizeOpen && <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} />}
+            <div className="flex flex-col">
+              {isCustomizeOpen && <CustomizePanel 
+                  setIsOpen={setIsCustomizeOpen} 
+                  toggleTheme={toggleTheme} 
+                  theme={theme}
+                  showShortcuts={showShortcutsOnNtp}
+                  setShowShortcuts={setShowShortcutsOnNtp}
+                  shortcutSetting={shortcutSetting}
+                  setShortcutSetting={setShortcutSetting}
+                  showCards={showCardsOnNtp}
+                  setShowCards={setShowCardsOnNtp}
+                  handleResetToDefault={handleResetToDefault}
+              />}
               {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
                 isMobile={false}
                 assistantMessages={assistantMessages}
@@ -3158,7 +3218,7 @@ const BrowserApp = () => {
                 handleAssistantSearch={handleAssistantSearch}
                 handleAttachment={handleAttachment}
               />}
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -3341,7 +3401,19 @@ const BrowserApp = () => {
        {isMobile && (
           <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
               <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
-                   <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} isMobile />
+                   <CustomizePanel 
+                    setIsOpen={setIsCustomizeOpen} 
+                    toggleTheme={toggleTheme} 
+                    theme={theme} 
+                    isMobile 
+                    showShortcuts={showShortcutsOnNtp}
+                    setShowShortcuts={setShowShortcutsOnNtp}
+                    shortcutSetting={shortcutSetting}
+                    setShortcutSetting={setShortcutSetting}
+                    showCards={showCardsOnNtp}
+                    setShowCards={setShowCardsOnNtp}
+                    handleResetToDefault={handleResetToDefault}
+                   />
               </DialogContent>
           </Dialog>
       )}
