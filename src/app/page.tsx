@@ -493,6 +493,62 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
     return shortcut.icon;
 };
 
+const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
+  shortcut: Shortcut;
+  onNavigate: (url: string) => void;
+  onEdit: (shortcut: Shortcut) => void;
+  onRemove: (shortcut: Shortcut) => void;
+  isIncognito: boolean;
+}) => {
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const handleNavigation = (e: React.MouseEvent) => {
+    // Only navigate if the click is not on the menu button itself
+    if (!(e.target as HTMLElement).closest('[data-popover-trigger]')) {
+      onNavigate(shortcut.url || shortcut.name);
+    }
+  };
+
+  return (
+    <div 
+      className="relative flex flex-col items-center gap-2 text-center cursor-pointer group"
+      onClick={handleNavigation}
+    >
+      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+        {renderShortcutIcon(shortcut)}
+      </div>
+      <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
+
+      {!isIncognito && (
+        <div className="absolute top-[-4px] right-[-4px] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full bg-background/60 hover:bg-background/90"
+                data-popover-trigger
+                onClick={(e) => e.stopPropagation()} // Prevent navigation
+              >
+                <MoreVertical className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-1" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-8" onClick={() => { onEdit(shortcut); setPopoverOpen(false); }}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit shortcut
+              </Button>
+              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-8 text-destructive hover:text-destructive" onClick={() => { onRemove(shortcut); setPopoverOpen(false); }}>
+                <Trash2 className="mr-2 h-4 w-4" /> Remove
+              </Button>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 const NewTabPage = ({
     searchContainerRef,
     isSearchFocused,
@@ -513,13 +569,9 @@ const NewTabPage = ({
     searchHistory,
     shortcuts,
     isIncognito,
-    setIsAddShortcutOpen,
-    isAddShortcutOpen,
-    newShortcutName,
-    setNewShortcutName,
-    newShortcutUrl,
-    setNewShortcutUrl,
-    handleAddShortcut
+    handleOpenAddShortcut,
+    handleOpenEditShortcut,
+    handleRemoveShortcut
 } : {
     searchContainerRef: React.RefObject<HTMLDivElement>;
     isSearchFocused: boolean;
@@ -540,13 +592,9 @@ const NewTabPage = ({
     searchHistory: SearchHistoryItem[];
     shortcuts: Shortcut[];
     isIncognito: boolean;
-    setIsAddShortcutOpen: (value: boolean) => void;
-    isAddShortcutOpen: boolean;
-    newShortcutName: string;
-    setNewShortcutName: (value: string) => void;
-    newShortcutUrl: string;
-    setNewShortcutUrl: (value: string) => void;
-    handleAddShortcut: () => void;
+    handleOpenAddShortcut: () => void;
+    handleOpenEditShortcut: (shortcut: Shortcut) => void;
+    handleRemoveShortcut: (shortcut: Shortcut) => void;
 }) => {
     const isMobile = useIsMobile();
     return (
@@ -649,15 +697,17 @@ const NewTabPage = ({
                             <div className="p-4">
                               <div className="grid grid-cols-5 gap-x-8 gap-y-4">
                                   {shortcuts.map((shortcut, index) => (
-                                      <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); setIsSearchFocused(false); }}>
-                                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                                              {renderShortcutIcon(shortcut)}
-                                          </div>
-                                          <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
-                                      </div>
+                                      <ShortcutItem 
+                                        key={`${shortcut.name}-${index}`}
+                                        shortcut={shortcut}
+                                        onNavigate={(url) => { handleNavigation(activeTabId, url); setIsSearchFocused(false); }}
+                                        onEdit={handleOpenEditShortcut}
+                                        onRemove={handleRemoveShortcut}
+                                        isIncognito={isIncognito}
+                                      />
                                   ))}
                                   {shortcuts.length < 100 && !isIncognito && (
-                                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={handleOpenAddShortcut}>
                                         <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
                                             <Plus className="w-6 h-6 text-muted-foreground" />
                                         </div>
@@ -671,18 +721,20 @@ const NewTabPage = ({
                 </Card>
             )}
         </div>
-        <div className="w-full max-w-2xl mt-12">
+        <div className="w-full max-w-2xl mt-12 p-4">
             <div className="grid grid-cols-5 gap-x-8 gap-y-4">
                 {shortcuts.map((shortcut, index) => (
-                    <div key={`main-shortcut-${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); }}>
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                            {renderShortcutIcon(shortcut)}
-                        </div>
-                        <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
-                    </div>
+                    <ShortcutItem
+                        key={`main-shortcut-${shortcut.name}-${index}`}
+                        shortcut={shortcut}
+                        onNavigate={(url) => handleNavigation(activeTabId, url)}
+                        onEdit={handleOpenEditShortcut}
+                        onRemove={handleRemoveShortcut}
+                        isIncognito={isIncognito}
+                    />
                 ))}
                 {shortcuts.length < 100 && !isIncognito && (
-                  <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                  <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={handleOpenAddShortcut}>
                       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
                           <Plus className="w-6 h-6 text-muted-foreground" />
                       </div>
@@ -691,33 +743,6 @@ const NewTabPage = ({
                 )}
             </div>
         </div>
-        <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add shortcut</DialogTitle>
-              <DialogDescription>
-                Enter a name and URL for your new shortcut.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="url" className="text-right">
-                  URL
-                </Label>
-                <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddShortcut}>Add Shortcut</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
     </div>
   );
 }
@@ -748,9 +773,12 @@ const BrowserApp = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [shortcuts, setShortcuts] = useState<Shortcut[]>(initialShortcuts);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
-  const [isAddShortcutOpen, setIsAddShortcutOpen] = useState(false);
+  
+  const [isAddOrEditShortcutOpen, setIsAddOrEditShortcutOpen] = useState(false);
+  const [shortcutToEdit, setShortcutToEdit] = useState<Shortcut | null>(null);
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
+
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [assistantInput, setAssistantInput] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
@@ -1533,15 +1561,34 @@ const BrowserApp = () => {
     setFeedbackEmail('');
   };
   
-  const handleAddShortcut = () => {
+  const handleOpenAddShortcut = () => {
     if (isIncognito) {
-        toast({ title: "Can't add shortcuts in Incognito mode." });
-        return;
-    }
-    if (shortcuts.length >= 100) {
-      toast({ title: 'You have reached the shortcut limit of 100.', variant: 'destructive' });
+      toast({ title: "Can't add shortcuts in Incognito mode." });
       return;
     }
+    setShortcutToEdit(null);
+    setNewShortcutName('');
+    setNewShortcutUrl('');
+    setIsAddOrEditShortcutOpen(true);
+  };
+  
+  const handleOpenEditShortcut = (shortcut: Shortcut) => {
+    setShortcutToEdit(shortcut);
+    setNewShortcutName(shortcut.name);
+    setNewShortcutUrl(shortcut.url);
+    setIsAddOrEditShortcutOpen(true);
+  };
+  
+  const handleRemoveShortcut = (shortcutToRemove: Shortcut) => {
+    if (isIncognito) return;
+    const newShortcuts = shortcuts.filter(s => s.name !== shortcutToRemove.name);
+    setShortcuts(newShortcuts);
+    localStorage.setItem('aisha-shortcuts', JSON.stringify(newShortcuts));
+    toast({ title: 'Shortcut removed' });
+  };
+  
+  const handleSaveShortcut = () => {
+    if (isIncognito) return;
     if (!newShortcutName.trim() || !newShortcutUrl.trim()) {
       toast({ title: 'Please fill out both name and URL.', variant: 'destructive' });
       return;
@@ -1551,20 +1598,38 @@ const BrowserApp = () => {
       url = `https://${url}`;
     }
 
-    const newShortcut: Shortcut = {
-      name: newShortcutName,
-      url: url,
-      icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`,
-      color: 'bg-secondary',
-    };
+    let newShortcuts;
+    if (shortcutToEdit) {
+      // Editing existing shortcut
+      newShortcuts = shortcuts.map(s =>
+        s.name === shortcutToEdit.name
+          ? { ...s, name: newShortcutName, url: url, icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}` }
+          : s
+      );
+      toast({ title: "Shortcut updated!" });
+    } else {
+      // Adding new shortcut
+      if (shortcuts.length >= 100) {
+        toast({ title: 'You have reached the shortcut limit of 100.', variant: 'destructive' });
+        return;
+      }
+      const newShortcut: Shortcut = {
+        name: newShortcutName,
+        url: url,
+        icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`,
+        color: 'bg-secondary',
+      };
+      newShortcuts = [...shortcuts, newShortcut];
+      toast({ title: "Shortcut added!" });
+    }
 
-    const newShortcuts = [...shortcuts, newShortcut];
     setShortcuts(newShortcuts);
     localStorage.setItem('aisha-shortcuts', JSON.stringify(newShortcuts));
-    
+
+    setIsAddOrEditShortcutOpen(false);
+    setShortcutToEdit(null);
     setNewShortcutName('');
     setNewShortcutUrl('');
-    setIsAddShortcutOpen(false);
   };
   
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1735,7 +1800,7 @@ const BrowserApp = () => {
   };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
-    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto px-8">
+    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto px-4 sm:px-8">
       <div className="flex items-center gap-4 mb-8">
         <Icon className="w-8 h-8 text-muted-foreground"/>
         <h1 className="text-3xl font-bold">{title}</h1>
@@ -1948,13 +2013,9 @@ const BrowserApp = () => {
         searchHistory={searchHistory}
         shortcuts={shortcuts}
         isIncognito={isIncognito}
-        setIsAddShortcutOpen={setIsAddShortcutOpen}
-        isAddShortcutOpen={isAddShortcutOpen}
-        newShortcutName={newShortcutName}
-        setNewShortcutName={setNewShortcutName}
-        newShortcutUrl={newShortcutUrl}
-        setNewShortcutUrl={setNewShortcutUrl}
-        handleAddShortcut={handleAddShortcut}
+        handleOpenAddShortcut={handleOpenAddShortcut}
+        handleOpenEditShortcut={handleOpenEditShortcut}
+        handleRemoveShortcut={handleRemoveShortcut}
     />;
     const url = activeTab.history[activeTab.currentIndex];
 
@@ -1984,13 +2045,9 @@ const BrowserApp = () => {
               searchHistory={searchHistory}
               shortcuts={shortcuts}
               isIncognito={isIncognito}
-              setIsAddShortcutOpen={setIsAddShortcutOpen}
-              isAddShortcutOpen={isAddShortcutOpen}
-              newShortcutName={newShortcutName}
-              setNewShortcutName={setNewShortcutName}
-              newShortcutUrl={newShortcutUrl}
-              setNewShortcutUrl={setNewShortcutUrl}
-              handleAddShortcut={handleAddShortcut}
+              handleOpenAddShortcut={handleOpenAddShortcut}
+              handleOpenEditShortcut={handleOpenEditShortcut}
+              handleRemoveShortcut={handleRemoveShortcut}
             />;
         case 'about:settings':
             return <SettingsPage />;
@@ -2688,7 +2745,7 @@ const BrowserApp = () => {
                                     <span>Save page as...</span>
                                     <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setIsAddShortcutOpen(true)}>
+                                <DropdownMenuItem onSelect={() => handleOpenAddShortcut()}>
                                     <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
                                     <span>Create shortcut...</span>
                                 </DropdownMenuItem>
@@ -2770,16 +2827,7 @@ const BrowserApp = () => {
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-80">
-                          <DropdownMenuItem onSelect={addTab}>
-                              <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>New tab</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
-                              <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>New Incognito window</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <div className="flex items-center justify-around px-2 py-2">
+                           <div className="flex items-center justify-around px-2 py-2">
                                 <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
                                     <BookMarked className="h-6 w-6 text-muted-foreground" />
                                 </Button>
@@ -2793,6 +2841,15 @@ const BrowserApp = () => {
                                     <Settings className="h-6 w-6 text-muted-foreground" />
                                 </Button>
                           </div>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={addTab}>
+                              <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>New tab</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
+                              <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <span>New Incognito window</span>
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onSelect={handleShare}>
                               <Share className="mr-4 h-5 w-5 text-muted-foreground" />
@@ -2967,6 +3024,35 @@ const BrowserApp = () => {
             </div>
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={isAddOrEditShortcutOpen} onOpenChange={setIsAddOrEditShortcutOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{shortcutToEdit ? 'Edit shortcut' : 'Add shortcut'}</DialogTitle>
+            <DialogDescription>
+              {shortcutToEdit ? 'Edit the name and URL for your shortcut.' : 'Enter a name and URL for your new shortcut.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="url" className="text-right">
+                URL
+              </Label>
+              <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSaveShortcut}>{shortcutToEdit ? 'Save changes' : 'Add Shortcut'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <input
         type="file"
@@ -3037,3 +3123,4 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
