@@ -559,6 +559,8 @@ const BrowserApp = () => {
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [fontSize, setFontSize] = useState('medium');
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [showFab, setShowFab] = useState(true);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
@@ -798,6 +800,28 @@ const BrowserApp = () => {
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const mainContent = document.getElementById('browser-content-area');
+    if (!mainContent) return;
+
+    const handleScroll = () => {
+        const currentScrollY = mainContent.scrollTop;
+        if (currentScrollY > lastScrollY && currentScrollY > 50) { 
+            setShowFab(false);
+        } else { 
+            setShowFab(true);
+        }
+        setLastScrollY(currentScrollY);
+    };
+
+    mainContent.addEventListener('scroll', handleScroll);
+    return () => {
+        mainContent.removeEventListener('scroll', handleScroll);
+    };
+  }, [isMobile, lastScrollY]);
 
   const handleInstallClick = () => {
     if (!installPrompt) {
@@ -1045,15 +1069,17 @@ const BrowserApp = () => {
 
   const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && activeTab) {
-      handleNavigation(activeTabId, inputValue);
-      e.currentTarget.blur();
+      const target = e.target as HTMLInputElement;
+      handleNavigation(activeTabId, target.value);
+      target.blur();
     }
   };
 
   const handleNtpInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && activeTab) {
-        handleNavigation(activeTabId, ntpInputValue);
-        e.currentTarget.blur();
+        const target = e.target as HTMLInputElement;
+        handleNavigation(activeTabId, target.value);
+        target.blur();
         setIsSearchFocused(false);
     }
   };
@@ -1394,23 +1420,6 @@ const BrowserApp = () => {
     router.push('/welcome');
   };
 
-
-  const mobileNavItems = [
-    { icon: Share, label: 'Share', action: handleShare },
-    { icon: Search, label: 'Find in page', action: handleFind },
-    { icon: Languages, label: 'Translate', action: () => {
-        if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-            const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-            handleNavigation(activeTabId, googleTranslateUrl);
-        } else {
-            toast({ title: "Can't translate internal pages." });
-        }
-    }},
-    { icon: PlusSquare, label: 'Add to Home', action: handleInstallClick },
-    { icon: Laptop, label: 'Recent tabs', action: () => handleNavigation(activeTabId, 'about:tabs') },
-    { icon: HelpCircle, label: 'Help & feedback', action: () => setIsFeedbackOpen(true) },
-  ];
-
   const navItems = [
     { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
     { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
@@ -1426,7 +1435,7 @@ const BrowserApp = () => {
 
   const NewTabPage = () => {
     return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground py-4 px-4 overflow-y-auto scrollbar-hide">
+    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
@@ -1967,29 +1976,15 @@ const BrowserApp = () => {
   const NavigationSheetContent = () => (
     <div className="flex flex-col h-full py-4">
       <div className="mb-4 px-4">
-          <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
-              <AishaLogo width={28} height={28} />
-              <span className="ml-4 font-semibold text-lg">Aisha</span>
+          <button onClick={() => { handleNavigation(activeTabId, 'about:newtab'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
+              <Globe className="h-7 w-7 text-cyan-400 shrink-0" />
+              <span className="ml-4 font-semibold text-lg">Browse</span>
           </button>
       </div>
-      <div className="flex items-center justify-around px-4 py-3 border-y border-sidebar-border">
-        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); setMobileMenuOpen(false); }}>
-          <BookMarked className="h-6 w-6 text-muted-foreground" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); setMobileMenuOpen(false); }}>
-          <Download className="h-6 w-6 text-muted-foreground" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:history'); setMobileMenuOpen(false); }}>
-          <HistoryIcon className="h-6 w-6 text-muted-foreground" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:settings'); setMobileMenuOpen(false); }}>
-          <Settings className="h-6 w-6 text-muted-foreground" />
-        </Button>
-      </div>
       <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1 mt-4">
-          {mobileNavItems.map((item, index) => (
+          {navItems.map((item, index) => (
               <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                  <item.icon className="h-6 w-6" />
+                  <item.icon className="size-6" />
                   <span className="ml-4">{item.label}</span>
               </button>
           ))}
@@ -2724,6 +2719,24 @@ const BrowserApp = () => {
             handleAttachment={handleAttachment}
           />}
       </div>
+
+      {isMobile && (
+        <div className={cn(
+            "fixed bottom-6 right-6 z-50 transition-transform duration-300",
+            showFab ? "translate-y-0" : "translate-y-24"
+        )}>
+            <Button
+              size="icon"
+              className="rounded-full h-16 w-16 shadow-lg"
+              onClick={() => {
+                setMobileSheetContent('nav');
+                setMobileMenuOpen(true);
+              }}
+            >
+              <Menu className="w-7 h-7" />
+            </Button>
+        </div>
+      )}
 
       <AlertDialog open={isClearDataOpen} onOpenChange={setIsClearDataOpen}>
         <AlertDialogContent>
