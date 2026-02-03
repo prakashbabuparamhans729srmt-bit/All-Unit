@@ -2075,7 +2075,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <div className={cn(`flex items-center gap-2 p-2 rounded-none`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
+          <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2 rounded-none`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2090,7 +2090,7 @@ const BrowserApp = () => {
                 <Home className="w-5 h-5" />
               </Button>)}
             </div>
-            <div className="flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full w-full px-4 py-1.5">
+            <div className="flex flex-1 items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full min-w-0 px-2 sm:px-4 py-1.5">
               {isInternalPage ? (
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
@@ -2235,7 +2235,7 @@ const BrowserApp = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
               <Tooltip>
                   <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => window.print()}>
