@@ -3060,32 +3060,33 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
-          { !isMobile && (
-            <>
-              {isCustomizeOpen && <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} />}
-              {isAssistantOpen && !isCustomizeOpen && <AishaAssistant 
-                isMobile={false}
-                assistantMessages={assistantMessages}
-                setAssistantMessages={setAssistantMessages}
-                isAssistantLoading={isAssistantLoading}
-                assistantInput={assistantInput}
-                setAssistantInput={setAssistantInput}
-                handleAssistantSubmit={() => handleAssistantSubmit()}
-                toast={toast}
-                startVoiceSearch={startVoiceSearch}
-                listeningState={listeningState}
-                voiceSearchSource={voiceSearchSource}
-                setIsAssistantOpen={setIsAssistantOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-                toggleMainSidebar={toggleMainSidebar}
-                setMobileSheetContent={setMobileSheetContent}
-                handleInstallClick={handleInstallClick}
-                handleAssistantSearch={handleAssistantSearch}
-                handleAttachment={handleAttachment}
-              />}
-            </>
-          )}
       </div>
+
+      { !isMobile && (
+        <>
+          {isCustomizeOpen && <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} />}
+          {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
+            isMobile={false}
+            assistantMessages={assistantMessages}
+            setAssistantMessages={setAssistantMessages}
+            isAssistantLoading={isAssistantLoading}
+            assistantInput={assistantInput}
+            setAssistantInput={setAssistantInput}
+            handleAssistantSubmit={() => handleAssistantSubmit()}
+            toast={toast}
+            startVoiceSearch={startVoiceSearch}
+            listeningState={listeningState}
+            voiceSearchSource={voiceSearchSource}
+            setIsAssistantOpen={setIsAssistantOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+            toggleMainSidebar={toggleMainSidebar}
+            setMobileSheetContent={setMobileSheetContent}
+            handleInstallClick={handleInstallClick}
+            handleAssistantSearch={handleAssistantSearch}
+            handleAttachment={handleAttachment}
+          />}
+        </>
+      )}
 
       {isMobile && (
         <div
