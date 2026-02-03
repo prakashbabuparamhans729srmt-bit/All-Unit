@@ -498,13 +498,21 @@ const CustomizePanel = ({
   setShortcutSetting,
   showCards,
   setShowCards,
+  showContinueWithTabs,
+  setShowContinueWithTabs,
   handleResetToDefault,
   followDeviceTheme,
   setFollowDeviceTheme,
 }) => {
 
   const handleModeChange = (mode) => {
+    setFollowDeviceTheme(false);
     handleThemeChange(mode);
+  };
+  
+  const handleDeviceModeChange = (checked) => {
+    setFollowDeviceTheme(checked);
+    handleThemeChange(checked ? 'device' : theme);
   };
 
   const handleShortcutSettingChange = (value: string) => {
@@ -552,7 +560,7 @@ const CustomizePanel = ({
                 <Button variant={!followDeviceTheme && theme === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
                   <Moon className="mr-2 h-4 w-4" /> Dark
                 </Button>
-                <Button variant={followDeviceTheme ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full" onClick={() => handleModeChange('device')}>
+                <Button variant={followDeviceTheme ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full" onClick={() => handleDeviceModeChange(true)}>
                   <Laptop className="mr-2 h-4 w-4" /> Device
                 </Button>
               </div>
@@ -592,7 +600,7 @@ const CustomizePanel = ({
               
               <div className="flex items-center justify-between">
                 <Label htmlFor="follow-device" className="text-sm font-normal">Follow device colors</Label>
-                <Switch id="follow-device" checked={followDeviceTheme} onCheckedChange={(checked) => handleThemeChange(checked ? 'device' : theme)} />
+                <Switch id="follow-device" checked={followDeviceTheme} onCheckedChange={handleDeviceModeChange} />
               </div>
               
               <Separator />
@@ -651,7 +659,12 @@ const CustomizePanel = ({
                   <Switch id="show-cards" checked={showCards} onCheckedChange={handleShowCardsChange} />
                 </div>
                 <div className="flex items-center space-x-2">
-                    <Checkbox id="continue-tabs" defaultChecked onCheckedChange={() => {}}/>
+                    <Checkbox 
+                      id="continue-tabs" 
+                      disabled={!showCards}
+                      checked={showContinueWithTabs} 
+                      onCheckedChange={setShowContinueWithTabs}
+                    />
                     <Label htmlFor="continue-tabs" className="text-sm font-normal">Continue with these tabs</Label>
                 </div>
               </CardContent>
@@ -670,6 +683,7 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
     if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
     if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
     if (shortcut.icon === 'Youtube') return <Youtube className="w-5 h-5" />;
+    if (shortcut.icon === 'Globe') return <Globe className="w-5 h-5" />;
     return shortcut.icon;
 };
 
@@ -756,12 +770,15 @@ const NewTabPage = ({
     handleNavigation,
     searchHistory,
     shortcuts,
+    shortcutSetting,
     isIncognito,
     handleOpenAddShortcut,
     handleOpenEditShortcut,
     handleRemoveShortcut,
     setIsCustomizeOpen,
     showShortcuts,
+    showCards,
+    showContinueWithTabs,
 } : {
     searchContainerRef: React.RefObject<HTMLDivElement>;
     isSearchFocused: boolean;
@@ -781,14 +798,26 @@ const NewTabPage = ({
     handleNavigation: (tabId: string, url: string) => void;
     searchHistory: SearchHistoryItem[];
     shortcuts: Shortcut[];
+    shortcutSetting: string;
     isIncognito: boolean;
     handleOpenAddShortcut: () => void;
     handleOpenEditShortcut: (shortcut: Shortcut) => void;
     handleRemoveShortcut: (shortcut: Shortcut) => void;
     setIsCustomizeOpen: (value: boolean) => void;
     showShortcuts: boolean;
+    showCards: boolean;
+    showContinueWithTabs: boolean;
 }) => {
     const isMobile = useIsMobile();
+    const mostVisitedSites = [
+        { name: "Wikipedia", icon: 'Globe', color: 'bg-gray-200 text-black', url: 'https://wikipedia.org' },
+        { name: "Reddit", icon: 'Globe', color: 'bg-orange-500', url: 'https://reddit.com' },
+        { name: "Twitter / X", icon: 'Globe', color: 'bg-black', url: 'https://x.com' },
+        { name: "Amazon", icon: 'Globe', color: 'bg-yellow-400 text-black', url: 'https://amazon.com' },
+        { name: "LinkedIn", icon: 'Globe', color: 'bg-blue-600', url: 'https://linkedin.com' },
+    ];
+    const shortcutsToDisplay = shortcutSetting === 'most-visited' ? mostVisitedSites : shortcuts;
+
     return (
     <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
@@ -916,7 +945,7 @@ const NewTabPage = ({
         {showShortcuts ? (
             <div className="w-full max-w-2xl mt-12 p-4">
                 <div className="grid grid-cols-5 gap-4">
-                    {shortcuts.map((shortcut, index) => (
+                    {shortcutsToDisplay.map((shortcut, index) => (
                         <ShortcutItem
                             key={`main-shortcut-${shortcut.name}-${index}`}
                             shortcut={shortcut}
@@ -926,7 +955,7 @@ const NewTabPage = ({
                             isIncognito={isIncognito}
                         />
                     ))}
-                    {shortcuts.length < 100 && !isIncognito && (
+                    {shortcutSetting === 'my-shortcuts' && shortcuts.length < 100 && !isIncognito && (
                       <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
                           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary/50 mb-2">
                               <Plus className="w-8 h-8 text-muted-foreground" />
@@ -943,6 +972,20 @@ const NewTabPage = ({
                     Show shortcuts
                 </Button>
             </div>
+        )}
+        {showCards && showContinueWithTabs && (
+          <div className="w-full max-w-2xl mt-8">
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="text-base font-semibold">Continue browsing</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                          Your recent tabs will appear here when you have them.
+                      </div>
+                  </CardContent>
+              </Card>
+          </div>
         )}
     </div>
   );
@@ -1036,6 +1079,7 @@ const BrowserApp = () => {
   const [showShortcutsOnNtp, setShowShortcutsOnNtp] = useState(true);
   const [shortcutSetting, setShortcutSetting] = useState("my-shortcuts");
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
+  const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(false);
 
   const updateTab = (id: string, updates: Partial<Tab>) => {
@@ -1541,9 +1585,9 @@ const BrowserApp = () => {
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'device') => {
     if (newTheme === 'device') {
-      setFollowDeviceTheme(true);
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(mediaQuery.matches ? 'dark' : 'light');
     } else {
-      setFollowDeviceTheme(false);
       applyTheme(newTheme);
     }
   };
@@ -1994,6 +2038,7 @@ const BrowserApp = () => {
     setShowShortcutsOnNtp(true);
     setShortcutSetting("my-shortcuts");
     setShowCardsOnNtp(true);
+    setShowContinueWithTabsCard(true);
     toast({ title: "Customizations reset to default" });
   };
 
@@ -2251,11 +2296,14 @@ const BrowserApp = () => {
         handleNavigation={handleNavigation}
         searchHistory={searchHistory}
         shortcuts={shortcuts}
+        shortcutSetting={shortcutSetting}
         isIncognito={isIncognito}
         handleOpenAddShortcut={handleOpenAddShortcut}
         handleOpenEditShortcut={handleOpenEditShortcut}
         handleRemoveShortcut={handleRemoveShortcut}
         showShortcuts={showShortcutsOnNtp}
+        showCards={showCardsOnNtp}
+        showContinueWithTabs={showContinueWithTabsCard}
     />;
     const url = activeTab.history[activeTab.currentIndex];
 
@@ -2285,11 +2333,14 @@ const BrowserApp = () => {
               handleNavigation={handleNavigation}
               searchHistory={searchHistory}
               shortcuts={shortcuts}
+              shortcutSetting={shortcutSetting}
               isIncognito={isIncognito}
               handleOpenAddShortcut={handleOpenAddShortcut}
               handleOpenEditShortcut={handleOpenEditShortcut}
               handleRemoveShortcut={handleRemoveShortcut}
               showShortcuts={showShortcutsOnNtp}
+              showCards={showCardsOnNtp}
+              showContinueWithTabs={showContinueWithTabsCard}
             />;
         case 'about:settings':
             return <SettingsPage />;
@@ -3208,6 +3259,8 @@ const BrowserApp = () => {
                   setShortcutSetting={setShortcutSetting}
                   showCards={showCardsOnNtp}
                   setShowCards={setShowCardsOnNtp}
+                  showContinueWithTabs={showContinueWithTabsCard}
+                  setShowContinueWithTabs={setShowContinueWithTabsCard}
                   handleResetToDefault={handleResetToDefault}
                   followDeviceTheme={followDeviceTheme}
                   setFollowDeviceTheme={setFollowDeviceTheme}
@@ -3426,6 +3479,8 @@ const BrowserApp = () => {
                     setShortcutSetting={setShortcutSetting}
                     showCards={showCardsOnNtp}
                     setShowCards={setShowCardsOnNtp}
+                    showContinueWithTabs={showContinueWithTabsCard}
+                    setShowContinueWithTabs={setShowContinueWithTabsCard}
                     handleResetToDefault={handleResetToDefault}
                     followDeviceTheme={followDeviceTheme}
                     setFollowDeviceTheme={setFollowDeviceTheme}
