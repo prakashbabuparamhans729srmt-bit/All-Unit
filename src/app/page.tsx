@@ -562,6 +562,12 @@ const BrowserApp = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showFab, setShowFab] = useState(true);
 
+  // FAB State
+  const [fabPosition, setFabPosition] = useState({ x: 0, y: 0 });
+  const [isFabDragging, setIsFabDragging] = useState(false);
+  const fabReturnTimer = useRef<NodeJS.Timeout | null>(null);
+  const dragStart = useRef({ x: 0, y: 0, initialButtonX: 0, initialButtonY: 0 });
+
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
 
@@ -769,6 +775,52 @@ const BrowserApp = () => {
     recognition.start();
   }, [activeTab, activeTabId, handleNavigation, handleAssistantSubmit, stopVoiceSearch, toast]);
   
+  // FAB Handlers
+  const handleFabPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (fabReturnTimer.current) {
+        clearTimeout(fabReturnTimer.current);
+        fabReturnTimer.current = null;
+    }
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragStart.current = {
+        x: e.clientX,
+        y: e.clientY,
+        initialButtonX: fabPosition.x,
+        initialButtonY: fabPosition.y,
+    };
+  };
+
+  const handleFabPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
+        const deltaX = e.clientX - dragStart.current.x;
+        const deltaY = e.clientY - dragStart.current.y;
+
+        if (!isFabDragging && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+            setIsFabDragging(true);
+        }
+        
+        if (isFabDragging) {
+            setFabPosition({
+                x: dragStart.current.initialButtonX + deltaX,
+                y: dragStart.current.initialButtonY + deltaY,
+            });
+        }
+    }
+  };
+
+  const handleFabPointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    if (isFabDragging) {
+        fabReturnTimer.current = setTimeout(() => {
+            setFabPosition({ x: 0, y: 0 });
+        }, 10000);
+        setIsFabDragging(false);
+    } else {
+        setMobileSheetContent('nav');
+        setMobileMenuOpen(true);
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
         if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
@@ -1464,7 +1516,7 @@ const BrowserApp = () => {
                     <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8 md:hidden" onClick={() => { setIsAssistantOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
                               <Sparkles className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>
@@ -2075,7 +2127,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2 rounded-none`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
+          <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
@@ -2721,19 +2773,22 @@ const BrowserApp = () => {
       </div>
 
       {isMobile && (
-        <div className={cn(
-            "fixed bottom-6 right-6 z-50 transition-transform duration-300",
-            showFab ? "translate-y-0" : "translate-y-24"
-        )}>
+        <div
+          className="fixed bottom-6 right-6 z-50"
+          style={{
+            transform: `translate(${fabPosition.x}px, ${fabPosition.y}px) ${!showFab ? 'translateY(6rem)' : 'translateY(0)'}`,
+            opacity: showFab ? 1 : 0,
+            transition: isFabDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out',
+          }}
+        >
             <Button
               size="icon"
-              className="rounded-full h-16 w-16 shadow-lg"
-              onClick={() => {
-                setMobileSheetContent('nav');
-                setMobileMenuOpen(true);
-              }}
+              className="rounded-full h-14 w-14 shadow-lg touch-none"
+              onPointerDown={handleFabPointerDown}
+              onPointerMove={handleFabPointerMove}
+              onPointerUp={handleFabPointerUp}
             >
-              <Menu className="w-7 h-7" />
+              <Menu className="w-6 h-6" />
             </Button>
         </div>
       )}
