@@ -536,7 +536,7 @@ const BrowserApp = () => {
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
-  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
   const voiceSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -755,7 +755,7 @@ const BrowserApp = () => {
             return;
         }
         if (source === 'address' && activeTab) {
-          setInputValue(searchText);
+          setNtpInputValue(searchText);
           handleNavigation(activeTabId, searchText);
         } else if (source === 'assistant') {
           handleAssistantSubmit(searchText);
@@ -1068,13 +1068,9 @@ const BrowserApp = () => {
   useEffect(() => {
     if (activeTab) {
       const newUrl = activeTab.history[activeTab.currentIndex];
-      if (newUrl === DEFAULT_URL && !isSearchFocused) {
-        setInputValue('');
-      } else {
-        setInputValue(newUrl);
-      }
+      setInputValue(newUrl);
     }
-  }, [activeTab, isSearchFocused]);
+  }, [activeTab]);
 
 
   const goBack = () => {
@@ -1486,14 +1482,13 @@ const BrowserApp = () => {
     { icon: PlusSquare, label: 'Add to Home', action: handleInstallClick },
     { icon: Laptop, label: 'Recent tabs', action: () => handleNavigation(activeTabId, 'about:tabs') },
     { icon: HelpCircle, label: 'Help & feedback', action: () => setIsFeedbackOpen(true) },
-    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
   ];
 
   const navItems = [
     { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
     { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
     { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
-    { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'https://groups.google.com/') },
+    { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'about:groups') },
     { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://play.google.com/store') },
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
@@ -1504,7 +1499,7 @@ const BrowserApp = () => {
 
   const NewTabPage = () => {
     return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-28 bg-background text-foreground py-4 overflow-y-auto scrollbar-hide">
+    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground py-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
@@ -1533,7 +1528,7 @@ const BrowserApp = () => {
                     <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="w-8 h-8 md:hidden" onClick={() => { setIsAssistantOpen(true); }}>
                               <Sparkles className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>
@@ -1622,6 +1617,26 @@ const BrowserApp = () => {
                     </CardContent>
                 </Card>
             )}
+        </div>
+        <div className="w-full max-w-2xl mt-12">
+            <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                {shortcuts.map((shortcut, index) => (
+                    <div key={`main-shortcut-${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); }}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+                            {renderShortcutIcon(shortcut)}
+                        </div>
+                        <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
+                    </div>
+                ))}
+                {shortcuts.length < 100 && !isIncognito && (
+                  <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                          <Plus className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
+                  </div>
+                )}
+            </div>
         </div>
         <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
           <DialogContent className="sm:max-w-[425px]">
@@ -1889,6 +1904,8 @@ const BrowserApp = () => {
             return <TabsPage tabs={tabs} setActiveTabId={setActiveTabId} />;
         case 'about:downloads':
             return <GenericInternalPage title="Downloads" icon={Download}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Download className="w-16 h-16 mb-4"/><p>There are no downloads to show.</p></div></GenericInternalPage>;
+        case 'about:groups':
+             return <GenericInternalPage title="Groups" icon={CustomGroupIcon}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><CustomGroupIcon className="w-16 h-16 mb-4"/><p>Google Groups is not implemented in this prototype. You would be redirected to groups.google.com</p></div></GenericInternalPage>;
         case 'about:media':
             return <GenericInternalPage title="Media" icon={Play}><div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center"><Play className="w-16 h-16 mb-4"/><p>There is no media content to show.</p></div></GenericInternalPage>;
         case 'about:passwords':
@@ -2666,22 +2683,20 @@ const BrowserApp = () => {
                               <span>New Incognito window</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
-                              <HistoryIcon className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>History</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
-                              <Download className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Downloads</span>
-                          </DropdownMenuItem>
-                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
-                              <Star className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Bookmarks</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:tabs')}>
-                              <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Recent tabs</span>
-                          </DropdownMenuItem>
+                          <div className="flex items-center justify-around px-2 py-2">
+                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
+                                    <BookMarked className="h-6 w-6 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); }}>
+                                    <Download className="h-6 w-6 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:history'); }}>
+                                    <HistoryIcon className="h-6 w-6 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:settings'); }}>
+                                    <Settings className="h-6 w-6 text-muted-foreground" />
+                                </Button>
+                          </div>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onSelect={handleShare}>
                               <Share className="mr-4 h-5 w-5 text-muted-foreground" />
@@ -2720,13 +2735,17 @@ const BrowserApp = () => {
                               </div>
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                              <Settings className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Settings</span>
-                          </DropdownMenuItem>
+                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
+                                <Info className="mr-4 h-5 w-5 text-muted-foreground"/>
+                                <span>About Aisha</span>
+                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
                               <HelpCircle className="mr-4 h-5 w-5 text-muted-foreground" />
                               <span>Help & feedback</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={handleSignOut}>
+                            <LogOut className="mr-4 h-5 w-5 text-muted-foreground"/>
+                            <span>Sign Out</span>
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                   </DropdownMenu>
@@ -2734,8 +2753,7 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
-        <div className="flex-1 flex overflow-hidden">
-          <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative">
+        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative rounded-lg">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -2779,7 +2797,6 @@ const BrowserApp = () => {
             handleAttachment={handleAttachment}
           />}
         </div>
-      </div>
 
       <AlertDialog open={isClearDataOpen} onOpenChange={setIsClearDataOpen}>
         <AlertDialogContent>
@@ -2975,6 +2992,8 @@ export default function BrowserPage() {
     
 
     
+
+
 
 
 
