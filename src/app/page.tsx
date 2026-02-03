@@ -219,16 +219,6 @@ const searchEngines: { [key: string]: { name: string; url: string } } = {
   yahoo: { name: 'Yahoo', url: 'https://search.yahoo.com/search?p=' },
 };
 
-const renderShortcutIcon = (shortcut: Shortcut) => {
-    if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
-        return <Image src={shortcut.icon} alt={shortcut.name} width={24} height={24} className="rounded-full"/>;
-    }
-    if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
-    if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
-    if (shortcut.icon === 'Youtube') return <Youtube className="w-5 h-5" />;
-    return shortcut.icon;
-};
-
 type Shortcut = {
     name: string;
     icon: string | React.ElementType;
@@ -491,6 +481,246 @@ const AishaAssistant = React.memo(({
   </aside>
 ));
 AishaAssistant.displayName = 'AishaAssistant';
+
+
+const renderShortcutIcon = (shortcut: Shortcut) => {
+    if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
+        return <Image src={shortcut.icon} alt={shortcut.name} width={24} height={24} className="rounded-full"/>;
+    }
+    if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
+    if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
+    if (shortcut.icon === 'Youtube') return <Youtube className="w-5 h-5" />;
+    return shortcut.icon;
+};
+
+const NewTabPage = ({
+    searchContainerRef,
+    isSearchFocused,
+    searchEngines,
+    searchEngine,
+    ntpInputValue,
+    setNtpInputValue,
+    handleNtpInputKeyDown,
+    setIsSearchFocused,
+    listeningState,
+    voiceSearchSource,
+    startVoiceSearch,
+    setIsImageSearchOpen,
+    setIsAssistantOpen,
+    aiTools,
+    activeTabId,
+    handleNavigation,
+    searchHistory,
+    shortcuts,
+    isIncognito,
+    setIsAddShortcutOpen,
+    isAddShortcutOpen,
+    newShortcutName,
+    setNewShortcutName,
+    newShortcutUrl,
+    setNewShortcutUrl,
+    handleAddShortcut
+} : {
+    searchContainerRef: React.RefObject<HTMLDivElement>;
+    isSearchFocused: boolean;
+    searchEngines: { [key: string]: { name: string; url: string } };
+    searchEngine: string;
+    ntpInputValue: string;
+    setNtpInputValue: (value: string) => void;
+    handleNtpInputKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
+    setIsSearchFocused: (value: boolean) => void;
+    listeningState: 'listening' | 'error' | 'inactive';
+    voiceSearchSource: 'address' | 'assistant' | null;
+    startVoiceSearch: (source: 'address' | 'assistant') => void;
+    setIsImageSearchOpen: (value: boolean) => void;
+    setIsAssistantOpen: (value: boolean) => void;
+    aiTools: any;
+    activeTabId: string;
+    handleNavigation: (tabId: string, url: string) => void;
+    searchHistory: SearchHistoryItem[];
+    shortcuts: Shortcut[];
+    isIncognito: boolean;
+    setIsAddShortcutOpen: (value: boolean) => void;
+    isAddShortcutOpen: boolean;
+    newShortcutName: string;
+    setNewShortcutName: (value: string) => void;
+    newShortcutUrl: string;
+    setNewShortcutUrl: (value: string) => void;
+    handleAddShortcut: () => void;
+}) => {
+    const isMobile = useIsMobile();
+    return (
+    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
+        <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
+        <div ref={searchContainerRef} className="w-full max-w-2xl relative">
+            <div className={cn(
+                "relative w-full",
+                isSearchFocused ? "rounded-t-3xl bg-card shadow-lg" : ""
+            )}>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-20" />
+                <Input 
+                    type="text"
+                    placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
+                    className={cn(
+                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10 font-light placeholder:font-light text-sm",
+                        isSearchFocused 
+                            ? "bg-card rounded-t-3xl" 
+                            : "bg-secondary rounded-full"
+                    )}
+                    value={ntpInputValue}
+                    onChange={(e) => setNtpInputValue(e.target.value)}
+                    onKeyDown={handleNtpInputKeyDown}
+                    onFocus={() => setIsSearchFocused(true)}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
+                    <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
+                      <Mic className="w-5 h-5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
+                                <Sparkles className="w-5 h-5" />
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p>Open AI Assistant</p>
+                          </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64">
+                             <ScrollArea className="h-96">
+                                {Object.entries(aiTools).map(([category, tools]) => (
+                                    <React.Fragment key={category}>
+                                        <DropdownMenuLabel>{category}</DropdownMenuLabel>
+                                        {(tools as {name: string, url: string}[]).map(tool => (
+                                            <DropdownMenuItem key={tool.name} onSelect={() => handleNavigation(activeTabId, tool.url)}>
+                                                <Image 
+                                                    src={`https://www.google.com/s2/favicons?sz=32&domain_url=${tool.url}`} 
+                                                    alt={`${tool.name} logo`}
+                                                    width={16}
+                                                    height={16}
+                                                    className="mr-2"
+                                                />
+                                                <span>{tool.name}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                        <DropdownMenuSeparator />
+                                    </React.Fragment>
+                                ))}
+                            </ScrollArea>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+            {isSearchFocused && (
+                <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
+                    <CardContent className="p-0">
+                         <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
+                            {searchHistory.length > 0 && (
+                                <>
+                                    <ul className="py-2">
+                                        {searchHistory.map((item, index) => (
+                                            <li
+                                                key={index}
+                                                className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
+                                                onClick={() => {
+                                                    handleNavigation(activeTabId, item.query);
+                                                    setIsSearchFocused(false);
+                                                }}
+                                            >
+                                                <HistoryIcon className="w-5 h-5 text-muted-foreground" />
+                                                <div className="flex-1 truncate">
+                                                    <p className="truncate text-sm font-light">
+                                                        {item.query}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <Separator />
+                                </>
+                            )}
+                            <div className="p-4">
+                              <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                                  {shortcuts.map((shortcut, index) => (
+                                      <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); setIsSearchFocused(false); }}>
+                                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+                                              {renderShortcutIcon(shortcut)}
+                                          </div>
+                                          <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
+                                      </div>
+                                  ))}
+                                  {shortcuts.length < 100 && !isIncognito && (
+                                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                                            <Plus className="w-6 h-6 text-muted-foreground" />
+                                        </div>
+                                        <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+        <div className="w-full max-w-2xl mt-12">
+            <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                {shortcuts.map((shortcut, index) => (
+                    <div key={`main-shortcut-${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); }}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+                            {renderShortcutIcon(shortcut)}
+                        </div>
+                        <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
+                    </div>
+                ))}
+                {shortcuts.length < 100 && !isIncognito && (
+                  <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                          <Plus className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
+                  </div>
+                )}
+            </div>
+        </div>
+        <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add shortcut</DialogTitle>
+              <DialogDescription>
+                Enter a name and URL for your new shortcut.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="url" className="text-right">
+                  URL
+                </Label>
+                <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddShortcut}>Add Shortcut</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+    </div>
+  );
+}
 
 const BrowserApp = () => {
   const router = useRouter();
@@ -1485,178 +1715,6 @@ const BrowserApp = () => {
 
   const isInternalPage = currentUrl.startsWith('about:');
 
-  const NewTabPage = () => {
-    return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
-        <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
-        <div ref={searchContainerRef} className="w-full max-w-2xl relative">
-            <div className={cn(
-                "relative w-full",
-                isSearchFocused ? "rounded-t-3xl bg-card shadow-lg" : ""
-            )}>
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-20" />
-                <Input 
-                    type="text"
-                    placeholder={`Search with ${searchEngines[searchEngine]?.name || 'Google'} or type a URL`}
-                    className={cn(
-                        "w-full h-12 pl-12 pr-48 border-none focus-visible:ring-0 relative z-10 font-light placeholder:font-light text-sm",
-                        isSearchFocused 
-                            ? "bg-card rounded-t-3xl" 
-                            : "bg-secondary rounded-full"
-                    )}
-                    value={ntpInputValue}
-                    onChange={(e) => setNtpInputValue(e.target.value)}
-                    onKeyDown={handleNtpInputKeyDown}
-                    onFocus={() => setIsSearchFocused(true)}
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
-                    <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
-                      <Mic className="w-5 h-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8 md:hidden" onClick={() => { setIsAssistantOpen(true); }}>
-                              <Sparkles className="w-5 h-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Open AI Assistant</p>
-                        </TooltipContent>
-                    </Tooltip>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-64">
-                             <ScrollArea className="h-96">
-                                {Object.entries(aiTools).map(([category, tools]) => (
-                                    <React.Fragment key={category}>
-                                        <DropdownMenuLabel>{category}</DropdownMenuLabel>
-                                        {tools.map(tool => (
-                                            <DropdownMenuItem key={tool.name} onSelect={() => handleNavigation(activeTabId, tool.url)}>
-                                                <Image 
-                                                    src={`https://www.google.com/s2/favicons?sz=32&domain_url=${tool.url}`} 
-                                                    alt={`${tool.name} logo`}
-                                                    width={16}
-                                                    height={16}
-                                                    className="mr-2"
-                                                />
-                                                <span>{tool.name}</span>
-                                            </DropdownMenuItem>
-                                        ))}
-                                        <DropdownMenuSeparator />
-                                    </React.Fragment>
-                                ))}
-                            </ScrollArea>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </div>
-            {isSearchFocused && (
-                <Card className="absolute top-full w-full bg-card rounded-b-3xl shadow-lg z-0 border-t">
-                    <CardContent className="p-0">
-                         <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
-                            {searchHistory.length > 0 && (
-                                <>
-                                    <ul className="py-2">
-                                        {searchHistory.map((item, index) => (
-                                            <li
-                                                key={index}
-                                                className="flex items-center gap-4 px-4 py-2.5 cursor-pointer hover:bg-secondary"
-                                                onClick={() => {
-                                                    handleNavigation(activeTabId, item.query);
-                                                    setIsSearchFocused(false);
-                                                }}
-                                            >
-                                                <HistoryIcon className="w-5 h-5 text-muted-foreground" />
-                                                <div className="flex-1 truncate">
-                                                    <p className="truncate text-sm font-light">
-                                                        {item.query}
-                                                    </p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <Separator />
-                                </>
-                            )}
-                            <div className="p-4">
-                              <div className="grid grid-cols-5 gap-x-8 gap-y-4">
-                                  {shortcuts.map((shortcut, index) => (
-                                      <div key={`${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); setIsSearchFocused(false); }}>
-                                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                                              {renderShortcutIcon(shortcut)}
-                                          </div>
-                                          <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
-                                      </div>
-                                  ))}
-                                  {shortcuts.length < 100 && !isIncognito && (
-                                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
-                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
-                                            <Plus className="w-6 h-6 text-muted-foreground" />
-                                        </div>
-                                        <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
-                                    </div>
-                                  )}
-                              </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-        <div className="w-full max-w-2xl mt-12">
-            <div className="grid grid-cols-5 gap-x-8 gap-y-4">
-                {shortcuts.map((shortcut, index) => (
-                    <div key={`main-shortcut-${shortcut.name}-${index}`} className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => { handleNavigation(activeTabId, shortcut.url || shortcut.name); }}>
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
-                            {renderShortcutIcon(shortcut)}
-                        </div>
-                        <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
-                    </div>
-                ))}
-                {shortcuts.length < 100 && !isIncognito && (
-                  <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={() => setIsAddShortcutOpen(true)}>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
-                          <Plus className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                      <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
-                  </div>
-                )}
-            </div>
-        </div>
-        <Dialog open={isAddShortcutOpen} onOpenChange={setIsAddShortcutOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add shortcut</DialogTitle>
-              <DialogDescription>
-                Enter a name and URL for your new shortcut.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input id="name" value={newShortcutName} onChange={e => setNewShortcutName(e.target.value)} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="url" className="text-right">
-                  URL
-                </Label>
-                <Input id="url" value={newShortcutUrl} onChange={e => setNewShortcutUrl(e.target.value)} className="col-span-3" placeholder="https://example.com" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddShortcut}>Add Shortcut</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-    </div>
-  );
-  }
-
   const SettingsPage = () => {
     try {
       const SettingsContent = require('@/app/settings/page').default;
@@ -1870,7 +1928,34 @@ const BrowserApp = () => {
   );
 
   const renderCurrentPage = () => {
-    if (!activeTab) return <NewTabPage />;
+    if (!activeTab) return <NewTabPage 
+        searchContainerRef={searchContainerRef}
+        isSearchFocused={isSearchFocused}
+        searchEngines={searchEngines}
+        searchEngine={searchEngine}
+        ntpInputValue={ntpInputValue}
+        setNtpInputValue={setNtpInputValue}
+        handleNtpInputKeyDown={handleNtpInputKeyDown}
+        setIsSearchFocused={setIsSearchFocused}
+        listeningState={listeningState}
+        voiceSearchSource={voiceSearchSource}
+        startVoiceSearch={startVoiceSearch}
+        setIsImageSearchOpen={setIsImageSearchOpen}
+        setIsAssistantOpen={setIsAssistantOpen}
+        aiTools={aiTools}
+        activeTabId={activeTabId}
+        handleNavigation={handleNavigation}
+        searchHistory={searchHistory}
+        shortcuts={shortcuts}
+        isIncognito={isIncognito}
+        setIsAddShortcutOpen={setIsAddShortcutOpen}
+        isAddShortcutOpen={isAddShortcutOpen}
+        newShortcutName={newShortcutName}
+        setNewShortcutName={setNewShortcutName}
+        newShortcutUrl={newShortcutUrl}
+        setNewShortcutUrl={setNewShortcutUrl}
+        handleAddShortcut={handleAddShortcut}
+    />;
     const url = activeTab.history[activeTab.currentIndex];
 
     if (activeTab.loadFailed) {
@@ -1879,7 +1964,34 @@ const BrowserApp = () => {
 
     switch (url) {
         case DEFAULT_URL:
-            return <NewTabPage />;
+            return <NewTabPage 
+              searchContainerRef={searchContainerRef}
+              isSearchFocused={isSearchFocused}
+              searchEngines={searchEngines}
+              searchEngine={searchEngine}
+              ntpInputValue={ntpInputValue}
+              setNtpInputValue={setNtpInputValue}
+              handleNtpInputKeyDown={handleNtpInputKeyDown}
+              setIsSearchFocused={setIsSearchFocused}
+              listeningState={listeningState}
+              voiceSearchSource={voiceSearchSource}
+              startVoiceSearch={startVoiceSearch}
+              setIsImageSearchOpen={setIsImageSearchOpen}
+              setIsAssistantOpen={setIsAssistantOpen}
+              aiTools={aiTools}
+              activeTabId={activeTabId}
+              handleNavigation={handleNavigation}
+              searchHistory={searchHistory}
+              shortcuts={shortcuts}
+              isIncognito={isIncognito}
+              setIsAddShortcutOpen={setIsAddShortcutOpen}
+              isAddShortcutOpen={isAddShortcutOpen}
+              newShortcutName={newShortcutName}
+              setNewShortcutName={setNewShortcutName}
+              newShortcutUrl={newShortcutUrl}
+              setNewShortcutUrl={setNewShortcutUrl}
+              handleAddShortcut={handleAddShortcut}
+            />;
         case 'about:settings':
             return <SettingsPage />;
         case 'about:startup-checklist':
@@ -2265,63 +2377,73 @@ const BrowserApp = () => {
                   </PopoverContent>
                  </Popover>
                 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
-                       <Sparkles className="w-4 h-4 mr-2" />
-                       Assistant
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Open Assistant</p></TooltipContent>
-                </Tooltip>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                         <Sparkles className="w-4 h-4 mr-2" />
+                         Assistant
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Open Assistant</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
-                 <Tooltip>
-                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
-                      <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
-                    </Button>
-                   </TooltipTrigger>
-                   <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                </Tooltip>
+                 <TooltipProvider>
+                   <Tooltip>
+                     <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                        <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
+                      </Button>
+                     </TooltipTrigger>
+                     <TooltipContent><p>Bookmark this tab</p></TooltipContent>
+                  </Tooltip>
+                 </TooltipProvider>
 
               </div>
             </div>
             
             <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
-              <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => window.print()}>
-                          <Download className="w-5 h-5"/>
-                      </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                      <p>Download page</p>
-                  </TooltipContent>
-              </Tooltip>
-              {showBookmarksButton && <Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => window.print()}>
+                            <Download className="w-5 h-5"/>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Download page</p>
+                    </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {showBookmarksButton && <TooltipProvider><Tooltip>
                   <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
                   </TooltipTrigger>
                   <TooltipContent>
                       <p>Bookmarks</p>
                   </TooltipContent>
-              </Tooltip>}
-              <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                      <p>Downloads</p>
-                  </TooltipContent>
-              </Tooltip>
-               <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                      <p>History</p>
-                  </TooltipContent>
-              </Tooltip>
+              </Tooltip></TooltipProvider>}
+              <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Downloads</p>
+                    </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+               <TooltipProvider>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>History</p>
+                    </TooltipContent>
+                </Tooltip>
+               </TooltipProvider>
               <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -2727,7 +2849,7 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
-        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative p-4">
+        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
