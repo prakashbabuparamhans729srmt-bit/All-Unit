@@ -990,10 +990,14 @@ const BrowserApp = () => {
   
   useEffect(() => {
     if (activeTab) {
-      const newUrl = activeTab.history[activeTab.currentIndex];
-      setInputValue(newUrl);
+        const currentTabUrl = activeTab.history[activeTab.currentIndex];
+        if (currentTabUrl !== DEFAULT_URL) {
+            setInputValue(currentTabUrl);
+        } else {
+            setInputValue("");
+        }
     }
-  }, [activeTab]);
+  }, [activeTab, activeTabId]);
 
 
   const goBack = () => {
@@ -1422,7 +1426,7 @@ const BrowserApp = () => {
 
   const NewTabPage = () => {
     return (
-    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground py-4 overflow-y-auto scrollbar-hide">
+    <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground py-4 px-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative">
             <div className={cn(
