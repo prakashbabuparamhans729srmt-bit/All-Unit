@@ -1784,6 +1784,8 @@ const BrowserApp = () => {
     { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+    { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
+    { icon: Pencil, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
   ];
 
   const isInternalPage = currentUrl.startsWith('about:');
@@ -2091,6 +2093,37 @@ const BrowserApp = () => {
                     <p className="text-muted-foreground mt-2">Copyright © 2024. All rights reserved.</p>
                 </div>
             </GenericInternalPage>;
+        case 'about:languages': {
+            const lastRealUrl = [...(activeTab?.history ?? [])].reverse().find(url => url !== DEFAULT_URL && !url.startsWith('about:'));
+
+            const translate = (lang: 'en' | 'hi') => {
+                if (lastRealUrl) {
+                    const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=${lang}&u=${encodeURIComponent(lastRealUrl)}`;
+                    handleNavigation(activeTabId, googleTranslateUrl);
+                } else {
+                    toast({ title: "No translatable page found", description: "Please browse to a website first." });
+                }
+            };
+            return <GenericInternalPage title="Translate Page" icon={Languages}>
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    <p className="mb-4 text-muted-foreground">Translate the last page you viewed to English or Hindi.</p>
+                    {lastRealUrl && <p className="mb-4 text-sm font-mono p-2 bg-muted rounded-md">{lastRealUrl}</p>}
+                    <div className="flex gap-4">
+                        <Button onClick={() => translate('en')}>Translate to English</Button>
+                        <Button onClick={() => translate('hi')}>Translate to Hindi</Button>
+                    </div>
+                </div>
+            </GenericInternalPage>;
+        }
+        case 'about:editor':
+            return <GenericInternalPage title="Editor" icon={Pencil}>
+                <div className="flex flex-col h-full">
+                    <Textarea 
+                        placeholder="Start writing..."
+                        className="flex-1 w-full h-full resize-none text-base"
+                    />
+                </div>
+            </GenericInternalPage>;
         default:
             return (
               <iframe
@@ -2308,7 +2341,7 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile ? 'inline-flex' : 'hidden')}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden', !isMobile && showHomeButton ? 'inline-flex' : 'hidden', 'md:inline-flex')}>
                 <Home className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
@@ -2343,7 +2376,7 @@ const BrowserApp = () => {
               <div className="flex items-center gap-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
                       <Share className="w-5 h-5 text-muted-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -2374,7 +2407,7 @@ const BrowserApp = () => {
 
                 <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" 
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" 
                         onClick={() => {
                           if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
                             setIsTranslateOpen(v => !v);
@@ -2416,7 +2449,7 @@ const BrowserApp = () => {
 
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
                                       <MoreVertical className="w-4 h-4" />
                                   </Button>
                               </DropdownMenuTrigger>
@@ -2433,7 +2466,7 @@ const BrowserApp = () => {
                               </DropdownMenuContent>
                           </DropdownMenu>
 
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsTranslateOpen(false)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsTranslateOpen(false)}>
                               <X className="w-4 h-4" />
                           </Button>
                       </div>
@@ -2447,7 +2480,7 @@ const BrowserApp = () => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                      <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex rounded-full" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
                          <Sparkles className="w-4 h-4 mr-2" />
                          Assistant
                       </Button>
@@ -2459,7 +2492,7 @@ const BrowserApp = () => {
                  <TooltipProvider>
                    <Tooltip>
                      <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleBookmark}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={toggleBookmark}>
                         <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
                       </Button>
                      </TooltipTrigger>
@@ -2474,7 +2507,7 @@ const BrowserApp = () => {
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => window.print()}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full md:hidden" onClick={() => window.print()}>
                             <Download className="w-5 h-5"/>
                         </Button>
                     </TooltipTrigger>
@@ -2485,7 +2518,7 @@ const BrowserApp = () => {
               </TooltipProvider>
               {showBookmarksButton && <TooltipProvider><Tooltip>
                   <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
                   </TooltipTrigger>
                   <TooltipContent>
                       <p>Bookmarks</p>
@@ -2494,7 +2527,7 @@ const BrowserApp = () => {
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Downloads</p>
@@ -2504,7 +2537,7 @@ const BrowserApp = () => {
                <TooltipProvider>
                  <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>History</p>
@@ -2514,7 +2547,7 @@ const BrowserApp = () => {
               <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                       <AppGridIcon className="w-5 h-5" />
                   </Button>
                   </DropdownMenuTrigger>
@@ -2561,7 +2594,7 @@ const BrowserApp = () => {
               <div className="hidden md:block">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                         <MoreVertical className="w-5 h-5" />
                     </Button>
                     </DropdownMenuTrigger>
@@ -2675,10 +2708,10 @@ const BrowserApp = () => {
                                 <ZoomIn className="mr-2 h-4 w-4" />
                                 <span>Zoom</span>
                                 <div className="ml-auto flex items-center gap-2">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
                                     <span>{zoomLevel}%</span>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
                                 </div>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
@@ -2832,22 +2865,22 @@ const BrowserApp = () => {
               <div className="block md:hidden">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                               <MoreVertical className="w-5 h-5" />
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-80">
                            <div className="flex items-center justify-around px-2 py-2">
-                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
+                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
                                     <BookMarked className="h-6 w-6 text-muted-foreground" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); }}>
+                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); }}>
                                     <Download className="h-6 w-6 text-muted-foreground" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:history'); }}>
+                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:history'); }}>
                                     <HistoryIcon className="h-6 w-6 text-muted-foreground" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:settings'); }}>
+                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:settings'); }}>
                                     <Settings className="h-6 w-6 text-muted-foreground" />
                                 </Button>
                           </div>
@@ -2934,7 +2967,7 @@ const BrowserApp = () => {
                               autoFocus
                           />
                           <Button size="sm" onClick={handleFind}>Find</Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFindOpen(false)}><X className="w-4 h-4"/></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsFindOpen(false)}><X className="w-4 h-4"/></Button>
                       </div>
                   </Card>
               )}
@@ -3147,6 +3180,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
