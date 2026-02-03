@@ -153,6 +153,8 @@ import { AppGridIcon } from '@/components/icons/AppGridIcon';
 import { CustomAboutIcon } from "@/components/icons/CustomAboutIcon";
 import { CustomGroupIcon } from "@/components/icons/CustomGroupIcon";
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 const DEFAULT_URL = "about:newtab";
@@ -488,7 +490,10 @@ AishaAssistant.displayName = 'AishaAssistant';
 const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => {
   const { toast } = useToast();
   const [currentMode, setCurrentMode] = React.useState(theme);
-
+  const [showShortcuts, setShowShortcuts] = React.useState(true);
+  const [shortcutSetting, setShortcutSetting] = React.useState("my-shortcuts");
+  const [showCards, setShowCards] = React.useState(true);
+  
   const handleModeChange = (mode) => {
     if ((mode === 'light' && theme === 'dark') || (mode === 'dark' && theme === 'light')) {
       toggleTheme();
@@ -497,9 +502,9 @@ const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => 
   }
 
   const colors = [
-    { bg: '#4274e0', selected: false }, { bg: '#707275', selected: false }, { bg: '#3a67c4', selected: false }, { bg: '#e8eaed', selected: true },
-    { bg: '#81c995', selected: false }, { bg: '#54a357', selected: false }, { bg: '#fcc934', selected: false }, { bg: '#f49ab0', selected: false },
-    { bg: '#d168d3', selected: false }, { bg: '#a142f4', selected: false }, { bg: '#e57f7f', selected: false }, { bg: '#202124', selected: false },
+    { bg: '#fdd663', selected: false }, { bg: '#f28b82', selected: false }, { bg: '#d4e1f5', selected: false }, { bg: '#e8daef', selected: false },
+    { bg: '#a3d1b0', selected: false }, { bg: '#fde293', selected: false }, { bg: '#e9a18d', selected: false }, { bg: '#d3bde0', selected: false },
+    { bg: '#4274e0', selected: false }, { bg: '#e8eaed', selected: true }, { bg: '#202124', selected: false },
   ];
 
   return (
@@ -515,65 +520,134 @@ const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => 
         </Button>
       </div>
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
-          <h3 className="text-sm font-medium text-muted-foreground">Appearance</h3>
+        <div className="p-4 space-y-4">
           
-          <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => toast({ title: "Changing theme is not implemented." })}>
-            <RefreshCcw className="mr-2 h-4 w-4" /> Change theme
-          </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Appearance</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => toast({ title: "Changing theme is not implemented." })}>
+                <RefreshCcw className="mr-2 h-4 w-4" /> Change theme
+              </Button>
 
-          <div className="flex justify-between items-center p-1 rounded-full bg-secondary">
-            <Button variant={currentMode === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
-              <Sun className="mr-2 h-4 w-4" /> Light
-            </Button>
-            <Button variant={currentMode === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
-              <Moon className="mr-2 h-4 w-4" /> Dark
-            </Button>
-            <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-full" onClick={() => toast({ title: "Device theme not implemented." })}>
-              <Laptop className="mr-2 h-4 w-4" /> Device
-            </Button>
-          </div>
+              <div className="flex justify-between items-center p-1 rounded-full bg-secondary">
+                 <Button variant={currentMode === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
+                  <Sun className="mr-2 h-4 w-4" /> Light
+                </Button>
+                <Button variant={currentMode === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
+                  <Moon className="mr-2 h-4 w-4" /> Dark
+                </Button>
+                <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-full" onClick={() => toast({ title: "Device theme not implemented." })}>
+                  <Laptop className="mr-2 h-4 w-4" /> Device
+                </Button>
+              </div>
 
-          <div className="grid grid-cols-4 gap-4 pt-2 justify-items-center">
-            {colors.map((color, i) => (
-              <TooltipProvider key={i}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="w-12 h-12 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
-                      onClick={() => toast({ title: "Color themes are not yet implemented." })}>
-                      <div className="w-full h-full rounded-full" style={{ backgroundColor: color.bg }} />
-                      {color.selected && (
-                        <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
-                          <Check className="text-white" />
-                        </div>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Default</p></TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button className="w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => toast({ title: "Custom colors are not yet implemented." })}>
-                    <Pencil className="w-5 h-5 text-muted-foreground" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent><p>Custom Color</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+              <div className="grid grid-cols-6 gap-2 pt-2 justify-items-center">
+                {colors.map((color, i) => (
+                  <TooltipProvider key={i}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="w-10 h-10 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
+                          onClick={() => toast({ title: "Color themes are not yet implemented." })}>
+                          <div className="w-full h-full rounded-full" style={{ backgroundColor: color.bg }} />
+                          {color.selected && (
+                            <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+                              <Check className="text-white" />
+                            </div>
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Default</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+                 <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => toast({ title: "Custom colors are not yet implemented." })}>
+                        <Pencil className="w-5 h-5 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Custom Color</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
 
-          <div className="flex items-center justify-between pt-4">
-            <Label htmlFor="follow-device" className="text-sm font-normal">Follow device colors</Label>
-            <Switch id="follow-device" onCheckedChange={() => toast({ title: "This feature is not yet implemented." })} />
-          </div>
+              <Separator />
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="follow-device" className="text-sm font-normal">Follow device colors</Label>
+                <Switch id="follow-device" onCheckedChange={() => toast({ title: "This feature is not yet implemented." })} />
+              </div>
+              
+              <Separator />
+
+              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-9" onClick={() => toast({ title: "Resetting to default is not implemented." })}>
+                 <RefreshCw className="mr-2 h-4 w-4"/>
+                 Reset to Default
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+             <CardContent className="p-2">
+                <Button variant="ghost" className="w-full justify-between text-sm font-normal h-10" onClick={() => toast({ title: "Toolbar settings are not implemented." })}>
+                    <span>Toolbar</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </Button>
+             </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Shortcuts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="flex items-center justify-between">
+                  <Label htmlFor="show-shortcuts" className="text-sm font-normal">Show shortcuts</Label>
+                  <Switch id="show-shortcuts" checked={showShortcuts} onCheckedChange={setShowShortcuts} />
+               </div>
+               <RadioGroup disabled={!showShortcuts} value={shortcutSetting} onValueChange={setShortcutSetting}>
+                  <div className="flex items-start space-x-3 py-2">
+                    <RadioGroupItem value="my-shortcuts" id="my-shortcuts" />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="my-shortcuts" className="font-normal cursor-pointer">My shortcuts</Label>
+                      <p className="text-xs text-muted-foreground">Shortcuts are curated by you</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 py-2">
+                     <RadioGroupItem value="most-visited" id="most-visited" />
+                     <div className="grid gap-1.5 leading-none">
+                        <Label htmlFor="most-visited" className="font-normal cursor-pointer">Most visited sites</Label>
+                        <p className="text-xs text-muted-foreground">Shortcuts are suggested based on websites you visit often</p>
+                     </div>
+                  </div>
+               </RadioGroup>
+            </CardContent>
+          </Card>
+          
+           <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Cards</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-cards" className="text-sm font-normal">Show cards</Label>
+                  <Switch id="show-cards" checked={showCards} onCheckedChange={setShowCards} />
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="continue-tabs" defaultChecked onCheckedChange={() => toast({ title: 'This feature is not implemented.' })}/>
+                    <Label htmlFor="continue-tabs" className="text-sm font-normal">Continue with these tabs</Label>
+                </div>
+              </CardContent>
+           </Card>
         </div>
       </ScrollArea>
     </aside>
   );
 };
+
 
 const renderShortcutIcon = (shortcut: Shortcut) => {
     if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
@@ -2429,7 +2503,7 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden md:hidden', !isMobile && showHomeButton ? 'inline-flex' : 'hidden', 'rounded-full')}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden', 'rounded-full')}>
                 <Home className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
