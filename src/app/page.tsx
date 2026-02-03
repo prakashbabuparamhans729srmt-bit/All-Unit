@@ -1070,13 +1070,13 @@ const BrowserApp = () => {
       const newUrl = activeTab.history[activeTab.currentIndex];
       if (newUrl === DEFAULT_URL) {
         if (!isSearchFocused) {
-          setInputValue("");
+          setInputValue(ntpInputValue);
         }
       } else {
         setInputValue(newUrl);
       }
     }
-  }, [activeTab, isSearchFocused]);
+  }, [activeTab, isSearchFocused, ntpInputValue]);
 
 
   const goBack = () => {
@@ -1681,7 +1681,7 @@ const BrowserApp = () => {
         <Icon className="w-8 h-8 text-muted-foreground"/>
         <h1 className="text-3xl font-bold">{title}</h1>
       </div>
-      <Card className="flex-1 mx-8">
+      <Card className="flex-1">
         <CardContent className="p-6">
           {children}
         </CardContent>
@@ -2963,6 +2963,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 

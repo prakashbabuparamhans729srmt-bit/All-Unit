@@ -822,7 +822,7 @@ export default function SettingsPage() {
         </div>
       </aside>
 
-      <main className="flex-1 py-6 lg:py-8 overflow-y-auto">
+      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="">
           <div className="w-full mb-8 md:hidden">
             <div className="relative">
@@ -844,5 +844,6 @@ export default function SettingsPage() {
     
 
     
+
 
 
