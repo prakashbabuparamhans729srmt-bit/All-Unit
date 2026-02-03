@@ -278,7 +278,7 @@ const VoiceSearchOverlay = ({
             </DialogDescription>
           </DialogHeader>
           <DialogClose asChild>
-              <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
+              <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white focus-visible:outline-none">
                 <X className="w-6 h-6" />
               </button>
           </DialogClose>
@@ -2400,7 +2400,7 @@ const BrowserApp = () => {
   const NavigationSheetContent = () => (
     <div className="flex flex-col h-full py-4">
       <div className="mb-4 px-4">
-          <button onClick={() => { handleNavigation(activeTabId, 'about:newtab'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
+          <button onClick={() => { handleNavigation(activeTabId, 'about:newtab'); setMobileMenuOpen(false); }} className="w-full flex items-center p-2 rounded-lg hover:bg-sidebar-accent">
               <Globe className="h-7 w-7 text-cyan-400 shrink-0" />
               <span className="ml-4 font-semibold text-lg">Browse</span>
           </button>
@@ -2477,7 +2477,7 @@ const BrowserApp = () => {
                       onClick={() => setActiveTabId(tab.id)}
                       tabIndex={0}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTabId(tab.id); }}}
-                      className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`,
+                      className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`,
                         'font-light text-xs',
                         activeTabId === tab.id
                           ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
@@ -2503,7 +2503,7 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden', 'rounded-full')}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden md:inline-flex', 'rounded-full')}>
                 <Home className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
@@ -3111,7 +3111,8 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
-        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative">
+        <div className="flex flex-1 overflow-hidden">
+          <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -3134,33 +3135,33 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
+          { !isMobile && (
+            <>
+              {isCustomizeOpen && <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} />}
+              {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
+                isMobile={false}
+                assistantMessages={assistantMessages}
+                setAssistantMessages={setAssistantMessages}
+                isAssistantLoading={isAssistantLoading}
+                assistantInput={assistantInput}
+                setAssistantInput={setAssistantInput}
+                handleAssistantSubmit={() => handleAssistantSubmit()}
+                toast={toast}
+                startVoiceSearch={startVoiceSearch}
+                listeningState={listeningState}
+                voiceSearchSource={voiceSearchSource}
+                setIsAssistantOpen={setIsAssistantOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+                toggleMainSidebar={toggleMainSidebar}
+                setMobileSheetContent={setMobileSheetContent}
+                handleInstallClick={handleInstallClick}
+                handleAssistantSearch={handleAssistantSearch}
+                handleAttachment={handleAttachment}
+              />}
+            </>
+          )}
+        </div>
       </div>
-
-      { !isMobile && (
-        <>
-          {isCustomizeOpen && <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} />}
-          {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
-            isMobile={false}
-            assistantMessages={assistantMessages}
-            setAssistantMessages={setAssistantMessages}
-            isAssistantLoading={isAssistantLoading}
-            assistantInput={assistantInput}
-            setAssistantInput={setAssistantInput}
-            handleAssistantSubmit={() => handleAssistantSubmit()}
-            toast={toast}
-            startVoiceSearch={startVoiceSearch}
-            listeningState={listeningState}
-            voiceSearchSource={voiceSearchSource}
-            setIsAssistantOpen={setIsAssistantOpen}
-            setMobileMenuOpen={setMobileMenuOpen}
-            toggleMainSidebar={toggleMainSidebar}
-            setMobileSheetContent={setMobileSheetContent}
-            handleInstallClick={handleInstallClick}
-            handleAssistantSearch={handleAssistantSearch}
-            handleAttachment={handleAttachment}
-          />}
-        </>
-      )}
 
       {isMobile && (
         <div
