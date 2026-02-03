@@ -2299,9 +2299,9 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              {showHomeButton && (<Button variant="ghost" size="icon" onClick={goHome}>
+              <Button variant="ghost" size="icon" onClick={goHome} className="md:hidden">
                 <Home className="w-5 h-5" />
-              </Button>)}
+              </Button>
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -3138,6 +3138,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
