@@ -2398,6 +2398,8 @@ const BrowserApp = () => {
                 </div>
             </GenericInternalPage>;
         }
+        case 'about:editor':
+            return <GenericInternalPage title="Editor" icon={Pencil}><Textarea className="h-full" placeholder="Start writing..." /></GenericInternalPage>;
         default:
             return (
               <iframe
@@ -3248,7 +3250,7 @@ const BrowserApp = () => {
               )}
           </main>
           { !isMobile && (
-            <div className="flex flex-col">
+            <>
               {isCustomizeOpen && <CustomizePanel 
                   setIsOpen={setIsCustomizeOpen} 
                   handleThemeChange={handleThemeChange}
@@ -3285,7 +3287,7 @@ const BrowserApp = () => {
                 handleAssistantSearch={handleAssistantSearch}
                 handleAttachment={handleAttachment}
               />}
-            </div>
+            </>
           )}
         </div>
       </div>
