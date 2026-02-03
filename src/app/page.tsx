@@ -89,6 +89,8 @@ import {
   HelpCircle,
   LogOut,
   Minus,
+  Upload,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,6 +152,7 @@ import { AishaLogo } from "@/components/icons/AishaLogo";
 import { AppGridIcon } from '@/components/icons/AppGridIcon';
 import { CustomAboutIcon } from "@/components/icons/CustomAboutIcon";
 import { CustomGroupIcon } from "@/components/icons/CustomGroupIcon";
+import { Switch } from '@/components/ui/switch';
 
 
 const DEFAULT_URL = "about:newtab";
@@ -482,6 +485,95 @@ const AishaAssistant = React.memo(({
 ));
 AishaAssistant.displayName = 'AishaAssistant';
 
+const CustomizePanel = ({ setIsOpen, toggleTheme, theme, isMobile = false }) => {
+  const { toast } = useToast();
+  const [currentMode, setCurrentMode] = React.useState(theme);
+
+  const handleModeChange = (mode) => {
+    if ((mode === 'light' && theme === 'dark') || (mode === 'dark' && theme === 'light')) {
+      toggleTheme();
+    }
+    setCurrentMode(mode);
+  }
+
+  const colors = [
+    { bg: '#4274e0', selected: false }, { bg: '#707275', selected: false }, { bg: '#3a67c4', selected: false }, { bg: '#e8eaed', selected: true },
+    { bg: '#81c995', selected: false }, { bg: '#54a357', selected: false }, { bg: '#fcc934', selected: false }, { bg: '#f49ab0', selected: false },
+    { bg: '#d168d3', selected: false }, { bg: '#a142f4', selected: false }, { bg: '#e57f7f', selected: false }, { bg: '#202124', selected: false },
+  ];
+
+  return (
+    <aside className={cn(
+        "flex flex-col bg-background/95 backdrop-blur-sm",
+        isMobile ? "flex-1 h-full" : "w-[350px] flex-shrink-0 border-l border-border"
+    )}>
+      <div className="flex items-center p-3 border-b shrink-0">
+        <h2 className="text-base font-semibold">Customize Aisha</h2>
+        <div className="flex-grow" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
+          <X className="w-5 h-5 text-muted-foreground" />
+        </Button>
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-6">
+          <h3 className="text-sm font-medium text-muted-foreground">Appearance</h3>
+          
+          <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => toast({ title: "Changing theme is not implemented." })}>
+            <RefreshCcw className="mr-2 h-4 w-4" /> Change theme
+          </Button>
+
+          <div className="flex justify-between items-center p-1 rounded-full bg-secondary">
+            <Button variant={currentMode === 'light' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('light')}>
+              <Sun className="mr-2 h-4 w-4" /> Light
+            </Button>
+            <Button variant={currentMode === 'dark' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-8 rounded-full shadow-sm data-[variant=secondary]:bg-background" onClick={() => handleModeChange('dark')}>
+              <Moon className="mr-2 h-4 w-4" /> Dark
+            </Button>
+            <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-full" onClick={() => toast({ title: "Device theme not implemented." })}>
+              <Laptop className="mr-2 h-4 w-4" /> Device
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-4 gap-4 pt-2 justify-items-center">
+            {colors.map((color, i) => (
+              <TooltipProvider key={i}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="w-12 h-12 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
+                      onClick={() => toast({ title: "Color themes are not yet implemented." })}>
+                      <div className="w-full h-full rounded-full" style={{ backgroundColor: color.bg }} />
+                      {color.selected && (
+                        <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+                          <Check className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Default</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => toast({ title: "Custom colors are not yet implemented." })}>
+                    <Pencil className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent><p>Custom Color</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center justify-between pt-4">
+            <Label htmlFor="follow-device" className="text-sm font-normal">Follow device colors</Label>
+            <Switch id="follow-device" onCheckedChange={() => toast({ title: "This feature is not yet implemented." })} />
+          </div>
+        </div>
+      </ScrollArea>
+    </aside>
+  );
+};
 
 const renderShortcutIcon = (shortcut: Shortcut) => {
     if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
@@ -578,7 +670,8 @@ const NewTabPage = ({
     isIncognito,
     handleOpenAddShortcut,
     handleOpenEditShortcut,
-    handleRemoveShortcut
+    handleRemoveShortcut,
+    setIsCustomizeOpen
 } : {
     searchContainerRef: React.RefObject<HTMLDivElement>;
     isSearchFocused: boolean;
@@ -602,6 +695,7 @@ const NewTabPage = ({
     handleOpenAddShortcut: () => void;
     handleOpenEditShortcut: (shortcut: Shortcut) => void;
     handleRemoveShortcut: (shortcut: Shortcut) => void;
+    setIsCustomizeOpen: (value: boolean) => void;
 }) => {
     const isMobile = useIsMobile();
     return (
@@ -628,14 +722,14 @@ const NewTabPage = ({
                     onFocus={() => setIsSearchFocused(true)}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
-                    <Button variant="ghost" size="icon" className={`w-8 h-8 ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
+                    <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-full ${listeningState === 'listening' && voiceSearchSource === 'address' ? 'bg-red-500/20 text-red-500' : ''}`} onClick={() => startVoiceSearch('address')}>
                       <Mic className="w-5 h-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
+                    <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
                     <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
+                              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => { setIsAssistantOpen(true); setIsCustomizeOpen(false); }}>
                                 <Sparkles className="w-5 h-5" />
                               </Button>
                           </TooltipTrigger>
@@ -646,7 +740,7 @@ const NewTabPage = ({
                     </TooltipProvider>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-5 h-5"/></Button>
+                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full"><MoreVertical className="w-5 h-5"/></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-64">
                              <ScrollArea className="h-96">
@@ -787,6 +881,7 @@ const BrowserApp = () => {
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
 
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [assistantInput, setAssistantInput] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
@@ -1785,7 +1880,7 @@ const BrowserApp = () => {
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
     { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
-    { icon: Pencil, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
+    { icon: Pencil, label: 'Customize', action: () => { setIsCustomizeOpen(true); setIsAssistantOpen(false); if (isMobile) { setMobileMenuOpen(false); } } },
   ];
 
   const isInternalPage = currentUrl.startsWith('about:');
@@ -2017,6 +2112,7 @@ const BrowserApp = () => {
         startVoiceSearch={startVoiceSearch}
         setIsImageSearchOpen={setIsImageSearchOpen}
         setIsAssistantOpen={setIsAssistantOpen}
+        setIsCustomizeOpen={setIsCustomizeOpen}
         aiTools={aiTools}
         activeTabId={activeTabId}
         handleNavigation={handleNavigation}
@@ -2049,6 +2145,7 @@ const BrowserApp = () => {
               startVoiceSearch={startVoiceSearch}
               setIsImageSearchOpen={setIsImageSearchOpen}
               setIsAssistantOpen={setIsAssistantOpen}
+              setIsCustomizeOpen={setIsCustomizeOpen}
               aiTools={aiTools}
               activeTabId={activeTabId}
               handleNavigation={handleNavigation}
@@ -2115,15 +2212,6 @@ const BrowserApp = () => {
                 </div>
             </GenericInternalPage>;
         }
-        case 'about:editor':
-            return <GenericInternalPage title="Editor" icon={Pencil}>
-                <div className="flex flex-col h-full">
-                    <Textarea 
-                        placeholder="Start writing..."
-                        className="flex-1 w-full h-full resize-none text-base"
-                    />
-                </div>
-            </GenericInternalPage>;
         default:
             return (
               <iframe
@@ -2332,7 +2420,7 @@ const BrowserApp = () => {
                   </div>
               ))}
               <div className="flex items-center self-center h-full">
-                <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0" onClick={addTab}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0 rounded-full" onClick={addTab}>
                     <Plus className="w-4 h-4" />
                 </Button>
               </div>
@@ -2341,16 +2429,16 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden', !isMobile && showHomeButton ? 'inline-flex' : 'hidden', 'md:inline-flex')}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden md:hidden', !isMobile && showHomeButton ? 'inline-flex' : 'hidden', 'rounded-full')}>
                 <Home className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
                 <ArrowRight className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={reload}>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={reload}>
                 {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
               </Button>
             </div>
@@ -2480,7 +2568,7 @@ const BrowserApp = () => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex rounded-full" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                      <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex rounded-full" onClick={() => { setIsAssistantOpen(!isAssistantOpen); setIsCustomizeOpen(false); }}>
                          <Sparkles className="w-4 h-4 mr-2" />
                          Assistant
                       </Button>
@@ -2972,26 +3060,31 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
-          {!isMobile && isAssistantOpen && <AishaAssistant 
-            isMobile={false}
-            assistantMessages={assistantMessages}
-            setAssistantMessages={setAssistantMessages}
-            isAssistantLoading={isAssistantLoading}
-            assistantInput={assistantInput}
-            setAssistantInput={setAssistantInput}
-            handleAssistantSubmit={() => handleAssistantSubmit()}
-            toast={toast}
-            startVoiceSearch={startVoiceSearch}
-            listeningState={listeningState}
-            voiceSearchSource={voiceSearchSource}
-            setIsAssistantOpen={setIsAssistantOpen}
-            setMobileMenuOpen={setMobileMenuOpen}
-            toggleMainSidebar={toggleMainSidebar}
-            setMobileSheetContent={setMobileSheetContent}
-            handleInstallClick={handleInstallClick}
-            handleAssistantSearch={handleAssistantSearch}
-            handleAttachment={handleAttachment}
-          />}
+          { !isMobile && (
+            <>
+              {isCustomizeOpen && <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} />}
+              {isAssistantOpen && !isCustomizeOpen && <AishaAssistant 
+                isMobile={false}
+                assistantMessages={assistantMessages}
+                setAssistantMessages={setAssistantMessages}
+                isAssistantLoading={isAssistantLoading}
+                assistantInput={assistantInput}
+                setAssistantInput={setAssistantInput}
+                handleAssistantSubmit={() => handleAssistantSubmit()}
+                toast={toast}
+                startVoiceSearch={startVoiceSearch}
+                listeningState={listeningState}
+                voiceSearchSource={voiceSearchSource}
+                setIsAssistantOpen={setIsAssistantOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+                toggleMainSidebar={toggleMainSidebar}
+                setMobileSheetContent={setMobileSheetContent}
+                handleInstallClick={handleInstallClick}
+                handleAssistantSearch={handleAssistantSearch}
+                handleAttachment={handleAttachment}
+              />}
+            </>
+          )}
       </div>
 
       {isMobile && (
@@ -3169,6 +3262,13 @@ const BrowserApp = () => {
               </DialogContent>
           </Dialog>
       )}
+       {isMobile && (
+          <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
+              <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
+                   <CustomizePanel setIsOpen={setIsCustomizeOpen} toggleTheme={toggleTheme} theme={theme} isMobile />
+              </DialogContent>
+          </Dialog>
+      )}
     </div>
   );
 }
@@ -3180,10 +3280,3 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
-
-
-
-
-
-
-
