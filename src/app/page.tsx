@@ -511,7 +511,7 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
 
   return (
     <div 
-      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group bg-secondary hover:bg-secondary/80"
+      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary"
       onClick={handleNavigation}
     >
       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl mb-2 ${shortcut.color}`}>
@@ -707,7 +707,7 @@ const NewTabPage = ({
                                       />
                                   ))}
                                   {shortcuts.length < 100 && !isIncognito && (
-                                    <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group bg-secondary hover:bg-secondary/80" onClick={handleOpenAddShortcut}>
+                                    <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
                                         <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background/30 mb-2">
                                             <Plus className="w-8 h-8 text-muted-foreground" />
                                         </div>
@@ -734,7 +734,7 @@ const NewTabPage = ({
                     />
                 ))}
                 {shortcuts.length < 100 && !isIncognito && (
-                  <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group bg-secondary hover:bg-secondary/80" onClick={handleOpenAddShortcut}>
+                  <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
                       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background/30 mb-2">
                           <Plus className="w-8 h-8 text-muted-foreground" />
                       </div>
