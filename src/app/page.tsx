@@ -510,9 +510,16 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
   };
 
   return (
-    <div 
-      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary"
+    <div
+      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={handleNavigation}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onNavigate(shortcut.url || shortcut.name);
+        }
+      }}
     >
       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl mb-2 ${shortcut.color}`}>
         {renderShortcutIcon(shortcut)}
@@ -2273,7 +2280,9 @@ const BrowserApp = () => {
                   <div
                       key={tab.id}
                       onClick={() => setActiveTabId(tab.id)}
-                      className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0`,
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTabId(tab.id); }}}
+                      className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`,
                         'font-light text-xs',
                         activeTabId === tab.id
                           ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
@@ -2299,7 +2308,7 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className="md:hidden">
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile ? 'inline-flex' : 'hidden')}>
                 <Home className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
@@ -3138,6 +3147,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
