@@ -511,22 +511,22 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
 
   return (
     <div 
-      className="relative flex flex-col items-center gap-2 text-center cursor-pointer group"
+      className="relative w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group bg-secondary hover:bg-secondary/80"
       onClick={handleNavigation}
     >
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl ${shortcut.color}`}>
+      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-medium text-xl mb-2 ${shortcut.color}`}>
         {renderShortcutIcon(shortcut)}
       </div>
-      <span className="text-xs truncate w-20 font-light text-muted-foreground">{shortcut.name}</span>
+      <span className="text-sm font-light text-foreground w-full truncate">{shortcut.name}</span>
 
       {!isIncognito && (
-        <div className="absolute top-[-4px] right-[-4px] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 rounded-full bg-background/60 hover:bg-background/90"
+                className="h-7 w-7 rounded-full bg-transparent hover:bg-black/10 dark:hover:bg-white/10"
                 data-popover-trigger
                 onClick={(e) => e.stopPropagation()} // Prevent navigation
               >
@@ -695,7 +695,7 @@ const NewTabPage = ({
                                 </>
                             )}
                             <div className="p-4">
-                              <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+                              <div className="grid grid-cols-5 gap-4">
                                   {shortcuts.map((shortcut, index) => (
                                       <ShortcutItem 
                                         key={`${shortcut.name}-${index}`}
@@ -707,11 +707,11 @@ const NewTabPage = ({
                                       />
                                   ))}
                                   {shortcuts.length < 100 && !isIncognito && (
-                                    <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={handleOpenAddShortcut}>
-                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
-                                            <Plus className="w-6 h-6 text-muted-foreground" />
+                                    <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group bg-secondary hover:bg-secondary/80" onClick={handleOpenAddShortcut}>
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background/30 mb-2">
+                                            <Plus className="w-8 h-8 text-muted-foreground" />
                                         </div>
-                                        <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
+                                        <span className="text-sm font-light text-foreground">Add shortcut</span>
                                     </div>
                                   )}
                               </div>
@@ -722,7 +722,7 @@ const NewTabPage = ({
             )}
         </div>
         <div className="w-full max-w-2xl mt-12 p-4">
-            <div className="grid grid-cols-5 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-5 gap-4">
                 {shortcuts.map((shortcut, index) => (
                     <ShortcutItem
                         key={`main-shortcut-${shortcut.name}-${index}`}
@@ -734,11 +734,11 @@ const NewTabPage = ({
                     />
                 ))}
                 {shortcuts.length < 100 && !isIncognito && (
-                  <div className="flex flex-col items-center gap-2 text-center cursor-pointer group" onClick={handleOpenAddShortcut}>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
-                          <Plus className="w-6 h-6 text-muted-foreground" />
+                  <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group bg-secondary hover:bg-secondary/80" onClick={handleOpenAddShortcut}>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background/30 mb-2">
+                          <Plus className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <span className="text-xs font-light text-muted-foreground">Add shortcut</span>
+                      <span className="text-sm font-light text-foreground">Add shortcut</span>
                   </div>
                 )}
             </div>
@@ -3123,4 +3123,5 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
