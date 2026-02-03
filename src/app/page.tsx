@@ -502,7 +502,6 @@ const CustomizePanel = ({
   followDeviceTheme,
   setFollowDeviceTheme,
 }) => {
-  const { toast } = useToast();
 
   const handleModeChange = (mode) => {
     handleThemeChange(mode);
@@ -510,14 +509,10 @@ const CustomizePanel = ({
 
   const handleShortcutSettingChange = (value: string) => {
     setShortcutSetting(value);
-    if (value === 'most-visited') {
-      toast({ title: "Displaying most visited sites is not yet implemented." });
-    }
   };
 
   const handleShowCardsChange = (checked: boolean) => {
     setShowCards(checked);
-    toast({ title: "Custom cards are not yet implemented.", description: "This setting is for display purposes." });
   };
   
   const colors = [
@@ -656,7 +651,7 @@ const CustomizePanel = ({
                   <Switch id="show-cards" checked={showCards} onCheckedChange={handleShowCardsChange} />
                 </div>
                 <div className="flex items-center space-x-2">
-                    <Checkbox id="continue-tabs" defaultChecked onCheckedChange={() => toast({ title: 'This feature is not implemented.' })}/>
+                    <Checkbox id="continue-tabs" defaultChecked onCheckedChange={() => {}}/>
                     <Label htmlFor="continue-tabs" className="text-sm font-normal">Continue with these tabs</Label>
                 </div>
               </CardContent>
