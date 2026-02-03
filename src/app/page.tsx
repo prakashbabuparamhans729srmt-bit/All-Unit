@@ -811,6 +811,7 @@ const BrowserApp = () => {
   const [listeningState, setListeningState] = useState<'listening' | 'error' | 'inactive'>('inactive');
   const [voiceSearchSource, setVoiceSearchSource] = useState<'address' | 'assistant' | null>(null);
   const [interimTranscript, setInterimTranscript] = useState('');
+  const [isCloseLastTabAlertOpen, setIsCloseLastTabAlertOpen] = useState(false);
 
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
   
@@ -1463,7 +1464,7 @@ const BrowserApp = () => {
           window.close();
           return;
       }
-      toast({title: "You can't close the last tab.", variant: "destructive"});
+      setIsCloseLastTabAlertOpen(true);
       return;
     };
 
@@ -2988,6 +2989,20 @@ const BrowserApp = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={isCloseLastTabAlertOpen} onOpenChange={setIsCloseLastTabAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Cannot Close Last Tab</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You cannot close the last remaining tab in the browser.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setIsCloseLastTabAlertOpen(false)}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={!!qrCodeUrl} onOpenChange={(isOpen) => !isOpen && setQrCodeUrl('')}>
         <DialogContent>
           <DialogHeader>
@@ -3123,5 +3138,6 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
