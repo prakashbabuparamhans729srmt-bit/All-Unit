@@ -487,8 +487,117 @@ const AishaAssistant = React.memo(({
 ));
 AishaAssistant.displayName = 'AishaAssistant';
 
-const CustomizePanel = ({
+const ToolbarSettingsPanel = ({
+  setCustomizeView,
   setIsOpen,
+  showHomeButton,
+  setShowHomeButton,
+  showBookmarksButton,
+  setShowBookmarksButton,
+  isMobile = false,
+  toast,
+}) => {
+    // Conceptual states, not hooked up to anything for now
+  const [showForward, setShowForward] = React.useState(true);
+  const [showSplitView, setShowSplitView] = React.useState(false);
+  const [showIncognito, setShowIncognito] = React.useState(true);
+  
+  const [showPasswords, setShowPasswords] = React.useState(true);
+  const [showPayments, setShowPayments] = React.useState(true);
+  const [showAddresses, setShowAddresses] = React.useState(true);
+  
+  return (
+    <div className={cn(
+        "flex flex-col bg-background/95 backdrop-blur-sm",
+        isMobile ? "flex-1 h-full" : "w-[350px] flex-shrink-0 border-l border-border"
+    )}>
+      <div className="flex items-center p-3 border-b shrink-0">
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full mr-2" onClick={() => setCustomizeView('main')}>
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </Button>
+        <h2 className="text-base font-semibold">Toolbar</h2>
+        <div className="flex-grow" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
+          <X className="w-5 h-5 text-muted-foreground" />
+        </Button>
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          <Card className="p-4">
+              <div className="bg-secondary p-2 rounded-lg border">
+                <div className="h-6 bg-card rounded-t-md flex items-center justify-end px-2 border-b">
+                    <Minus className="w-3 h-3 text-muted-foreground/50"/>
+                    <Square className="w-2 h-2 mx-2 text-muted-foreground/50"/>
+                    <X className="w-3 h-3 text-muted-foreground/50"/>
+                </div>
+                <div className="h-8 bg-card rounded-b-md flex items-center px-2 gap-2 text-muted-foreground/80">
+                  <Star className="w-4 h-4"/>
+                  <Bookmark className="w-4 h-4"/>
+                  <PanelsTopLeft className="w-4 h-4"/>
+                  <div className="flex-grow"/>
+                  <User className="w-4 h-4"/>
+                  <MoreVertical className="w-4 h-4"/>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-3">Choose what buttons show in the toolbar</p>
+              <Button variant="outline" size="sm" className="w-full mt-3 h-8" onClick={() => toast({title: "Reset to default is not implemented yet."})}>
+                <RefreshCw className="mr-2 h-3 w-3" /> Reset to default
+              </Button>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Navigation</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-home" className="text-sm font-normal flex items-center gap-3"><Home className="w-5 h-5 text-muted-foreground"/> Home</Label>
+                <Switch id="show-home" checked={showHomeButton} onCheckedChange={setShowHomeButton} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-forward" className="text-sm font-normal flex items-center gap-3"><ArrowRight className="w-5 h-5 text-muted-foreground"/> Forward</Label>
+                <Switch id="show-forward" checked={showForward} onCheckedChange={setShowForward} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-split" className="text-sm font-normal flex items-center gap-3"><PanelsTopLeft className="w-5 h-5 text-muted-foreground"/> Open in split view</Label>
+                <Switch id="show-split" checked={showSplitView} onCheckedChange={setShowSplitView} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-incognito" className="text-sm font-normal flex items-center gap-3"><ShieldOff className="w-5 h-5 text-muted-foreground"/> New Incognito window</Label>
+                <Switch id="show-incognito" checked={showIncognito} onCheckedChange={setShowIncognito} />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader><CardTitle className="text-base">Your Aisha</CardTitle></CardHeader>
+            <CardContent>
+               <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-passwords" className="text-sm font-normal flex items-center gap-3"><KeyRound className="w-5 h-5 text-muted-foreground"/> Aisha Password Manager</Label>
+                <Switch id="show-passwords" checked={showPasswords} onCheckedChange={setShowPasswords} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-payments" className="text-sm font-normal flex items-center gap-3"><CreditCard className="w-5 h-5 text-muted-foreground"/> Payment methods</Label>
+                <Switch id="show-payments" checked={showPayments} onCheckedChange={setShowPayments} />
+              </div>
+               <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-addresses" className="text-sm font-normal flex items-center gap-3"><MapPin className="w-5 h-5 text-muted-foreground"/> Addresses and more</Label>
+                <Switch id="show-addresses" checked={showAddresses} onCheckedChange={setShowAddresses} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-bookmarks" className="text-sm font-normal flex items-center gap-3"><BookMarked className="w-5 h-5 text-muted-foreground"/> Bookmarks</Label>
+                <Switch id="show-bookmarks" checked={showBookmarksButton} onCheckedChange={setShowBookmarksButton} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+
+const CustomizePanelMain = ({
+  setIsOpen,
+  setCustomizeView,
   handleThemeChange,
   theme,
   isMobile = false,
@@ -504,10 +613,10 @@ const CustomizePanel = ({
   followDeviceTheme,
   setFollowDeviceTheme,
 }) => {
-
   const handleModeChange = (mode) => {
-    setFollowDeviceTheme(false);
-    handleThemeChange(mode);
+    if (!followDeviceTheme) {
+      handleThemeChange(mode);
+    }
   };
   
   const handleDeviceModeChange = (checked) => {
@@ -530,7 +639,7 @@ const CustomizePanel = ({
   ];
 
   return (
-    <aside className={cn(
+    <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
         isMobile ? "flex-1 h-full" : "w-[350px] flex-shrink-0 border-l border-border"
     )}>
@@ -614,7 +723,7 @@ const CustomizePanel = ({
 
           <Card>
              <CardContent className="p-2">
-                <Button variant="ghost" className="w-full justify-between text-sm font-normal h-10" onClick={() => {}}>
+                <Button variant="ghost" className="w-full justify-between text-sm font-normal h-10" onClick={() => setCustomizeView('toolbar')}>
                     <span>Toolbar</span>
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </Button>
@@ -671,7 +780,69 @@ const CustomizePanel = ({
            </Card>
         </div>
       </ScrollArea>
-    </aside>
+    </div>
+  );
+};
+
+
+const CustomizePanel = ({
+  setIsOpen,
+  handleThemeChange,
+  theme,
+  isMobile = false,
+  showShortcuts,
+  setShowShortcuts,
+  shortcutSetting,
+  setShortcutSetting,
+  showCards,
+  setShowCards,
+  showContinueWithTabs,
+  setShowContinueWithTabs,
+  handleResetToDefault,
+  followDeviceTheme,
+  setFollowDeviceTheme,
+  showHomeButton,
+  setShowHomeButton,
+  showBookmarksButton,
+  setShowBookmarksButton,
+  toast,
+}) => {
+  const [customizeView, setCustomizeView] = useState('main');
+
+  if (customizeView === 'toolbar') {
+    return (
+      <ToolbarSettingsPanel
+        setCustomizeView={setCustomizeView}
+        setIsOpen={setIsOpen}
+        showHomeButton={showHomeButton}
+        setShowHomeButton={setShowHomeButton}
+        showBookmarksButton={showBookmarksButton}
+        setShowBookmarksButton={setShowBookmarksButton}
+        isMobile={isMobile}
+        toast={toast}
+      />
+    );
+  }
+
+  return (
+    <CustomizePanelMain
+      setCustomizeView={setCustomizeView}
+      setIsOpen={setIsOpen}
+      handleThemeChange={handleThemeChange}
+      theme={theme}
+      isMobile={isMobile}
+      showShortcuts={showShortcuts}
+      setShowShortcuts={setShowShortcuts}
+      shortcutSetting={shortcutSetting}
+      setShortcutSetting={setShortcutSetting}
+      showCards={showCards}
+      setShowCards={setShowCards}
+      showContinueWithTabs={showContinueWithTabs}
+      setShowContinueWithTabs={setShowContinueWithTabs}
+      handleResetToDefault={handleResetToDefault}
+      followDeviceTheme={followDeviceTheme}
+      setFollowDeviceTheme={setFollowDeviceTheme}
+    />
   );
 };
 
@@ -2602,13 +2773,13 @@ const BrowserApp = () => {
                       <span className="truncate max-w-[150px]">
                           {tab.isLoading ? "Loading..." : tab.title}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20 focus-visible:outline-none" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
                           <X className="w-4 h-4" />
                       </Button>
                   </div>
               ))}
               <div className="flex items-center self-center h-full">
-                <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0 rounded-full" onClick={addTab}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0 rounded-full focus-visible:outline-none" onClick={addTab}>
                     <Plus className="w-4 h-4" />
                 </Button>
               </div>
@@ -2617,16 +2788,16 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden md:inline-flex', 'rounded-full')}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(isMobile && showHomeButton ? 'inline-flex' : 'hidden md:inline-flex')}>
                 <Home className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
+              <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
+              <Button variant="ghost" size="icon" onClick={goForward} disabled={!activeTab || activeTab.currentIndex >= activeTab.history.length - 1}>
                 <ArrowRight className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={reload}>
+              <Button variant="ghost" size="icon" onClick={reload}>
                 {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
               </Button>
             </div>
@@ -2783,7 +2954,7 @@ const BrowserApp = () => {
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full md:hidden" onClick={() => window.print()}>
+                        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => window.print()}>
                             <Download className="w-5 h-5"/>
                         </Button>
                     </TooltipTrigger>
@@ -2794,7 +2965,7 @@ const BrowserApp = () => {
               </TooltipProvider>
               {showBookmarksButton && <TooltipProvider><Tooltip>
                   <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
+                      <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
                   </TooltipTrigger>
                   <TooltipContent>
                       <p>Bookmarks</p>
@@ -2803,7 +2974,7 @@ const BrowserApp = () => {
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Downloads</p>
@@ -2813,7 +2984,7 @@ const BrowserApp = () => {
                <TooltipProvider>
                  <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>History</p>
@@ -2823,7 +2994,7 @@ const BrowserApp = () => {
               <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                  <Button variant="ghost" size="icon">
                       <AppGridIcon className="w-5 h-5" />
                   </Button>
                   </DropdownMenuTrigger>
@@ -2848,7 +3019,7 @@ const BrowserApp = () => {
               </DropdownMenu>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                  <Button variant="ghost" size="icon">
                       <Avatar className="w-7 h-7">
                       <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
                       <AvatarFallback>PB</AvatarFallback>
@@ -2870,7 +3041,7 @@ const BrowserApp = () => {
               <div className="hidden md:block">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                    <Button variant="ghost" size="icon">
                         <MoreVertical className="w-5 h-5" />
                     </Button>
                     </DropdownMenuTrigger>
@@ -3141,7 +3312,7 @@ const BrowserApp = () => {
               <div className="block md:hidden">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                          <Button variant="ghost" size="icon">
                               <MoreVertical className="w-5 h-5" />
                           </Button>
                       </DropdownMenuTrigger>
@@ -3250,7 +3421,7 @@ const BrowserApp = () => {
               )}
           </main>
           { !isMobile && (
-            <>
+            <div className='flex'>
               {isCustomizeOpen && <CustomizePanel 
                   setIsOpen={setIsCustomizeOpen} 
                   handleThemeChange={handleThemeChange}
@@ -3266,6 +3437,11 @@ const BrowserApp = () => {
                   handleResetToDefault={handleResetToDefault}
                   followDeviceTheme={followDeviceTheme}
                   setFollowDeviceTheme={setFollowDeviceTheme}
+                  showHomeButton={showHomeButton}
+                  setShowHomeButton={setShowHomeButton}
+                  showBookmarksButton={showBookmarksButton}
+                  setShowBookmarksButton={setShowBookmarksButton}
+                  toast={toast}
               />}
               {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
                 isMobile={false}
@@ -3287,7 +3463,7 @@ const BrowserApp = () => {
                 handleAssistantSearch={handleAssistantSearch}
                 handleAttachment={handleAttachment}
               />}
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -3486,6 +3662,11 @@ const BrowserApp = () => {
                     handleResetToDefault={handleResetToDefault}
                     followDeviceTheme={followDeviceTheme}
                     setFollowDeviceTheme={setFollowDeviceTheme}
+                    showHomeButton={showHomeButton}
+                    setShowHomeButton={setShowHomeButton}
+                    showBookmarksButton={showBookmarksButton}
+                    setShowBookmarksButton={setShowBookmarksButton}
+                    toast={toast}
                    />
               </DialogContent>
           </Dialog>
