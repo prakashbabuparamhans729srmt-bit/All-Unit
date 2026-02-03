@@ -560,15 +560,6 @@ const BrowserApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [fontSize, setFontSize] = useState('medium');
 
-  // FAB states
-  const fabRef = useRef<HTMLButtonElement>(null);
-  const [isFabDragging, setIsFabDragging] = useState(false);
-  const DEFAULT_FAB_POSITION = { x: 24, y: 24 };
-  const [fabPosition, setFabPosition] = useState(DEFAULT_FAB_POSITION); // right, bottom in px
-  const fabDragOffset = useRef({ x: 0, y: 0 });
-  const wasFabDragged = useRef(false);
-  const fabResetTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
 
@@ -642,6 +633,7 @@ const BrowserApp = () => {
         loadFailed: false,
     });
     setInputValue(newUrl);
+    setNtpInputValue("");
   }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
@@ -755,7 +747,6 @@ const BrowserApp = () => {
             return;
         }
         if (source === 'address' && activeTab) {
-          setNtpInputValue(searchText);
           handleNavigation(activeTabId, searchText);
         } else if (source === 'assistant') {
           handleAssistantSubmit(searchText);
@@ -775,74 +766,6 @@ const BrowserApp = () => {
 
     recognition.start();
   }, [activeTab, activeTabId, handleNavigation, handleAssistantSubmit, stopVoiceSearch, toast]);
-
-    const handleFabDragStart = (clientX: number, clientY: number) => {
-        if (fabResetTimerRef.current) {
-            clearTimeout(fabResetTimerRef.current);
-            fabResetTimerRef.current = null;
-        }
-        if (!fabRef.current) return;
-        wasFabDragged.current = false;
-        setIsFabDragging(true);
-        const rect = fabRef.current.getBoundingClientRect();
-        fabDragOffset.current = {
-            x: clientX - rect.left,
-            y: clientY - rect.top,
-        };
-    };
-
-    const handleFabDragMove = (clientX: number, clientY: number) => {
-        if (!isFabDragging || !fabRef.current) return;
-        wasFabDragged.current = true;
-
-        const newX = window.innerWidth - clientX - (fabRef.current.offsetWidth - fabDragOffset.current.x);
-        const newY = window.innerHeight - clientY - (fabRef.current.offsetHeight - fabDragOffset.current.y);
-        
-        const boundedX = Math.max(8, Math.min(newX, window.innerWidth - fabRef.current.offsetWidth - 8));
-        const boundedY = Math.max(8, Math.min(newY, window.innerHeight - fabRef.current.offsetHeight - 8));
-
-        setFabPosition({ x: boundedX, y: boundedY });
-    };
-
-    const handleFabDragEnd = () => {
-        setIsFabDragging(false);
-        if (wasFabDragged.current) {
-            if (fabResetTimerRef.current) {
-                clearTimeout(fabResetTimerRef.current);
-            }
-            fabResetTimerRef.current = setTimeout(() => {
-                setFabPosition(DEFAULT_FAB_POSITION);
-            }, 10000);
-        }
-    };
-
-    const handleFabMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
-        handleFabDragStart(e.clientX, e.clientY);
-        e.preventDefault();
-    };
-
-    const handleFabTouchStart = (e: React.TouchEvent<HTMLButtonElement>) => {
-        handleFabDragStart(e.touches[0].clientX, e.clientY);
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => handleFabDragMove(e.clientX, e.clientY);
-        const handleTouchMove = (e: TouchEvent) => handleFabDragMove(e.touches[0].clientX, e.clientY);
-
-        if (isFabDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleFabDragEnd);
-            window.addEventListener('touchmove', handleTouchMove);
-            window.addEventListener('touchend', handleFabDragEnd);
-        }
-    
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleFabDragEnd);
-            window.removeEventListener('touchmove', handleTouchMove);
-            window.removeEventListener('touchend', handleFabDragEnd);
-        };
-    }, [isFabDragging]);
   
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -2753,7 +2676,7 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
-        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative rounded-lg">
+        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -2908,31 +2831,6 @@ const BrowserApp = () => {
               </DialogContent>
           </Dialog>
       )}
-      <Button
-        ref={fabRef}
-        variant="secondary"
-        size="icon"
-        className={cn(
-            "md:hidden fixed z-50 h-12 w-12 rounded-full shadow-lg",
-            isFabDragging ? "cursor-grabbing" : "cursor-grab"
-        )}
-        style={{
-            right: `${fabPosition.x}px`,
-            bottom: `${fabPosition.y}px`,
-            touchAction: 'none'
-        }}
-        onMouseDown={handleFabMouseDown}
-        onTouchStart={handleFabTouchStart}
-        onClick={() => {
-            if (wasFabDragged.current) {
-                return;
-            }
-            setMobileSheetContent('nav'); 
-            setMobileMenuOpen(true); 
-        }}
-      >
-        <Menu className="w-5 h-5" />
-      </Button>
     </div>
   );
 }
