@@ -1068,15 +1068,13 @@ const BrowserApp = () => {
   useEffect(() => {
     if (activeTab) {
       const newUrl = activeTab.history[activeTab.currentIndex];
-      if (newUrl === DEFAULT_URL) {
-        if (!isSearchFocused) {
-          setInputValue(ntpInputValue);
-        }
+      if (newUrl === DEFAULT_URL && !isSearchFocused) {
+        setInputValue('');
       } else {
         setInputValue(newUrl);
       }
     }
-  }, [activeTab, isSearchFocused, ntpInputValue]);
+  }, [activeTab, isSearchFocused]);
 
 
   const goBack = () => {
@@ -1676,8 +1674,8 @@ const BrowserApp = () => {
   };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
-    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto">
-      <div className="flex items-center gap-4 mb-8 px-8">
+    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto px-8">
+      <div className="flex items-center gap-4 mb-8">
         <Icon className="w-8 h-8 text-muted-foreground"/>
         <h1 className="text-3xl font-bold">{title}</h1>
       </div>
@@ -2024,13 +2022,27 @@ const BrowserApp = () => {
 
   const NavigationSheetContent = () => (
     <div className="flex flex-col h-full py-4">
-      <div className="mb-8 px-4">
+      <div className="mb-4 px-4">
           <button onClick={() => { handleNavigation(activeTabId, 'about:about'); setMobileMenuOpen(false); }} className="flex items-center justify-start w-full p-2 rounded-lg hover:bg-sidebar-accent">
               <AishaLogo width={28} height={28} />
               <span className="ml-4 font-semibold text-lg">Aisha</span>
           </button>
       </div>
-      <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1">
+      <div className="flex items-center justify-around px-4 py-3 border-y border-sidebar-border">
+        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); setMobileMenuOpen(false); }}>
+          <BookMarked className="h-6 w-6 text-muted-foreground" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); setMobileMenuOpen(false); }}>
+          <Download className="h-6 w-6 text-muted-foreground" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:history'); setMobileMenuOpen(false); }}>
+          <HistoryIcon className="h-6 w-6 text-muted-foreground" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => { handleNavigation(activeTabId, 'about:settings'); setMobileMenuOpen(false); }}>
+          <Settings className="h-6 w-6 text-muted-foreground" />
+        </Button>
+      </div>
+      <nav className="flex flex-col items-start w-full px-2 space-y-2 flex-1 mt-4">
           {mobileNavItems.map((item, index) => (
               <button key={index} onClick={() => { item.action(); setMobileMenuOpen(false); }} className="w-full flex items-center p-3 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <item.icon className="h-6 w-6" />
@@ -2264,7 +2276,7 @@ const BrowserApp = () => {
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
+                    <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex" onClick={() => setIsAssistantOpen(!isAssistantOpen)}>
                        <Sparkles className="w-4 h-4 mr-2" />
                        Assistant
                     </Button>
@@ -2963,6 +2975,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
