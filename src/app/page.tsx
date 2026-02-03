@@ -1516,7 +1516,7 @@ const BrowserApp = () => {
                     <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setIsImageSearchOpen(true)}><Camera className="w-5 h-5" /></Button>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => { setIsAssistantOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="w-8 h-8 md:hidden" onClick={() => { setIsAssistantOpen(true); }}>
                               <Sparkles className="w-5 h-5" />
                             </Button>
                         </TooltipTrigger>
@@ -2727,7 +2727,7 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
-        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative">
+        <main id="browser-content-area" className="flex-1 bg-background overflow-auto relative p-4">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -2783,7 +2783,8 @@ const BrowserApp = () => {
         >
             <Button
               size="icon"
-              className="rounded-full h-14 w-14 shadow-lg touch-none"
+              variant="ghost"
+              className="rounded-full h-14 w-14 shadow-lg touch-none border bg-background/30 backdrop-blur-sm hover:bg-background/50"
               onPointerDown={handleFabPointerDown}
               onPointerMove={handleFabPointerMove}
               onPointerUp={handleFabPointerUp}
