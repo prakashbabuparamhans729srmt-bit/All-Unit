@@ -498,14 +498,24 @@ const ToolbarSettingsPanel = ({
   toast,
 }) => {
     // Conceptual states, not hooked up to anything for now
-  const [showForward, setShowForward] = React.useState(true);
-  const [showSplitView, setShowSplitView] = React.useState(false);
-  const [showIncognito, setShowIncognito] = React.useState(true);
-  
-  const [showPasswords, setShowPasswords] = React.useState(true);
   const [showPayments, setShowPayments] = React.useState(true);
   const [showAddresses, setShowAddresses] = React.useState(true);
-  
+  const [showReadingList, setShowReadingList] = React.useState(false);
+  const [showHistory, setShowHistory] = React.useState(true);
+  const [showDownloads, setShowDownloads] = React.useState(true);
+  const [showDeleteData, setShowDeleteData] = React.useState(false);
+
+  const [showPrint, setShowPrint] = React.useState(false);
+  const [showGoogleLens, setShowGoogleLens] = React.useState(false);
+  const [showTranslate, setShowTranslate] = React.useState(false);
+  const [showQRCode, setShowQRCode] = React.useState(false);
+  const [showCast, setShowCast] = React.useState(false);
+  const [showReadingMode, setShowReadingMode] = React.useState(false);
+  const [showCopyLink, setShowCopyLink] = React.useState(false);
+  const [showSendToDevices, setShowSendToDevices] = React.useState(false);
+  const [showTaskManager, setShowTaskManager] = React.useState(false);
+  const [showDevTools, setShowDevTools] = React.useState(false);
+
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
@@ -523,62 +533,13 @@ const ToolbarSettingsPanel = ({
       </div>
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          <Card className="p-4">
-              <div className="bg-secondary p-2 rounded-lg border">
-                <div className="h-6 bg-card rounded-t-md flex items-center justify-end px-2 border-b">
-                    <Minus className="w-3 h-3 text-muted-foreground/50"/>
-                    <Square className="w-2 h-2 mx-2 text-muted-foreground/50"/>
-                    <X className="w-3 h-3 text-muted-foreground/50"/>
-                </div>
-                <div className="h-8 bg-card rounded-b-md flex items-center px-2 gap-2 text-muted-foreground/80">
-                  <Star className="w-4 h-4"/>
-                  <Bookmark className="w-4 h-4"/>
-                  <PanelsTopLeft className="w-4 h-4"/>
-                  <div className="flex-grow"/>
-                  <User className="w-4 h-4"/>
-                  <MoreVertical className="w-4 h-4"/>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-3">Choose what buttons show in the toolbar</p>
-              <Button variant="outline" size="sm" className="w-full mt-3 h-8" onClick={() => toast({title: "Reset to default is not implemented yet."})}>
-                <RefreshCw className="mr-2 h-3 w-3" /> Reset to default
-              </Button>
-          </Card>
-
           <Card>
-            <CardHeader><CardTitle className="text-base">Navigation</CardTitle></CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between py-2">
-                <Label htmlFor="show-home" className="text-sm font-normal flex items-center gap-3"><Home className="w-5 h-5 text-muted-foreground"/> Home</Label>
-                <Switch id="show-home" checked={showHomeButton} onCheckedChange={setShowHomeButton} />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <Label htmlFor="show-forward" className="text-sm font-normal flex items-center gap-3"><ArrowRight className="w-5 h-5 text-muted-foreground"/> Forward</Label>
-                <Switch id="show-forward" checked={showForward} onCheckedChange={setShowForward} />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <Label htmlFor="show-split" className="text-sm font-normal flex items-center gap-3"><PanelsTopLeft className="w-5 h-5 text-muted-foreground"/> Open in split view</Label>
-                <Switch id="show-split" checked={showSplitView} onCheckedChange={setShowSplitView} />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <Label htmlFor="show-incognito" className="text-sm font-normal flex items-center gap-3"><ShieldOff className="w-5 h-5 text-muted-foreground"/> New Incognito window</Label>
-                <Switch id="show-incognito" checked={showIncognito} onCheckedChange={setShowIncognito} />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader><CardTitle className="text-base">Your Aisha</CardTitle></CardHeader>
-            <CardContent>
-               <div className="flex items-center justify-between py-2">
-                <Label htmlFor="show-passwords" className="text-sm font-normal flex items-center gap-3"><KeyRound className="w-5 h-5 text-muted-foreground"/> Aisha Password Manager</Label>
-                <Switch id="show-passwords" checked={showPasswords} onCheckedChange={setShowPasswords} />
-              </div>
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-payments" className="text-sm font-normal flex items-center gap-3"><CreditCard className="w-5 h-5 text-muted-foreground"/> Payment methods</Label>
                 <Switch id="show-payments" checked={showPayments} onCheckedChange={setShowPayments} />
               </div>
-               <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-addresses" className="text-sm font-normal flex items-center gap-3"><MapPin className="w-5 h-5 text-muted-foreground"/> Addresses and more</Label>
                 <Switch id="show-addresses" checked={showAddresses} onCheckedChange={setShowAddresses} />
               </div>
@@ -586,7 +547,76 @@ const ToolbarSettingsPanel = ({
                 <Label htmlFor="show-bookmarks" className="text-sm font-normal flex items-center gap-3"><BookMarked className="w-5 h-5 text-muted-foreground"/> Bookmarks</Label>
                 <Switch id="show-bookmarks" checked={showBookmarksButton} onCheckedChange={setShowBookmarksButton} />
               </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-reading-list" className="text-sm font-normal flex items-center gap-3"><BookCopy className="w-5 h-5 text-muted-foreground"/> Reading list</Label>
+                <Switch id="show-reading-list" checked={showReadingList} onCheckedChange={setShowReadingList} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-history" className="text-sm font-normal flex items-center gap-3"><HistoryIcon className="w-5 h-5 text-muted-foreground"/> History</Label>
+                <Switch id="show-history" checked={showHistory} onCheckedChange={setShowHistory} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-downloads" className="text-sm font-normal flex items-center gap-3"><Download className="w-5 h-5 text-muted-foreground"/> Downloads</Label>
+                <Switch id="show-downloads" checked={showDownloads} onCheckedChange={setShowDownloads} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-delete-data" className="text-sm font-normal flex items-center gap-3"><Trash2 className="w-5 h-5 text-muted-foreground"/> Delete browsing data</Label>
+                <Switch id="show-delete-data" checked={showDeleteData} onCheckedChange={setShowDeleteData} />
+              </div>
             </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader><CardTitle className="text-base">Tools and actions</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-print" className="text-sm font-normal flex items-center gap-3"><Printer className="w-5 h-5 text-muted-foreground"/> Print</Label>
+                <Switch id="show-print" checked={showPrint} onCheckedChange={setShowPrint} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-google-lens" className="text-sm font-normal flex items-center gap-3"><Camera className="w-5 h-5 text-muted-foreground"/> Search with Google Lens</Label>
+                <Switch id="show-google-lens" checked={showGoogleLens} onCheckedChange={setShowGoogleLens} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-translate" className="text-sm font-normal flex items-center gap-3"><Languages className="w-5 h-5 text-muted-foreground"/> Translate</Label>
+                <Switch id="show-translate" checked={showTranslate} onCheckedChange={setShowTranslate} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-qr-code" className="text-sm font-normal flex items-center gap-3"><QrCode className="w-5 h-5 text-muted-foreground"/> Create QR Code</Label>
+                <Switch id="show-qr-code" checked={showQRCode} onCheckedChange={setShowQRCode} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-cast" className="text-sm font-normal flex items-center gap-3"><Cast className="w-5 h-5 text-muted-foreground"/> Cast</Label>
+                <Switch id="show-cast" checked={showCast} onCheckedChange={setShowCast} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-reading-mode" className="text-sm font-normal flex items-center gap-3"><BookOpen className="w-5 h-5 text-muted-foreground"/> Reading mode</Label>
+                <Switch id="show-reading-mode" checked={showReadingMode} onCheckedChange={setShowReadingMode} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-copy-link" className="text-sm font-normal flex items-center gap-3"><LinkIcon className="w-5 h-5 text-muted-foreground"/> Copy link</Label>
+                <Switch id="show-copy-link" checked={showCopyLink} onCheckedChange={setShowCopyLink} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-send-to-devices" className="text-sm font-normal flex items-center gap-3"><Computer className="w-5 h-5 text-muted-foreground"/> Send to your devices</Label>
+                <Switch id="show-send-to-devices" checked={showSendToDevices} onCheckedChange={setShowSendToDevices} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-task-manager" className="text-sm font-normal flex items-center gap-3"><Gauge className="w-5 h-5 text-muted-foreground"/> Task manager</Label>
+                <Switch id="show-task-manager" checked={showTaskManager} onCheckedChange={setShowTaskManager} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-dev-tools" className="text-sm font-normal flex items-center gap-3"><Code className="w-5 h-5 text-muted-foreground"/> Developer tools</Label>
+                <Switch id="show-dev-tools" checked={showDevTools} onCheckedChange={setShowDevTools} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="p-3 bg-secondary">
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 text-muted-foreground" />
+              <span className="text-sm font-normal text-muted-foreground">To rearrange buttons on the toolbar, drag them</span>
+            </div>
           </Card>
         </div>
       </ScrollArea>
@@ -2230,6 +2260,7 @@ const BrowserApp = () => {
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
     { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
     { icon: Pencil, label: 'Customize', action: () => { setIsCustomizeOpen(true); setIsAssistantOpen(false); if (isMobile) { setMobileMenuOpen(false); } } },
+    { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
   ];
 
   const isInternalPage = currentUrl.startsWith('about:');
@@ -3420,51 +3451,49 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
-          { !isMobile && (
-            <div className="flex-shrink-0">
-              {isCustomizeOpen && <CustomizePanel 
-                  setIsOpen={setIsCustomizeOpen} 
-                  handleThemeChange={handleThemeChange}
-                  theme={theme}
-                  showShortcuts={showShortcutsOnNtp}
-                  setShowShortcuts={setShowShortcutsOnNtp}
-                  shortcutSetting={shortcutSetting}
-                  setShortcutSetting={setShortcutSetting}
-                  showCards={showCardsOnNtp}
-                  setShowCards={setShowCardsOnNtp}
-                  showContinueWithTabs={showContinueWithTabsCard}
-                  setShowContinueWithTabs={setShowContinueWithTabsCard}
-                  handleResetToDefault={handleResetToDefault}
-                  followDeviceTheme={followDeviceTheme}
-                  setFollowDeviceTheme={setFollowDeviceTheme}
-                  showHomeButton={showHomeButton}
-                  setShowHomeButton={setShowHomeButton}
-                  showBookmarksButton={showBookmarksButton}
-                  setShowBookmarksButton={setShowBookmarksButton}
-                  toast={toast}
-              />}
-              {isAssistantOpen && !isCustomizeOpen && <AishaAssistant
-                isMobile={false}
-                assistantMessages={assistantMessages}
-                setAssistantMessages={setAssistantMessages}
-                isAssistantLoading={isAssistantLoading}
-                assistantInput={assistantInput}
-                setAssistantInput={setAssistantInput}
-                handleAssistantSubmit={() => handleAssistantSubmit()}
+          <div className="flex-shrink-0">
+            {isCustomizeOpen && !isMobile && <CustomizePanel 
+                setIsOpen={setIsCustomizeOpen} 
+                handleThemeChange={handleThemeChange}
+                theme={theme}
+                showShortcuts={showShortcutsOnNtp}
+                setShowShortcuts={setShowShortcutsOnNtp}
+                shortcutSetting={shortcutSetting}
+                setShortcutSetting={setShortcutSetting}
+                showCards={showCardsOnNtp}
+                setShowCards={setShowCardsOnNtp}
+                showContinueWithTabs={showContinueWithTabsCard}
+                setShowContinueWithTabs={setShowContinueWithTabsCard}
+                handleResetToDefault={handleResetToDefault}
+                followDeviceTheme={followDeviceTheme}
+                setFollowDeviceTheme={setFollowDeviceTheme}
+                showHomeButton={showHomeButton}
+                setShowHomeButton={setShowHomeButton}
+                showBookmarksButton={showBookmarksButton}
+                setShowBookmarksButton={setShowBookmarksButton}
                 toast={toast}
-                startVoiceSearch={startVoiceSearch}
-                listeningState={listeningState}
-                voiceSearchSource={voiceSearchSource}
-                setIsAssistantOpen={setIsAssistantOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-                toggleMainSidebar={toggleMainSidebar}
-                setMobileSheetContent={setMobileSheetContent}
-                handleInstallClick={handleInstallClick}
-                handleAssistantSearch={handleAssistantSearch}
-                handleAttachment={handleAttachment}
-              />}
-            </div>
-          )}
+            />}
+            {isAssistantOpen && !isCustomizeOpen && !isMobile && <AishaAssistant
+              isMobile={false}
+              assistantMessages={assistantMessages}
+              setAssistantMessages={setAssistantMessages}
+              isAssistantLoading={isAssistantLoading}
+              assistantInput={assistantInput}
+              setAssistantInput={setAssistantInput}
+              handleAssistantSubmit={() => handleAssistantSubmit()}
+              toast={toast}
+              startVoiceSearch={startVoiceSearch}
+              listeningState={listeningState}
+              voiceSearchSource={voiceSearchSource}
+              setIsAssistantOpen={setIsAssistantOpen}
+              setMobileMenuOpen={setMobileMenuOpen}
+              toggleMainSidebar={toggleMainSidebar}
+              setMobileSheetContent={setMobileSheetContent}
+              handleInstallClick={handleInstallClick}
+              handleAssistantSearch={handleAssistantSearch}
+              handleAttachment={handleAttachment}
+            />}
+          </div>
         </div>
       </div>
 
@@ -3682,3 +3711,5 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
+    
