@@ -490,31 +490,22 @@ AishaAssistant.displayName = 'AishaAssistant';
 const ToolbarSettingsPanel = ({
   setCustomizeView,
   setIsOpen,
-  showHomeButton,
-  setShowHomeButton,
   showBookmarksButton,
   setShowBookmarksButton,
   isMobile = false,
   toast,
+  toolbarSettings,
+  onSettingChange,
+}: {
+  setCustomizeView: (view: string) => void;
+  setIsOpen: (isOpen: boolean) => void;
+  showBookmarksButton: boolean;
+  setShowBookmarksButton: (show: boolean) => void;
+  isMobile?: boolean;
+  toast: (options: any) => void;
+  toolbarSettings: any;
+  onSettingChange: (key: string, value: boolean) => void;
 }) => {
-  const [showPayments, setShowPayments] = React.useState(true);
-  const [showAddresses, setShowAddresses] = React.useState(true);
-  const [showReadingList, setShowReadingList] = React.useState(false);
-  const [showHistory, setShowHistory] = React.useState(true);
-  const [showDownloads, setShowDownloads] = React.useState(true);
-  const [showDeleteData, setShowDeleteData] = React.useState(false);
-
-  const [showPrint, setShowPrint] = React.useState(false);
-  const [showGoogleLens, setShowGoogleLens] = React.useState(false);
-  const [showTranslate, setShowTranslate] = React.useState(false);
-  const [showQRCode, setShowQRCode] = React.useState(false);
-  const [showCast, setShowCast] = React.useState(false);
-  const [showReadingMode, setShowReadingMode] = React.useState(false);
-  const [showCopyLink, setShowCopyLink] = React.useState(false);
-  const [showSendToDevices, setShowSendToDevices] = React.useState(false);
-  const [showTaskManager, setShowTaskManager] = React.useState(false);
-  const [showDevTools, setShowDevTools] = React.useState(false);
-
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
@@ -536,11 +527,11 @@ const ToolbarSettingsPanel = ({
             <CardContent className="pt-6">
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-payments" className="text-sm font-normal flex items-center gap-3"><CreditCard className="w-5 h-5 text-muted-foreground"/> Payment methods</Label>
-                <Switch id="show-payments" checked={showPayments} onCheckedChange={setShowPayments} />
+                <Switch id="show-payments" checked={toolbarSettings.showPayments} onCheckedChange={(val) => onSettingChange('showPayments', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-addresses" className="text-sm font-normal flex items-center gap-3"><MapPin className="w-5 h-5 text-muted-foreground"/> Addresses and more</Label>
-                <Switch id="show-addresses" checked={showAddresses} onCheckedChange={setShowAddresses} />
+                <Switch id="show-addresses" checked={toolbarSettings.showAddresses} onCheckedChange={(val) => onSettingChange('showAddresses', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-bookmarks" className="text-sm font-normal flex items-center gap-3"><BookMarked className="w-5 h-5 text-muted-foreground"/> Bookmarks</Label>
@@ -548,19 +539,19 @@ const ToolbarSettingsPanel = ({
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-reading-list" className="text-sm font-normal flex items-center gap-3"><BookCopy className="w-5 h-5 text-muted-foreground"/> Reading list</Label>
-                <Switch id="show-reading-list" checked={showReadingList} onCheckedChange={setShowReadingList} />
+                <Switch id="show-reading-list" checked={toolbarSettings.showReadingList} onCheckedChange={(val) => onSettingChange('showReadingList', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-history" className="text-sm font-normal flex items-center gap-3"><HistoryIcon className="w-5 h-5 text-muted-foreground"/> History</Label>
-                <Switch id="show-history" checked={showHistory} onCheckedChange={setShowHistory} />
+                <Switch id="show-history" checked={toolbarSettings.showHistory} onCheckedChange={(val) => onSettingChange('showHistory', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-downloads" className="text-sm font-normal flex items-center gap-3"><Download className="w-5 h-5 text-muted-foreground"/> Downloads</Label>
-                <Switch id="show-downloads" checked={showDownloads} onCheckedChange={setShowDownloads} />
+                <Switch id="show-downloads" checked={toolbarSettings.showDownloads} onCheckedChange={(val) => onSettingChange('showDownloads', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-delete-data" className="text-sm font-normal flex items-center gap-3"><Trash2 className="w-5 h-5 text-muted-foreground"/> Delete browsing data</Label>
-                <Switch id="show-delete-data" checked={showDeleteData} onCheckedChange={setShowDeleteData} />
+                <Switch id="show-delete-data" checked={toolbarSettings.showDeleteData} onCheckedChange={(val) => onSettingChange('showDeleteData', val)} />
               </div>
             </CardContent>
           </Card>
@@ -570,43 +561,43 @@ const ToolbarSettingsPanel = ({
             <CardContent>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-print" className="text-sm font-normal flex items-center gap-3"><Printer className="w-5 h-5 text-muted-foreground"/> Print</Label>
-                <Switch id="show-print" checked={showPrint} onCheckedChange={setShowPrint} />
+                <Switch id="show-print" checked={toolbarSettings.showPrint} onCheckedChange={(val) => onSettingChange('showPrint', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-google-lens" className="text-sm font-normal flex items-center gap-3"><Camera className="w-5 h-5 text-muted-foreground"/> Search with Google Lens</Label>
-                <Switch id="show-google-lens" checked={showGoogleLens} onCheckedChange={setShowGoogleLens} />
+                <Switch id="show-google-lens" checked={toolbarSettings.showGoogleLens} onCheckedChange={(val) => onSettingChange('showGoogleLens', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-translate" className="text-sm font-normal flex items-center gap-3"><Languages className="w-5 h-5 text-muted-foreground"/> Translate</Label>
-                <Switch id="show-translate" checked={showTranslate} onCheckedChange={setShowTranslate} />
+                <Switch id="show-translate" checked={toolbarSettings.showTranslate} onCheckedChange={(val) => onSettingChange('showTranslate', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-qr-code" className="text-sm font-normal flex items-center gap-3"><QrCode className="w-5 h-5 text-muted-foreground"/> Create QR Code</Label>
-                <Switch id="show-qr-code" checked={showQRCode} onCheckedChange={setShowQRCode} />
+                <Switch id="show-qr-code" checked={toolbarSettings.showQRCode} onCheckedChange={(val) => onSettingChange('showQRCode', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-cast" className="text-sm font-normal flex items-center gap-3"><Cast className="w-5 h-5 text-muted-foreground"/> Cast</Label>
-                <Switch id="show-cast" checked={showCast} onCheckedChange={setShowCast} />
+                <Switch id="show-cast" checked={toolbarSettings.showCast} onCheckedChange={(val) => onSettingChange('showCast', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-reading-mode" className="text-sm font-normal flex items-center gap-3"><BookOpen className="w-5 h-5 text-muted-foreground"/> Reading mode</Label>
-                <Switch id="show-reading-mode" checked={showReadingMode} onCheckedChange={setShowReadingMode} />
+                <Switch id="show-reading-mode" checked={toolbarSettings.showReadingMode} onCheckedChange={(val) => onSettingChange('showReadingMode', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-copy-link" className="text-sm font-normal flex items-center gap-3"><LinkIcon className="w-5 h-5 text-muted-foreground"/> Copy link</Label>
-                <Switch id="show-copy-link" checked={showCopyLink} onCheckedChange={setShowCopyLink} />
+                <Switch id="show-copy-link" checked={toolbarSettings.showCopyLink} onCheckedChange={(val) => onSettingChange('showCopyLink', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-send-to-devices" className="text-sm font-normal flex items-center gap-3"><Computer className="w-5 h-5 text-muted-foreground"/> Send to your devices</Label>
-                <Switch id="show-send-to-devices" checked={showSendToDevices} onCheckedChange={setShowSendToDevices} />
+                <Switch id="show-send-to-devices" checked={toolbarSettings.showSendToDevices} onCheckedChange={(val) => onSettingChange('showSendToDevices', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-task-manager" className="text-sm font-normal flex items-center gap-3"><Gauge className="w-5 h-5 text-muted-foreground"/> Task manager</Label>
-                <Switch id="show-task-manager" checked={showTaskManager} onCheckedChange={setShowTaskManager} />
+                <Switch id="show-task-manager" checked={toolbarSettings.showTaskManager} onCheckedChange={(val) => onSettingChange('showTaskManager', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-dev-tools" className="text-sm font-normal flex items-center gap-3"><Code className="w-5 h-5 text-muted-foreground"/> Developer tools</Label>
-                <Switch id="show-dev-tools" checked={showDevTools} onCheckedChange={setShowDevTools} />
+                <Switch id="show-dev-tools" checked={toolbarSettings.showDevTools} onCheckedChange={(val) => onSettingChange('showDevTools', val)} />
               </div>
             </CardContent>
           </Card>
@@ -801,7 +792,7 @@ const CustomizePanelMain = ({
                       id="continue-tabs" 
                       disabled={!showCards}
                       checked={showContinueWithTabs} 
-                      onCheckedChange={setShowContinueWithTabs}
+                      onCheckedChange={(val) => setShowContinueWithTabs(val as boolean)}
                     />
                     <Label htmlFor="continue-tabs" className="text-sm font-normal">Continue with these tabs</Label>
                 </div>
@@ -835,6 +826,31 @@ const CustomizePanel = ({
   showBookmarksButton,
   setShowBookmarksButton,
   toast,
+  toolbarSettings,
+  onToolbarSettingChange,
+}: {
+  setIsOpen: (isOpen: boolean) => void;
+  handleThemeChange: (theme: 'light' | 'dark' | 'device') => void;
+  theme: string;
+  isMobile?: boolean;
+  showShortcuts: boolean;
+  setShowShortcuts: (show: boolean) => void;
+  shortcutSetting: string;
+  setShortcutSetting: (setting: string) => void;
+  showCards: boolean;
+  setShowCards: (show: boolean) => void;
+  showContinueWithTabs: boolean;
+  setShowContinueWithTabs: (show: boolean) => void;
+  handleResetToDefault: () => void;
+  followDeviceTheme: boolean;
+  setFollowDeviceTheme: (follow: boolean) => void;
+  showHomeButton: boolean;
+  setShowHomeButton: (show: boolean) => void;
+  showBookmarksButton: boolean;
+  setShowBookmarksButton: (show: boolean) => void;
+  toast: (options: any) => void;
+  toolbarSettings: any;
+  onToolbarSettingChange: (key: string, value: boolean) => void;
 }) => {
   const [customizeView, setCustomizeView] = useState('main');
 
@@ -849,6 +865,8 @@ const CustomizePanel = ({
         setShowBookmarksButton={setShowBookmarksButton}
         isMobile={isMobile}
         toast={toast}
+        toolbarSettings={toolbarSettings}
+        onSettingChange={onToolbarSettingChange}
       />
     );
   }
@@ -1281,6 +1299,30 @@ const BrowserApp = () => {
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(false);
+  const [toolbarSettings, setToolbarSettings] = useState({
+    showPayments: true,
+    showAddresses: true,
+    showReadingList: false,
+    showHistory: true,
+    showDownloads: true,
+    showDeleteData: false,
+    showPrint: true,
+    showGoogleLens: true,
+    showTranslate: true,
+    showQRCode: true,
+    showCast: false,
+    showReadingMode: false,
+    showCopyLink: true,
+    showSendToDevices: true,
+    showTaskManager: false,
+    showDevTools: true,
+  });
+
+  const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
+    const newSettings = { ...toolbarSettings, [key]: value };
+    setToolbarSettings(newSettings);
+    localStorage.setItem('aisha-toolbar-settings', JSON.stringify(newSettings));
+  };
 
   const updateTab = (id: string, updates: Partial<Tab>) => {
     setTabs((prevTabs) =>
@@ -1722,36 +1764,45 @@ const BrowserApp = () => {
       if (savedHistory) {
         setSearchHistory(JSON.parse(savedHistory));
       }
+      const savedBookmarks = localStorage.getItem('aisha-bookmarks');
+      if (savedBookmarks) {
+        setBookmarks(JSON.parse(savedBookmarks));
+      }
+      const savedShortcutsString = localStorage.getItem('aisha-shortcuts');
+      if (savedShortcutsString) {
+          try {
+              const savedShortcuts: Shortcut[] = JSON.parse(savedShortcutsString);
+              setShortcuts(savedShortcuts);
+          } catch (e) {
+              console.error("Failed to parse shortcuts from localStorage", e);
+              setShortcuts(initialShortcuts);
+          }
+      } else {
+          setShortcuts(initialShortcuts);
+      }
+
+      const savedShowShortcuts = localStorage.getItem('aisha-show-shortcuts');
+      if (savedShowShortcuts) setShowShortcutsOnNtp(JSON.parse(savedShowShortcuts));
+      
+      const savedShortcutSetting = localStorage.getItem('aisha-shortcut-setting');
+      if (savedShortcutSetting) setShortcutSetting(savedShortcutSetting);
+      
+      const savedShowCards = localStorage.getItem('aisha-show-cards');
+      if (savedShowCards) setShowCardsOnNtp(JSON.parse(savedShowCards));
+
+      const savedContinueTabs = localStorage.getItem('aisha-continue-tabs');
+      if (savedContinueTabs) setShowContinueWithTabsCard(JSON.parse(savedContinueTabs));
+      
+      const savedFollowTheme = localStorage.getItem('aisha-follow-theme');
+      if (savedFollowTheme) setFollowDeviceTheme(JSON.parse(savedFollowTheme));
+
+      const savedToolbarSettings = localStorage.getItem('aisha-toolbar-settings');
+      if (savedToolbarSettings) {
+          setToolbarSettings(prev => ({ ...prev, ...JSON.parse(savedToolbarSettings)}));
+      }
+
     } catch (e) {
-      console.error("Failed to parse search history from localStorage", e);
-      setSearchHistory([]);
-    }
-
-    const savedBookmarks = localStorage.getItem('aisha-bookmarks');
-    if (savedBookmarks) {
-      setBookmarks(JSON.parse(savedBookmarks));
-    }
-
-    const savedShortcutsString = localStorage.getItem('aisha-shortcuts');
-    if (savedShortcutsString) {
-        try {
-            const savedShortcuts: Shortcut[] = JSON.parse(savedShortcutsString);
-            const initialShortcutMap = new Map(initialShortcuts.map(s => [s.name, s]));
-            
-            const finalShortcuts = initialShortcuts.map(is => {
-                const savedVersion = savedShortcuts.find(ss => ss.name === is.name);
-                return savedVersion ? { ...is, url: savedVersion.url || is.url } : is;
-            });
-            
-            const userAddedShortcuts = savedShortcuts.filter(ss => !initialShortcutMap.has(ss.name));
-
-            setShortcuts([...finalShortcuts, ...userAddedShortcuts]);
-        } catch (e) {
-            console.error("Failed to parse shortcuts from localStorage", e);
-            setShortcuts(initialShortcuts);
-        }
-    } else {
-        setShortcuts(initialShortcuts);
+      console.error("Failed to parse settings from localStorage", e);
     }
   }, [isIncognito]);
 
@@ -1767,27 +1818,36 @@ const BrowserApp = () => {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
     document.documentElement.style.colorScheme = newTheme;
     setTheme(newTheme);
+    if (!isIncognito) localStorage.setItem('aisha-theme', newTheme);
   };
 
   useEffect(() => {
-    if (!followDeviceTheme) return;
+    if (!followDeviceTheme) {
+      const savedTheme = localStorage.getItem('aisha-theme') as 'light' | 'dark' | null;
+      applyTheme(savedTheme || 'dark');
+      return;
+    };
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
       applyTheme(e.matches ? 'dark' : 'light');
     };
-
+    
     handleChange({ matches: mediaQuery.matches } as MediaQueryListEvent); // apply initial
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [followDeviceTheme]);
+  }, [followDeviceTheme, isIncognito]);
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'device') => {
     if (newTheme === 'device') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      applyTheme(mediaQuery.matches ? 'dark' : 'light');
+      setFollowDeviceTheme(true);
+      if (!isIncognito) localStorage.setItem('aisha-follow-theme', 'true');
     } else {
+      if (followDeviceTheme) {
+        setFollowDeviceTheme(false);
+        if (!isIncognito) localStorage.setItem('aisha-follow-theme', 'false');
+      }
       applyTheme(newTheme);
     }
   };
@@ -2233,12 +2293,22 @@ const BrowserApp = () => {
   };
   
   const handleResetToDefault = () => {
+    if (isIncognito) return;
+    
     handleThemeChange('dark');
     setFollowDeviceTheme(false);
     setShowShortcutsOnNtp(true);
     setShortcutSetting("my-shortcuts");
     setShowCardsOnNtp(true);
     setShowContinueWithTabsCard(true);
+
+    localStorage.removeItem('aisha-theme');
+    localStorage.removeItem('aisha-follow-theme');
+    localStorage.removeItem('aisha-show-shortcuts');
+    localStorage.removeItem('aisha-shortcut-setting');
+    localStorage.removeItem('aisha-show-cards');
+    localStorage.removeItem('aisha-continue-tabs');
+
     toast({ title: "Customizations reset to default" });
   };
 
@@ -2858,14 +2928,14 @@ const BrowserApp = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={copyLink}>
+                    {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
                       <LinkIcon className="mr-2 h-4 w-4" />
                       <span>Copy Link</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={createQRCode}>
+                    </DropdownMenuItem>}
+                    {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
                       <QrCode className="mr-2 h-4 w-4" />
                       <span>Create QR Code</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem>}
                     <DropdownMenuItem onSelect={handleShare}>
                       <Share className="mr-2 h-4 w-4" />
                       <span>Share...</span>
@@ -2875,10 +2945,10 @@ const BrowserApp = () => {
                         <Download className="mr-2 h-4 w-4" />
                         <span>Save page as...</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
+                    {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
                         <Computer className="mr-2 h-4 w-4" />
                         <span>Send to your devices</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem>}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -3092,16 +3162,16 @@ const BrowserApp = () => {
                             <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
+                        {toolbarSettings.showHistory && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
                             <HistoryIcon className="mr-2 h-4 w-4" />
                             <span>History</span>
                             <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
+                        </DropdownMenuItem>}
+                        {toolbarSettings.showDownloads && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
                             <Download className="mr-2 h-4 w-4" />
                             <span>Downloads</span>
                             <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
-                        </DropdownMenuItem>
+                        </DropdownMenuItem>}
                         <DropdownMenuSub>
                         <DropdownMenuSubTrigger>
                             <Bookmark className="mr-2 h-4 w-4" />
@@ -3170,15 +3240,15 @@ const BrowserApp = () => {
                         {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
                         <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
+                        {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
                             <KeyRound className="mr-2 h-4 w-4" />
                             <span>Passwords and autofill</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
+                        </DropdownMenuItem>}
+                        {toolbarSettings.showDeleteData && <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Clear browsing data...</span>
                             <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
-                        </DropdownMenuItem>
+                        </DropdownMenuItem>}
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -3192,16 +3262,16 @@ const BrowserApp = () => {
                                 </div>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        <DropdownMenuItem onSelect={() => window.print()}>
+                        {toolbarSettings.showPrint && <DropdownMenuItem onSelect={() => window.print()}>
                             <Printer className="mr-2 h-4 w-4" />
                             <span>Print...</span>
                             <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setIsImageSearchOpen(true)}>
+                        </DropdownMenuItem>}
+                        {toolbarSettings.showGoogleLens && <DropdownMenuItem onSelect={() => setIsImageSearchOpen(true)}>
                             <Search className="mr-2 h-4 w-4" />
                             <span>Search with Google Lens</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {
+                        </DropdownMenuItem>}
+                        {toolbarSettings.showTranslate && <DropdownMenuItem onSelect={() => {
                             if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
                                 const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
                                 handleNavigation(activeTabId, googleTranslateUrl);
@@ -3211,7 +3281,7 @@ const BrowserApp = () => {
                         }}>
                             <Languages className="mr-2 h-4 w-4" />
                             <span>Translate...</span>
-                        </DropdownMenuItem>
+                        </DropdownMenuItem>}
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                                 <Search className="mr-2 h-4 w-4" />
@@ -3255,11 +3325,11 @@ const BrowserApp = () => {
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                             <DropdownMenuSubContent className="w-80">
-                                <DropdownMenuItem onSelect={() => toast({title: "Casting is not supported in this prototype."})}>
+                                {toolbarSettings.showCast && <DropdownMenuItem onSelect={() => toast({title: "Casting is not supported in this prototype."})}>
                                     <Cast className="mr-2 h-4 w-4" />
                                     <span>Cast...</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
+                                </DropdownMenuItem>}
+                                {toolbarSettings.showCast && <DropdownMenuSeparator />}
                                 <DropdownMenuItem onSelect={() => window.print()}>
                                     <Download className="mr-2 h-4 w-4" />
                                     <span>Save page as...</span>
@@ -3270,18 +3340,18 @@ const BrowserApp = () => {
                                     <span>Create shortcut...</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={copyLink}>
+                                {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
                                     <LinkIcon className="mr-2 h-4 w-4" />
                                     <span>Copy link</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
+                                </DropdownMenuItem>}
+                                {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
                                     <Computer className="mr-2 h-4 w-4" />
                                     <span>Send to your devices</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={createQRCode}>
+                                </DropdownMenuItem>}
+                                {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
                                     <QrCode className="mr-2 h-4 w-4" />
                                     <span>Create QR Code</span>
-                                </DropdownMenuItem>
+                                </DropdownMenuItem>}
                             </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
@@ -3301,10 +3371,10 @@ const BrowserApp = () => {
                                 <Gauge className="mr-2 h-4 w-4" />
                                 <span>Performance</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
+                            {toolbarSettings.showDevTools && <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
                                 <Terminal className="mr-2 h-4 w-4" />
                                 <span>Developer Console</span>
-                            </DropdownMenuItem>
+                            </DropdownMenuItem>}
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                         </DropdownMenuSub>
@@ -3458,21 +3528,38 @@ const BrowserApp = () => {
                   handleThemeChange={handleThemeChange}
                   theme={theme}
                   showShortcuts={showShortcutsOnNtp}
-                  setShowShortcuts={setShowShortcutsOnNtp}
+                  setShowShortcuts={(show) => {
+                      setShowShortcutsOnNtp(show);
+                      if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
+                  }}
                   shortcutSetting={shortcutSetting}
-                  setShortcutSetting={setShortcutSetting}
+                  setShortcutSetting={(setting) => {
+                      setShortcutSetting(setting);
+                       if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                  }}
                   showCards={showCardsOnNtp}
-                  setShowCards={setShowCardsOnNtp}
+                  setShowCards={(show) => {
+                      setShowCardsOnNtp(show);
+                      if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                  }}
                   showContinueWithTabs={showContinueWithTabsCard}
-                  setShowContinueWithTabs={setShowContinueWithTabsCard}
+                  setShowContinueWithTabs={(show) => {
+                      setShowContinueWithTabsCard(show);
+                      if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
+                  }}
                   handleResetToDefault={handleResetToDefault}
                   followDeviceTheme={followDeviceTheme}
-                  setFollowDeviceTheme={setFollowDeviceTheme}
+                  setFollowDeviceTheme={(follow) => {
+                      setFollowDeviceTheme(follow);
+                      if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
+                  }}
                   showHomeButton={showHomeButton}
                   setShowHomeButton={setShowHomeButton}
                   showBookmarksButton={showBookmarksButton}
                   setShowBookmarksButton={setShowBookmarksButton}
                   toast={toast}
+                  toolbarSettings={toolbarSettings}
+                  onToolbarSettingChange={handleToolbarSettingsChange}
                 />
               </div>
             )}
@@ -3688,21 +3775,38 @@ const BrowserApp = () => {
                     theme={theme} 
                     isMobile 
                     showShortcuts={showShortcutsOnNtp}
-                    setShowShortcuts={setShowShortcutsOnNtp}
+                    setShowShortcuts={(show) => {
+                        setShowShortcutsOnNtp(show);
+                        if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
+                    }}
                     shortcutSetting={shortcutSetting}
-                    setShortcutSetting={setShortcutSetting}
+                    setShortcutSetting={(setting) => {
+                        setShortcutSetting(setting);
+                        if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                    }}
                     showCards={showCardsOnNtp}
-                    setShowCards={setShowCardsOnNtp}
+                    setShowCards={(show) => {
+                        setShowCardsOnNtp(show);
+                        if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                    }}
                     showContinueWithTabs={showContinueWithTabsCard}
-                    setShowContinueWithTabs={setShowContinueWithTabsCard}
+                    setShowContinueWithTabs={(show) => {
+                        setShowContinueWithTabsCard(show);
+                        if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
+                    }}
                     handleResetToDefault={handleResetToDefault}
                     followDeviceTheme={followDeviceTheme}
-                    setFollowDeviceTheme={setFollowDeviceTheme}
+                    setFollowDeviceTheme={(follow) => {
+                        setFollowDeviceTheme(follow);
+                        if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
+                    }}
                     showHomeButton={showHomeButton}
                     setShowHomeButton={setShowHomeButton}
                     showBookmarksButton={showBookmarksButton}
                     setShowBookmarksButton={setShowBookmarksButton}
                     toast={toast}
+                    toolbarSettings={toolbarSettings}
+                    onToolbarSettingChange={handleToolbarSettingsChange}
                    />
               </DialogContent>
           </Dialog>
@@ -3720,3 +3824,4 @@ export default function BrowserPage() {
 }
 
     
+
