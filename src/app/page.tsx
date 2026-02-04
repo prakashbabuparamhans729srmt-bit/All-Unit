@@ -357,7 +357,7 @@ const AishaAssistant = React.memo(({
   <aside className={cn("flex flex-col",
       isMobile
       ? "flex-1 h-full bg-background"
-      : "w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+      : "h-[calc(100vh-80px)] w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
   )}>
     <div className="flex items-center p-2 border-b shrink-0">
       <div className="flex items-center gap-2">
@@ -659,7 +659,7 @@ const CustomizePanelMain = ({
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
-        isMobile ? "flex-1 h-full" : "w-[350px] flex-shrink-0 border-l border-border"
+        isMobile ? "flex-1 h-full" : "h-[calc(100vh-80px)] w-[350px] flex-shrink-0 border-l border-border"
     )}>
       <div className="flex items-center p-3 border-b shrink-0">
         <h2 className="text-base font-semibold">Customize Aisha</h2>
@@ -1284,8 +1284,8 @@ const BrowserApp = () => {
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(false);
-  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
-  const [isBookmarksBarHovered, setIsBookmarksBarHovered] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(true);
+  const [isToolbarHovered, setIsToolbarHovered] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState({
     showBookmarks: true,
@@ -1306,6 +1306,15 @@ const BrowserApp = () => {
     showTaskManager: false,
     showDevTools: true,
   });
+
+  const secondaryToolbarTools = [
+    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
+    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
+    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
+    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
+  ];
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
@@ -1727,9 +1736,9 @@ const BrowserApp = () => {
         const savedShowHome = localStorage.getItem('aisha-show-home-button');
         setShowHomeButton(savedShowHome ? JSON.parse(savedShowHome) : true);
       }
-      if (!e || e.key === 'aisha-show-bookmarks-bar') {
-        const savedShowBookmarks = localStorage.getItem('aisha-show-bookmarks-bar');
-        setShowBookmarksBar(savedShowBookmarks ? JSON.parse(savedShowBookmarks) : true);
+      if (!e || e.key === 'aisha-show-toolbar') {
+        const savedShowToolbar = localStorage.getItem('aisha-show-toolbar');
+        setShowToolbar(savedShowToolbar ? JSON.parse(savedShowToolbar) : true);
       }
       if (!e || e.key === 'aisha-font-size') {
         const savedFontSize = localStorage.getItem('aisha-font-size');
@@ -1792,9 +1801,9 @@ const BrowserApp = () => {
       if (savedToolbarSettings) {
           setToolbarSettings(prev => ({ ...prev, ...JSON.parse(savedToolbarSettings)}));
       }
-       const savedBookmarksBar = localStorage.getItem('aisha-show-bookmarks-bar');
-      if (savedBookmarksBar) {
-          setShowBookmarksBar(JSON.parse(savedBookmarksBar));
+       const savedToolbar = localStorage.getItem('aisha-show-toolbar');
+      if (savedToolbar) {
+          setShowToolbar(JSON.parse(savedToolbar));
       }
 
     } catch (e) {
@@ -3494,53 +3503,53 @@ const BrowserApp = () => {
         </header>
 
         <div
-          className="relative group/bookmarks-bar"
+          className="relative group/toolbar"
           onMouseEnter={() => {
-              if (!showBookmarksBar) {
-                  setIsBookmarksBarHovered(true);
-              }
+            if (!showToolbar) {
+              setIsToolbarHovered(true);
+            }
           }}
           onMouseLeave={() => {
-              setIsBookmarksBarHovered(false);
+            setIsToolbarHovered(false);
           }}
         >
           <div className={cn(
-              "flex items-center gap-1 px-2 h-9 bg-card border-b transition-all duration-200 ease-in-out overflow-x-auto scrollbar-hide",
-              (showBookmarksBar || isBookmarksBarHovered) ? "opacity-100" : "opacity-0 h-0 border-none"
+            "flex items-center gap-1 px-2 h-9 bg-card border-b transition-all duration-200 ease-in-out overflow-x-auto scrollbar-hide",
+            (showToolbar || isToolbarHovered) ? "opacity-100" : "opacity-0 h-0 border-none"
           )}>
-              {bookmarks.length === 0 && !isIncognito && (
-                  <p className="text-xs text-muted-foreground px-2">Import your bookmarks now.</p>
-              )}
-              {bookmarks.slice(0, 15).map(bookmark => (
-                  <Button
-                      key={bookmark.url}
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 shrink-0"
-                      onClick={() => handleNavigation(activeTabId, bookmark.url)}
-                  >
-                      <Image
-                          src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`}
-                          alt=""
-                          width={16}
-                          height={16}
-                          className="mr-2 shrink-0"
-                      />
-                      <span className="text-xs font-light truncate max-w-[120px]">{bookmark.title}</span>
-                  </Button>
-              ))}
-
+              <div className="flex items-center gap-1">
+                {secondaryToolbarTools.map(tool => (
+                  toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                    <TooltipProvider key={tool.key}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={tool.action}
+                          >
+                            <tool.icon className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom"><p>{tool.label}</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )
+                ))}
+              </div>
               <div className="flex-grow" />
-
               <Button variant="ghost" size="icon" className="h-7 w-7 sticky right-0 bg-card" onClick={() => {
-                  const newState = !showBookmarksBar;
-                  setShowBookmarksBar(newState);
-                  localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
+                const newState = !showToolbar;
+                setShowToolbar(newState);
+                if (!isIncognito) {
+                  localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                }
               }}>
-                  <ChevronUp className={cn("w-4 h-4 transition-transform", !showBookmarksBar && "rotate-180")} />
+                <ChevronUp className={cn("w-4 h-4 transition-transform", !showToolbar && "rotate-180")} />
               </Button>
           </div>
-          {!showBookmarksBar && <div className="absolute top-0 left-0 w-full h-2 z-0"></div>}
+          {!showToolbar && <div className="absolute top-0 left-0 w-full h-1 z-0"></div>}
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -3859,6 +3868,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
