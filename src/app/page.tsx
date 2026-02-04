@@ -3510,21 +3510,16 @@ const BrowserApp = () => {
         
         <div
           className={cn(
-            "relative group/toolbar transition-all duration-200 overflow-hidden",
-            (showToolbar || isToolbarHovered) ? "h-9" : "h-2"
+            "group/toolbar relative transition-all duration-300 ease-in-out",
+            showToolbar ? "h-9" : "h-2"
           )}
-          onMouseEnter={() => {
-            if (!showToolbar) {
-              setIsToolbarHovered(true);
-            }
-          }}
-          onMouseLeave={() => {
-            setIsToolbarHovered(false);
-          }}
         >
           <div
             className={cn(
-              "flex items-center gap-1 px-2 bg-card border-b h-9 w-full overflow-x-auto scrollbar-hide"
+              "absolute bottom-0 left-0 flex h-9 w-full items-center gap-1 overflow-x-auto border-b bg-card px-2 scrollbar-hide",
+              "transition-opacity duration-300",
+              "group-hover/toolbar:opacity-100",
+              showToolbar ? "opacity-100" : "opacity-0"
             )}
           >
             <div className="flex items-center gap-1">
@@ -3881,6 +3876,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
