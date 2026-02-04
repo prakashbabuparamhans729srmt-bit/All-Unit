@@ -2873,7 +2873,7 @@ const BrowserApp = () => {
           </SidebarFooter>
       </Sidebar>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col">
         <header className="flex-shrink-0 z-20">
           <div className="flex items-end h-10 pt-1 bg-background draggable">
             <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide h-full">
@@ -3894,4 +3894,5 @@ export default function BrowserPage() {
     
 
     
+
 
