@@ -1259,6 +1259,7 @@ const BrowserApp = () => {
   const [listeningState, setListeningState] = useState<'listening' | 'error' | 'inactive'>('inactive');
   const [voiceSearchSource, setVoiceSearchSource] = useState<'address' | 'assistant' | null>(null);
   const [interimTranscript, setInterimTranscript] = useState('');
+  const [isBookmarkAlertOpen, setIsBookmarkAlertOpen] = useState(false);
   const [isCloseLastTabAlertOpen, setIsCloseLastTabAlertOpen] = useState(false);
 
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
@@ -2031,7 +2032,7 @@ const BrowserApp = () => {
         return;
     }
     if (!activeTab || currentUrl === DEFAULT_URL || currentUrl.startsWith("about:")) {
-        toast({title: "Can't bookmark internal pages.", variant: "destructive"});
+        setIsBookmarkAlertOpen(true);
         return;
     }
     const existingIndex = bookmarks.findIndex(b => b.url === currentUrl);
@@ -3676,6 +3677,20 @@ const BrowserApp = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={isBookmarkAlertOpen} onOpenChange={setIsBookmarkAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Cannot Bookmark This Page</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You cannot bookmark an empty new tab or an internal browser page. Please navigate to a website first.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setIsBookmarkAlertOpen(false)}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={isCloseLastTabAlertOpen} onOpenChange={setIsCloseLastTabAlertOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -3868,6 +3883,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
