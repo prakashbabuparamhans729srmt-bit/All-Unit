@@ -3088,33 +3088,31 @@ const BrowserApp = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-2">
-              {showYourAishaTools && (
-                <div className="flex items-center gap-1">
-                  {yourAishaToolsList.map(tool => (
-                    toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
-                      <TooltipProvider key={tool.key}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-full"
-                              onClick={tool.action}
-                            >
-                              <tool.icon className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>{tool.label}</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center">
+              <div className="flex items-center gap-1">
+                {yourAishaToolsList.map(tool => (
+                  toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                    <TooltipProvider key={tool.key}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={tool.action}
+                          >
+                            <tool.icon className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{tool.label}</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )
+                ))}
+              </div>
               {showYourAishaTools && <Separator orientation="vertical" className="h-6 mx-1" />}
 
-               <div className="flex items-center gap-1">
+               <div className="flex items-center gap-1 sm:gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -3562,7 +3560,7 @@ const BrowserApp = () => {
           >
             <div className="flex items-center gap-1">
               {otherToolsList.map(tool => (
-                toolbarSettings[tool.key] && (
+                toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
                   <TooltipProvider key={tool.key}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -3608,66 +3606,64 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
-          <div className="flex-shrink-0 h-full overflow-y-auto scrollbar-hide">
-            {isCustomizeOpen && !isMobile && (
-                <CustomizePanel 
-                  setIsOpen={setIsCustomizeOpen} 
-                  handleThemeChange={handleThemeChange}
-                  theme={theme}
-                  showShortcuts={showShortcutsOnNtp}
-                  setShowShortcuts={(show) => {
-                      setShowShortcutsOnNtp(show);
-                      if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
-                  }}
-                  shortcutSetting={shortcutSetting}
-                  setShortcutSetting={(setting) => {
-                      setShortcutSetting(setting);
-                       if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
-                  }}
-                  showCards={showCardsOnNtp}
-                  setShowCards={(show) => {
-                      setShowCardsOnNtp(show);
-                      if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
-                  }}
-                  showContinueWithTabs={showContinueWithTabsCard}
-                  setShowContinueWithTabs={(show) => {
-                      setShowContinueWithTabsCard(show);
-                      if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
-                  }}
-                  handleResetToDefault={handleResetToDefault}
-                  followDeviceTheme={followDeviceTheme}
-                  setFollowDeviceTheme={(follow) => {
-                      setFollowDeviceTheme(follow);
-                      if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
-                  }}
-                  toast={toast}
-                  toolbarSettings={toolbarSettings}
-                  onToolbarSettingChange={handleToolbarSettingsChange}
-                />
-            )}
-            {isAssistantOpen && !isCustomizeOpen && !isMobile && (
-                <AishaAssistant
-                  isMobile={false}
-                  assistantMessages={assistantMessages}
-                  setAssistantMessages={setAssistantMessages}
-                  isAssistantLoading={isAssistantLoading}
-                  assistantInput={assistantInput}
-                  setAssistantInput={setAssistantInput}
-                  handleAssistantSubmit={() => handleAssistantSubmit()}
-                  toast={toast}
-                  startVoiceSearch={startVoiceSearch}
-                  listeningState={listeningState}
-                  voiceSearchSource={voiceSearchSource}
-                  setIsAssistantOpen={setIsAssistantOpen}
-                  setMobileMenuOpen={setMobileMenuOpen}
-                  toggleMainSidebar={toggleMainSidebar}
-                  setMobileSheetContent={setMobileSheetContent}
-                  handleInstallClick={handleInstallClick}
-                  handleAssistantSearch={handleAssistantSearch}
-                  handleAttachment={handleAttachment}
-                />
-            )}
-          </div>
+          {isCustomizeOpen && !isMobile && (
+              <CustomizePanel 
+                setIsOpen={setIsCustomizeOpen} 
+                handleThemeChange={handleThemeChange}
+                theme={theme}
+                showShortcuts={showShortcutsOnNtp}
+                setShowShortcuts={(show) => {
+                    setShowShortcutsOnNtp(show);
+                    if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
+                }}
+                shortcutSetting={shortcutSetting}
+                setShortcutSetting={(setting) => {
+                    setShortcutSetting(setting);
+                     if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                }}
+                showCards={showCardsOnNtp}
+                setShowCards={(show) => {
+                    setShowCardsOnNtp(show);
+                    if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                }}
+                showContinueWithTabs={showContinueWithTabsCard}
+                setShowContinueWithTabs={(show) => {
+                    setShowContinueWithTabsCard(show);
+                    if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
+                }}
+                handleResetToDefault={handleResetToDefault}
+                followDeviceTheme={followDeviceTheme}
+                setFollowDeviceTheme={(follow) => {
+                    setFollowDeviceTheme(follow);
+                    if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
+                }}
+                toast={toast}
+                toolbarSettings={toolbarSettings}
+                onToolbarSettingChange={handleToolbarSettingsChange}
+              />
+          )}
+          {isAssistantOpen && !isCustomizeOpen && !isMobile && (
+              <AishaAssistant
+                isMobile={false}
+                assistantMessages={assistantMessages}
+                setAssistantMessages={setAssistantMessages}
+                isAssistantLoading={isAssistantLoading}
+                assistantInput={assistantInput}
+                setAssistantInput={setAssistantInput}
+                handleAssistantSubmit={() => handleAssistantSubmit()}
+                toast={toast}
+                startVoiceSearch={startVoiceSearch}
+                listeningState={listeningState}
+                voiceSearchSource={voiceSearchSource}
+                setIsAssistantOpen={setIsAssistantOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+                toggleMainSidebar={toggleMainSidebar}
+                setMobileSheetContent={setMobileSheetContent}
+                handleInstallClick={handleInstallClick}
+                handleAssistantSearch={handleAssistantSearch}
+                handleAttachment={handleAttachment}
+              />
+          )}
         </div>
       </div>
 
