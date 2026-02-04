@@ -1337,10 +1337,10 @@ const BrowserApp = () => {
     { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
     { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
     { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
-    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
+    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: () => createQRCode() },
     { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
     { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
-    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
+    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: () => copyLink() },
     { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
     { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
     { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
@@ -3883,6 +3883,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
