@@ -2938,7 +2938,7 @@ const BrowserApp = () => {
                 value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
-                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light text-sm"
+                className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light text-sm flex-1"
                 placeholder="Ask anything or navigate..."
               />
               <div className="flex items-center">
@@ -3553,9 +3553,9 @@ const BrowserApp = () => {
             className={cn(
               "flex h-9 items-center gap-1 overflow-x-auto border-b bg-card px-2 transition-all duration-300 ease-in-out scrollbar-hide",
               showToolbar || isToolbarHovered
-                ? "translate-y-0 opacity-100"
-                : "-translate-y-full opacity-0",
-              !showToolbar && !isToolbarHovered && "h-0 border-none !p-0"
+                ? "max-h-9 opacity-100"
+                : "max-h-0 opacity-0",
+               !showToolbar && !isToolbarHovered && "border-none"
             )}
           >
             <div className="flex items-center gap-1">
@@ -3582,7 +3582,7 @@ const BrowserApp = () => {
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1">
           <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
