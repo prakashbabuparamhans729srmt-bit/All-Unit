@@ -2873,7 +2873,7 @@ const BrowserApp = () => {
           </SidebarFooter>
       </Sidebar>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         <header className="flex-shrink-0 z-20">
           <div className="flex items-end h-10 pt-1 bg-background draggable">
             <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide h-full">
@@ -2922,7 +2922,7 @@ const BrowserApp = () => {
                 {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
               </Button>
             </div>
-            <div className="flex-1 flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full min-w-0 px-2 sm:px-4 py-1.5">
+            <div className="flex-1 min-w-0 flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full px-2 sm:px-4 py-1.5">
               {isInternalPage ? (
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
@@ -3087,7 +3087,7 @@ const BrowserApp = () => {
               </div>
             </div>
             
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex-shrink-0 flex items-center ml-auto">
               <div className="flex items-center gap-1">
                 {yourAishaToolsList.map(tool => (
                   toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
@@ -3109,8 +3109,7 @@ const BrowserApp = () => {
                   )
                 ))}
               </div>
-              {(yourAishaToolsList.some(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings])) && <Separator orientation="vertical" className="h-6 mx-1" />}
-
+              {showYourAishaTools && <Separator orientation="vertical" className="h-6 mx-1" />}
                <div className="flex items-center gap-1 sm:gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -3581,7 +3580,7 @@ const BrowserApp = () => {
           </div>
         </div>
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0">
           <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
@@ -3911,6 +3910,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
