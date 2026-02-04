@@ -226,6 +226,26 @@ const searchEngines: { [key: string]: { name: string; url: string } } = {
   yahoo: { name: 'Yahoo', url: 'https://search.yahoo.com/search?p=' },
 };
 
+const initialToolbarSettings = {
+  showPayments: true,
+  showAddresses: true,
+  showBookmarks: true,
+  showReadingList: true,
+  showHistory: true,
+  showDownloads: true,
+  showDeleteData: true,
+  showPrint: true,
+  showGoogleLens: true,
+  showTranslate: true,
+  showQRCode: true,
+  showCast: true,
+  showReadingMode: true,
+  showCopyLink: true,
+  showSendToDevices: true,
+  showTaskManager: true,
+  showDevTools: true,
+};
+
 type Shortcut = {
     name: string;
     icon: string | React.ElementType;
@@ -1304,25 +1324,7 @@ const BrowserApp = () => {
   const [showToolbar, setShowToolbar] = useState(true);
   const [isToolbarHovered, setIsToolbarHovered] = useState(false);
 
-  const [toolbarSettings, setToolbarSettings] = useState({
-    showPayments: true,
-    showAddresses: true,
-    showBookmarks: true,
-    showReadingList: true,
-    showHistory: true,
-    showDownloads: true,
-    showDeleteData: true,
-    showPrint: true,
-    showGoogleLens: true,
-    showTranslate: true,
-    showQRCode: true,
-    showCast: true,
-    showReadingMode: true,
-    showCopyLink: true,
-    showSendToDevices: true,
-    showTaskManager: true,
-    showDevTools: true,
-  });
+  const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
@@ -1755,6 +1757,7 @@ const BrowserApp = () => {
                 title: "New Tab"
             }))
         );
+        setToolbarSettings(initialToolbarSettings);
         if (tabs.length > 0) {
             setActiveTabId(tabs[0].id);
             handleNavigation(tabs[0].id, DEFAULT_URL);
@@ -2337,6 +2340,7 @@ const BrowserApp = () => {
     setShortcutSetting("my-shortcuts");
     setShowCardsOnNtp(true);
     setShowContinueWithTabsCard(true);
+    setToolbarSettings(initialToolbarSettings);
 
     localStorage.removeItem('aisha-theme');
     localStorage.removeItem('aisha-follow-theme');
@@ -2344,6 +2348,7 @@ const BrowserApp = () => {
     localStorage.removeItem('aisha-shortcut-setting');
     localStorage.removeItem('aisha-show-cards');
     localStorage.removeItem('aisha-continue-tabs');
+    localStorage.removeItem('aisha-toolbar-settings');
 
     toast({ title: "Customizations reset to default" });
   };
@@ -2960,6 +2965,17 @@ const BrowserApp = () => {
             
             <div className="flex-shrink-0 flex items-center ml-auto">
               <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full"
+                   onClick={() => {
+                        const newState = !showToolbar;
+                        setShowToolbar(newState);
+                        if (!isIncognito) {
+                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                        }
+                   }}
+                 >
+                     <Menu className="w-5 h-5 text-muted-foreground" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
@@ -3086,8 +3102,7 @@ const BrowserApp = () => {
                   </Tooltip>
                  </TooltipProvider>
               </div>
-
-               <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1">
                 {yourAishaToolsList.map(tool => (
                   toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
                     <TooltipProvider key={tool.key}>
@@ -3109,7 +3124,7 @@ const BrowserApp = () => {
                 ))}
               </div>
               <Separator orientation="vertical" className="h-6 mx-1" />
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 ml-auto">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -3931,6 +3946,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 

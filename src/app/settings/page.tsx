@@ -253,6 +253,7 @@ export default function SettingsPage() {
     localStorage.removeItem('aisha-search-engine');
     localStorage.removeItem('aisha-show-home-button');
     localStorage.removeItem('aisha-show-toolbar');
+    localStorage.removeItem('aisha-toolbar-settings');
 
     setSearchEngine('google');
     setShowHomeButton(true);
@@ -844,6 +845,7 @@ export default function SettingsPage() {
     
 
     
+
 
 
 
