@@ -1307,45 +1307,6 @@ const BrowserApp = () => {
     showDevTools: true,
   });
 
-  const copyLink = useCallback(() => {
-    if (currentUrl !== DEFAULT_URL) {
-      navigator.clipboard.writeText(currentUrl).then(() => {
-        toast({ title: "Copied to clipboard!" });
-      }).catch(err => {
-        console.error("Failed to copy:", err);
-        toast({ title: "Failed to copy link", variant: "destructive" });
-      });
-    }
-  }, [currentUrl, toast]);
-
-  const createQRCode = useCallback(() => {
-    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
-    } else {
-      toast({ title: "Can't create QR code for this page." });
-    }
-  }, [currentUrl, toast]);
-
-  const allToolbarTools = [
-    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
-    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => handleNavigation(activeTabId, 'about:addresses') },
-    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
-    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => toast({ title: "Reading List is not implemented." }) },
-    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
-    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
-    { key: 'showDeleteData', icon: Trash2, label: 'Delete browsing data', action: () => setIsClearDataOpen(true) },
-    { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
-    { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
-    { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
-    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
-    { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
-    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
-    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
-    { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
-    { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
-    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
-  ];
-
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
     setToolbarSettings(newSettings);
@@ -2349,6 +2310,45 @@ const BrowserApp = () => {
   ];
 
   const isInternalPage = currentUrl.startsWith('about:');
+
+  const copyLink = useCallback(() => {
+    if (currentUrl !== DEFAULT_URL) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        toast({ title: "Copied to clipboard!" });
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+        toast({ title: "Failed to copy link", variant: "destructive" });
+      });
+    }
+  }, [currentUrl, toast]);
+
+  const createQRCode = useCallback(() => {
+    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
+    } else {
+      toast({ title: "Can't create QR code for this page." });
+    }
+  }, [currentUrl, toast]);
+
+  const allToolbarTools = [
+    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
+    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => handleNavigation(activeTabId, 'about:addresses') },
+    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => toast({ title: "Reading List is not implemented." }) },
+    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
+    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { key: 'showDeleteData', icon: Trash2, label: 'Delete browsing data', action: () => setIsClearDataOpen(true) },
+    { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
+    { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
+    { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
+    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
+    { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
+    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
+    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
+    { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
+    { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
+    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
+  ];
 
   const SettingsPage = () => {
     try {
@@ -3509,17 +3509,23 @@ const BrowserApp = () => {
         </header>
         
         <div
-          className={cn(
-            "group/toolbar relative transition-all duration-300 ease-in-out",
-            showToolbar ? "h-9" : "h-2"
-          )}
+          className="relative"
+          onMouseLeave={() => {
+            if (!showToolbar) setIsToolbarHovered(false);
+          }}
         >
           <div
+            className={cn("absolute top-0 left-0 w-full h-2", !showToolbar ? "block" : "hidden")}
+            onMouseEnter={() => {
+              if (!showToolbar) setIsToolbarHovered(true);
+            }}
+          />
+          <div
             className={cn(
-              "absolute bottom-0 left-0 flex h-9 w-full items-center gap-1 overflow-x-auto border-b bg-card px-2 scrollbar-hide",
-              "transition-opacity duration-300",
-              "group-hover/toolbar:opacity-100",
-              showToolbar ? "opacity-100" : "opacity-0"
+              "flex h-9 items-center gap-1 overflow-x-auto border-b bg-card px-2 transition-all duration-300 ease-in-out scrollbar-hide",
+              showToolbar || isToolbarHovered
+                ? "opacity-100"
+                : "h-0 -translate-y-full opacity-0 border-none"
             )}
           >
             <div className="flex items-center gap-1">
@@ -3876,6 +3882,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
