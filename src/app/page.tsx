@@ -91,6 +91,7 @@ import {
   Minus,
   Upload,
   Check,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -439,7 +440,7 @@ const AishaAssistant = React.memo(({
     <div className="p-2 bg-background/70 rounded-lg mt-2">
       <Textarea
         placeholder="Ask anything..."
-        className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none text-sm font-light"
+        className="bg-secondary border-none rounded-lg p-3 pr-4 h-auto min-h-[80px] resize-none text-sm font-light scrollbar-hide"
         value={assistantInput}
         onChange={(e) => setAssistantInput(e.target.value)}
         onKeyDown={(e) => {
@@ -490,8 +491,6 @@ AishaAssistant.displayName = 'AishaAssistant';
 const ToolbarSettingsPanel = ({
   setCustomizeView,
   setIsOpen,
-  showBookmarksButton,
-  setShowBookmarksButton,
   isMobile = false,
   toast,
   toolbarSettings,
@@ -499,8 +498,6 @@ const ToolbarSettingsPanel = ({
 }: {
   setCustomizeView: (view: string) => void;
   setIsOpen: (isOpen: boolean) => void;
-  showBookmarksButton: boolean;
-  setShowBookmarksButton: (show: boolean) => void;
   isMobile?: boolean;
   toast: (options: any) => void;
   toolbarSettings: any;
@@ -524,7 +521,8 @@ const ToolbarSettingsPanel = ({
       <ScrollArea className="flex-1 scrollbar-hide">
         <div className="p-4 space-y-4">
           <Card>
-            <CardContent className="pt-6">
+            <CardHeader><CardTitle className="text-base">Your Aisha</CardTitle></CardHeader>
+            <CardContent>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-payments" className="text-sm font-normal flex items-center gap-3"><CreditCard className="w-5 h-5 text-muted-foreground"/> Payment methods</Label>
                 <Switch id="show-payments" checked={toolbarSettings.showPayments} onCheckedChange={(val) => onSettingChange('showPayments', val)} />
@@ -535,7 +533,7 @@ const ToolbarSettingsPanel = ({
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-bookmarks" className="text-sm font-normal flex items-center gap-3"><BookMarked className="w-5 h-5 text-muted-foreground"/> Bookmarks</Label>
-                <Switch id="show-bookmarks" checked={showBookmarksButton} onCheckedChange={setShowBookmarksButton} />
+                <Switch id="show-bookmarks" checked={toolbarSettings.showBookmarks} onCheckedChange={(val) => onSettingChange('showBookmarks', val)} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-reading-list" className="text-sm font-normal flex items-center gap-3"><BookCopy className="w-5 h-5 text-muted-foreground"/> Reading list</Label>
@@ -821,10 +819,6 @@ const CustomizePanel = ({
   handleResetToDefault,
   followDeviceTheme,
   setFollowDeviceTheme,
-  showHomeButton,
-  setShowHomeButton,
-  showBookmarksButton,
-  setShowBookmarksButton,
   toast,
   toolbarSettings,
   onToolbarSettingChange,
@@ -844,10 +838,6 @@ const CustomizePanel = ({
   handleResetToDefault: () => void;
   followDeviceTheme: boolean;
   setFollowDeviceTheme: (follow: boolean) => void;
-  showHomeButton: boolean;
-  setShowHomeButton: (show: boolean) => void;
-  showBookmarksButton: boolean;
-  setShowBookmarksButton: (show: boolean) => void;
   toast: (options: any) => void;
   toolbarSettings: any;
   onToolbarSettingChange: (key: string, value: boolean) => void;
@@ -859,10 +849,6 @@ const CustomizePanel = ({
       <ToolbarSettingsPanel
         setCustomizeView={setCustomizeView}
         setIsOpen={setIsOpen}
-        showHomeButton={showHomeButton}
-        setShowHomeButton={setShowHomeButton}
-        showBookmarksButton={showBookmarksButton}
-        setShowBookmarksButton={setShowBookmarksButton}
         isMobile={isMobile}
         toast={toast}
         toolbarSettings={toolbarSettings}
@@ -1269,7 +1255,6 @@ const BrowserApp = () => {
   const [isDesktopSite, setIsDesktopSite] = useState(false);
   
   const [showHomeButton, setShowHomeButton] = useState(true);
-  const [showBookmarksButton, setShowBookmarksButton] = useState(true);
   
   const [listeningState, setListeningState] = useState<'listening' | 'error' | 'inactive'>('inactive');
   const [voiceSearchSource, setVoiceSearchSource] = useState<'address' | 'assistant' | null>(null);
@@ -1299,7 +1284,11 @@ const BrowserApp = () => {
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(false);
+  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
+  const [isBookmarksBarHovered, setIsBookmarksBarHovered] = useState(false);
+
   const [toolbarSettings, setToolbarSettings] = useState({
+    showBookmarks: true,
     showPayments: true,
     showAddresses: true,
     showReadingList: false,
@@ -1321,7 +1310,9 @@ const BrowserApp = () => {
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
     setToolbarSettings(newSettings);
-    localStorage.setItem('aisha-toolbar-settings', JSON.stringify(newSettings));
+    if (!isIncognito) {
+      localStorage.setItem('aisha-toolbar-settings', JSON.stringify(newSettings));
+    }
   };
 
   const updateTab = (id: string, updates: Partial<Tab>) => {
@@ -1728,6 +1719,7 @@ const BrowserApp = () => {
 
   useEffect(() => {
     const handleStorageChange = (e?: StorageEvent) => {
+      if (isIncognito) return;
       const savedEngine = localStorage.getItem('aisha-search-engine') || 'google';
       setSearchEngine(savedEngine);
       
@@ -1737,7 +1729,7 @@ const BrowserApp = () => {
       }
       if (!e || e.key === 'aisha-show-bookmarks-bar') {
         const savedShowBookmarks = localStorage.getItem('aisha-show-bookmarks-bar');
-        setShowBookmarksButton(savedShowBookmarks ? JSON.parse(savedShowBookmarks) : true);
+        setShowBookmarksBar(savedShowBookmarks ? JSON.parse(savedShowBookmarks) : true);
       }
       if (!e || e.key === 'aisha-font-size') {
         const savedFontSize = localStorage.getItem('aisha-font-size');
@@ -1751,7 +1743,7 @@ const BrowserApp = () => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [isIncognito]);
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -1799,6 +1791,10 @@ const BrowserApp = () => {
       const savedToolbarSettings = localStorage.getItem('aisha-toolbar-settings');
       if (savedToolbarSettings) {
           setToolbarSettings(prev => ({ ...prev, ...JSON.parse(savedToolbarSettings)}));
+      }
+       const savedBookmarksBar = localStorage.getItem('aisha-show-bookmarks-bar');
+      if (savedBookmarksBar) {
+          setShowBookmarksBar(JSON.parse(savedBookmarksBar));
       }
 
     } catch (e) {
@@ -2354,7 +2350,7 @@ const BrowserApp = () => {
   };
 
   const GenericInternalPage = ({title, icon: Icon, children}: {title: string, icon: React.ElementType, children: React.ReactNode}) => (
-    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto px-4 sm:px-8">
+    <div className="flex-1 flex flex-col bg-background text-foreground py-8 overflow-y-auto px-4 sm:px-8 scrollbar-hide">
       <div className="flex items-center gap-4 mb-8">
         <Icon className="w-8 h-8 text-muted-foreground"/>
         <h1 className="text-3xl font-bold">{title}</h1>
@@ -2507,7 +2503,7 @@ const BrowserApp = () => {
               id="feedback-content"
               value={feedbackContent}
               onChange={(e) => setFeedbackContent(e.target.value)}
-              className="col-span-3"
+              className="col-span-3 scrollbar-hide"
               placeholder="Tell us what you think..."
             />
           </div>
@@ -2670,7 +2666,7 @@ const BrowserApp = () => {
             </GenericInternalPage>;
         }
         case 'about:editor':
-            return <GenericInternalPage title="Editor" icon={Pencil}><Textarea className="h-full" placeholder="Start writing..." /></GenericInternalPage>;
+            return <GenericInternalPage title="Editor" icon={Pencil}><Textarea className="h-full scrollbar-hide" placeholder="Start writing..." /></GenericInternalPage>;
         default:
             return (
               <iframe
@@ -2888,7 +2884,7 @@ const BrowserApp = () => {
           </div>
           <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goHome} className={cn(!showHomeButton && "hidden", "md:hidden")}>
+              <Button variant="ghost" size="icon" onClick={goHome} className={cn(!showHomeButton && "hidden")}>
                 <Home className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="icon" onClick={goBack} disabled={!activeTab || activeTab.currentIndex === 0}>
@@ -3063,7 +3059,7 @@ const BrowserApp = () => {
                     </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              {showBookmarksButton && <TooltipProvider><Tooltip>
+              {toolbarSettings.showBookmarks && <TooltipProvider><Tooltip>
                   <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
                   </TooltipTrigger>
@@ -3172,7 +3168,7 @@ const BrowserApp = () => {
                             <span>Downloads</span>
                             <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
                         </DropdownMenuItem>}
-                        <DropdownMenuSub>
+                        {toolbarSettings.showBookmarks && <DropdownMenuSub>
                         <DropdownMenuSubTrigger>
                             <Bookmark className="mr-2 h-4 w-4" />
                             <span>Bookmarks and lists</span>
@@ -3206,7 +3202,7 @@ const BrowserApp = () => {
                             {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        </DropdownMenuSub>}
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                                 <PanelsTopLeft className="mr-2 h-4 w-4" />
@@ -3496,6 +3492,57 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
+
+        <div
+          className="relative group/bookmarks-bar"
+          onMouseEnter={() => {
+              if (!showBookmarksBar) {
+                  setIsBookmarksBarHovered(true);
+              }
+          }}
+          onMouseLeave={() => {
+              setIsBookmarksBarHovered(false);
+          }}
+        >
+          <div className={cn(
+              "flex items-center gap-1 px-2 h-9 bg-card border-b transition-all duration-200 ease-in-out overflow-x-auto scrollbar-hide",
+              (showBookmarksBar || isBookmarksBarHovered) ? "opacity-100" : "opacity-0 h-0 border-none"
+          )}>
+              {bookmarks.length === 0 && !isIncognito && (
+                  <p className="text-xs text-muted-foreground px-2">Import your bookmarks now.</p>
+              )}
+              {bookmarks.slice(0, 15).map(bookmark => (
+                  <Button
+                      key={bookmark.url}
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 shrink-0"
+                      onClick={() => handleNavigation(activeTabId, bookmark.url)}
+                  >
+                      <Image
+                          src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`}
+                          alt=""
+                          width={16}
+                          height={16}
+                          className="mr-2 shrink-0"
+                      />
+                      <span className="text-xs font-light truncate max-w-[120px]">{bookmark.title}</span>
+                  </Button>
+              ))}
+
+              <div className="flex-grow" />
+
+              <Button variant="ghost" size="icon" className="h-7 w-7 sticky right-0 bg-card" onClick={() => {
+                  const newState = !showBookmarksBar;
+                  setShowBookmarksBar(newState);
+                  localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
+              }}>
+                  <ChevronUp className={cn("w-4 h-4 transition-transform", !showBookmarksBar && "rotate-180")} />
+              </Button>
+          </div>
+          {!showBookmarksBar && <div className="absolute top-0 left-0 w-full h-2 z-0"></div>}
+        </div>
+
         <div className="flex flex-1 overflow-hidden">
           <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide">
               {tabs.map(tab => (
@@ -3520,9 +3567,8 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 h-full overflow-y-auto scrollbar-hide">
             {isCustomizeOpen && !isMobile && (
-              <div className="h-full overflow-y-auto scrollbar-hide">
                 <CustomizePanel 
                   setIsOpen={setIsCustomizeOpen} 
                   handleThemeChange={handleThemeChange}
@@ -3553,18 +3599,12 @@ const BrowserApp = () => {
                       setFollowDeviceTheme(follow);
                       if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
                   }}
-                  showHomeButton={showHomeButton}
-                  setShowHomeButton={setShowHomeButton}
-                  showBookmarksButton={showBookmarksButton}
-                  setShowBookmarksButton={setShowBookmarksButton}
                   toast={toast}
                   toolbarSettings={toolbarSettings}
                   onToolbarSettingChange={handleToolbarSettingsChange}
                 />
-              </div>
             )}
             {isAssistantOpen && !isCustomizeOpen && !isMobile && (
-              <div className="h-full overflow-y-auto scrollbar-hide">
                 <AishaAssistant
                   isMobile={false}
                   assistantMessages={assistantMessages}
@@ -3585,7 +3625,6 @@ const BrowserApp = () => {
                   handleAssistantSearch={handleAssistantSearch}
                   handleAttachment={handleAttachment}
                 />
-              </div>
             )}
           </div>
         </div>
@@ -3800,10 +3839,6 @@ const BrowserApp = () => {
                         setFollowDeviceTheme(follow);
                         if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
                     }}
-                    showHomeButton={showHomeButton}
-                    setShowHomeButton={setShowHomeButton}
-                    showBookmarksButton={showBookmarksButton}
-                    setShowBookmarksButton={setShowBookmarksButton}
                     toast={toast}
                     toolbarSettings={toolbarSettings}
                     onToolbarSettingChange={handleToolbarSettingsChange}
@@ -3824,5 +3859,6 @@ export default function BrowserPage() {
 }
 
     
+
 
 
