@@ -1430,6 +1430,7 @@ const BrowserApp = () => {
     { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
   ];
   
+  const showYourAishaTools = yourAishaToolsList.some(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings]);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
@@ -2940,7 +2941,7 @@ const BrowserApp = () => {
                 className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light text-sm"
                 placeholder="Ask anything or navigate..."
               />
-              <div className="flex items-center gap-1">
+              <div className="flex items-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
@@ -3087,30 +3088,33 @@ const BrowserApp = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-1 hidden md:flex">
-              {yourAishaToolsList.map(tool => (
-                toolbarSettings[tool.key] && (
-                  <TooltipProvider key={tool.key}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full"
-                          onClick={tool.action}
-                        >
-                          <tool.icon className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><p>{tool.label}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
-              ))}
-            </div>
-            
             <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
-              <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
+              {showYourAishaTools && (
+                <>
+                  <div className="flex items-center gap-1 hidden md:flex">
+                    {yourAishaToolsList.map(tool => (
+                      toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                        <TooltipProvider key={tool.key}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full"
+                                onClick={tool.action}
+                              >
+                                <tool.icon className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{tool.label}</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )
+                    ))}
+                  </div>
+                  <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
+                </>
+              )}
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -3909,21 +3913,3 @@ export default function BrowserPage() {
 }
 
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
