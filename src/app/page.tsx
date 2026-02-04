@@ -1337,10 +1337,10 @@ const BrowserApp = () => {
     { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
     { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
     { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
-    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: () => createQRCode() },
+    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
     { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
     { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
-    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: () => copyLink() },
+    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
     { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
     { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
     { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
@@ -3070,12 +3070,18 @@ const BrowserApp = () => {
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md-hidden" onClick={() => window.print()}>
-                            <Download className="w-5 h-5"/>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                          const newState = !showToolbar;
+                          setShowToolbar(newState);
+                          if (!isIncognito) {
+                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                          }
+                        }}>
+                          <ChevronUp className={cn("w-5 h-5 text-muted-foreground transition-transform", !showToolbar && "rotate-180")} />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Download page</p>
+                        <p>{showToolbar ? "Hide toolbar" : "Show toolbar"}</p>
                     </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -3515,42 +3521,32 @@ const BrowserApp = () => {
           }}
         >
           <div className={cn(
-            "flex items-center gap-1 px-2 h-9 bg-card border-b transition-all duration-200 ease-in-out overflow-x-auto scrollbar-hide",
-            (showToolbar || isToolbarHovered) ? "opacity-100" : "opacity-0 h-0 border-none"
+            "flex items-center gap-1 px-2 bg-card border-b transition-all duration-200 ease-in-out overflow-x-auto scrollbar-hide",
+            (showToolbar || isToolbarHovered) ? "h-9" : "h-0 opacity-0"
           )}>
-              <div className="flex items-center gap-1">
-                {allToolbarTools.map(tool => (
-                  toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
-                    <TooltipProvider key={tool.key}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={tool.action}
-                          >
-                            <tool.icon className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom"><p>{tool.label}</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )
-                ))}
-              </div>
-              <div className="flex-grow" />
-              <Button variant="ghost" size="icon" className="h-7 w-7 sticky right-0 bg-card" onClick={() => {
-                const newState = !showToolbar;
-                setShowToolbar(newState);
-                if (!isIncognito) {
-                  localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
-                }
-              }}>
-                <ChevronUp className={cn("w-4 h-4 transition-transform", !showToolbar && "rotate-180")} />
-              </Button>
+            <div className="flex items-center gap-1">
+              {allToolbarTools.map(tool => (
+                toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                  <TooltipProvider key={tool.key}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={tool.action}
+                        >
+                          <tool.icon className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom"><p>{tool.label}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              ))}
+            </div>
           </div>
-          {!showToolbar && <div className="absolute top-0 left-0 w-full h-1 z-0"></div>}
+          {!showToolbar && <div className="absolute top-0 left-0 w-full h-2 -translate-y-2" />}
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -3883,6 +3879,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
