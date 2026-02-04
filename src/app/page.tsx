@@ -3070,7 +3070,7 @@ const BrowserApp = () => {
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => window.print()}>
+                        <Button variant="ghost" size="icon" className="md-hidden" onClick={() => window.print()}>
                             <Download className="w-5 h-5"/>
                         </Button>
                     </TooltipTrigger>
@@ -3149,6 +3149,29 @@ const BrowserApp = () => {
                             <span>New Incognito window</span>
                             <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            <span>Autofill and passwords</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
+                                    <KeyRound className="mr-2 h-4 w-4" />
+                                    <span>Password Manager</span>
+                                </DropdownMenuItem>
+                                {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:payments')}>
+                                    <CreditCard className="mr-2 h-4 w-4" />
+                                    <span>Payment methods</span>
+                                </DropdownMenuItem>}
+                                {toolbarSettings.showAddresses && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:addresses')}>
+                                    <MapPin className="mr-2 h-4 w-4" />
+                                    <span>Addresses and more</span>
+                                </DropdownMenuItem>}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
                         <DropdownMenuSeparator />
                         {toolbarSettings.showHistory && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
                             <HistoryIcon className="mr-2 h-4 w-4" />
@@ -3234,28 +3257,6 @@ const BrowserApp = () => {
                         {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
                         <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <KeyRound className="mr-2 h-4 w-4" />
-                                <span>Autofill and passwords</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
-                                        <KeyRound className="mr-2 h-4 w-4" />
-                                        <span>Password Manager</span>
-                                    </DropdownMenuItem>
-                                    {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:payments')}>
-                                        <CreditCard className="mr-2 h-4 w-4" />
-                                        <span>Payment methods</span>
-                                    </DropdownMenuItem>}
-                                    {toolbarSettings.showAddresses && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:addresses')}>
-                                        <MapPin className="mr-2 h-4 w-4" />
-                                        <span>Addresses and more</span>
-                                    </DropdownMenuItem>}
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
                         {toolbarSettings.showDeleteData && <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Clear browsing data...</span>
@@ -3278,21 +3279,6 @@ const BrowserApp = () => {
                             <Printer className="mr-2 h-4 w-4" />
                             <span>Print...</span>
                             <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
-                        </DropdownMenuItem>}
-                        {toolbarSettings.showGoogleLens && <DropdownMenuItem onSelect={() => setIsImageSearchOpen(true)}>
-                            <Search className="mr-2 h-4 w-4" />
-                            <span>Search with Google Lens</span>
-                        </DropdownMenuItem>}
-                        {toolbarSettings.showTranslate && <DropdownMenuItem onSelect={() => {
-                            if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                                const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                                handleNavigation(activeTabId, googleTranslateUrl);
-                            } else {
-                                toast({ title: "Can't translate internal pages." });
-                            }
-                        }}>
-                            <Languages className="mr-2 h-4 w-4" />
-                            <span>Translate...</span>
                         </DropdownMenuItem>}
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
@@ -3897,6 +3883,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
