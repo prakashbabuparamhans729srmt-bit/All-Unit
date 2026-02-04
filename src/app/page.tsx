@@ -2907,7 +2907,7 @@ const BrowserApp = () => {
             </div>
             <div className="flex-grow h-full" />
           </div>
-          <div className={cn(`flex items-center gap-1 sm:gap-2 p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
+          <div className={cn(`flex items-center p-1 sm:p-2`, isIncognito ? 'bg-gray-800' : 'bg-card')}>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={goHome} className={cn(!showHomeButton && "hidden")}>
                 <Home className="w-5 h-5" />
@@ -2922,7 +2922,7 @@ const BrowserApp = () => {
                 {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
               </Button>
             </div>
-            <div className="flex flex-1 items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full min-w-0 px-2 sm:px-4 py-1.5">
+            <div className="flex-1 flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full min-w-0 px-2 sm:px-4 py-1.5">
               {isInternalPage ? (
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
@@ -3067,28 +3067,10 @@ const BrowserApp = () => {
                      <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                   </Tooltip>
                  </TooltipProvider>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                            const newState = !showToolbar;
-                            setShowToolbar(newState);
-                            if (!isIncognito) {
-                                localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
-                            }
-                            }}>
-                            <ChevronUp className={cn("w-5 h-5 text-muted-foreground transition-transform", !showToolbar && "rotate-180")} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{showToolbar ? "Hide toolbar" : "Show toolbar"}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
               </div>
             </div>
             
-            <div className="flex items-center">
+            <div className="flex-shrink-0 flex items-center">
               <div className="flex items-center gap-1">
                 {yourAishaToolsList.map(tool => (
                   toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
@@ -3582,7 +3564,7 @@ const BrowserApp = () => {
           </div>
         </div>
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-w-0">
           <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
@@ -3912,3 +3894,4 @@ export default function BrowserPage() {
     
 
     
+
