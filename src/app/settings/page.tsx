@@ -332,7 +332,7 @@ export default function SettingsPage() {
             <HelpCircle className="w-5 h-5 text-muted-foreground" />
           </Button>
         </header>
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto scrollbar-hide">
           {settingsGroups.map((group, index) => (
             <React.Fragment key={index}>
               {index > 0 && <Separator />}
@@ -801,7 +801,7 @@ export default function SettingsPage() {
           </div>
         </div>
         <div className="relative flex-1">
-          <div className="absolute inset-0 overflow-y-auto pr-2 space-y-1">
+          <div className="absolute inset-0 overflow-y-auto pr-2 space-y-1 scrollbar-hide">
             {filteredMenuItems.map(({ id, icon: Icon, text }) => (
               <Button
                 key={id}
@@ -822,7 +822,7 @@ export default function SettingsPage() {
         </div>
       </aside>
 
-      <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+      <main className="flex-1 p-6 lg:p-8 overflow-y-auto scrollbar-hide">
         <div className="">
           <div className="w-full mb-8 md:hidden">
             <div className="relative">
@@ -844,6 +844,7 @@ export default function SettingsPage() {
     
 
     
+
 
 
 

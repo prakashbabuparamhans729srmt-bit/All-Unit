@@ -383,7 +383,7 @@ const AishaAssistant = React.memo(({
           <PlusSquare className="w-5 h-5 text-muted-foreground" />
       </Button>
     </div>
-     <ScrollArea className="flex-1 pr-2">
+     <ScrollArea className="flex-1 pr-2 scrollbar-hide">
       <div className="p-2 space-y-4">
         {assistantMessages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center h-full pt-20">
@@ -521,7 +521,7 @@ const ToolbarSettingsPanel = ({
           <X className="w-5 h-5 text-muted-foreground" />
         </Button>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 scrollbar-hide">
         <div className="p-4 space-y-4">
           <Card>
             <CardContent className="pt-6">
@@ -670,7 +670,7 @@ const CustomizePanelMain = ({
           <X className="w-5 h-5 text-muted-foreground" />
         </Button>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 scrollbar-hide">
         <div className="p-4 space-y-4">
           
           <Card>
@@ -1081,7 +1081,7 @@ const NewTabPage = ({
                             <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full"><MoreVertical className="w-5 h-5"/></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-64">
-                             <ScrollArea className="h-96">
+                             <ScrollArea className="h-96 scrollbar-hide">
                                 {Object.entries(aiTools).map(([category, tools]) => (
                                     <React.Fragment key={category}>
                                         <DropdownMenuLabel>{category}</DropdownMenuLabel>
@@ -2456,7 +2456,7 @@ const BrowserApp = () => {
         <SheetHeader className="p-4 border-b">
           <SheetTitle>Developer Console</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto p-4 bg-secondary/30 font-mono text-sm">
+        <div className="flex-1 overflow-y-auto p-4 bg-secondary/30 font-mono text-sm scrollbar-hide">
           {consoleHistory.map((entry, index) => (
             <div key={index} className="mb-2">
               {entry.type === 'input' && (
@@ -2703,7 +2703,7 @@ const BrowserApp = () => {
               <Plus className="h-4 w-4" />
               <span className="ml-2 group-data-[collapsible=icon]:hidden">New Chat</span>
           </Button>
-          <ScrollArea className="flex-1 mt-4 group-data-[collapsible=icon]:hidden">
+          <ScrollArea className="flex-1 mt-4 group-data-[collapsible=icon]:hidden scrollbar-hide">
               <div className="space-y-1">
                   <p className="px-2 text-xs font-semibold text-muted-foreground/80">Today</p>
                   <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Summarize recent news about AI</Button>
@@ -2763,7 +2763,7 @@ const BrowserApp = () => {
                 New Chat
             </Button>
         </div>
-        <ScrollArea className="flex-1 px-2">
+        <ScrollArea className="flex-1 px-2 scrollbar-hide">
             <div className="space-y-1 px-2">
                 <p className="px-2 text-xs font-semibold text-muted-foreground/80">Today</p>
                 <Button variant="ghost" className="w-full h-auto py-2 justify-start text-sm truncate text-left">Summarize recent news about AI</Button>
@@ -3099,7 +3099,7 @@ const BrowserApp = () => {
                   </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-80">
-                  <ScrollArea className="h-96">
+                  <ScrollArea className="h-96 scrollbar-hide">
                       <div className="grid grid-cols-3 gap-x-4 gap-y-2 p-4">
                       {companyApps.map((app) => (
                           <button
@@ -3145,7 +3145,7 @@ const BrowserApp = () => {
                         <MoreVertical className="w-5 h-5" />
                     </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto">
+                    <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto scrollbar-hide">
                         <DropdownMenuItem onSelect={addTab}>
                             <FilePlus className="mr-2 h-4 w-4" />
                             <span>New tab</span>
@@ -3497,7 +3497,7 @@ const BrowserApp = () => {
           </div>
         </header>
         <div className="flex flex-1 overflow-hidden">
-          <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative">
+          <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -3522,7 +3522,7 @@ const BrowserApp = () => {
           </main>
           <div className="flex-shrink-0">
             {isCustomizeOpen && !isMobile && (
-              <div className="h-full overflow-y-auto">
+              <div className="h-full overflow-y-auto scrollbar-hide">
                 <CustomizePanel 
                   setIsOpen={setIsCustomizeOpen} 
                   handleThemeChange={handleThemeChange}
@@ -3564,7 +3564,7 @@ const BrowserApp = () => {
               </div>
             )}
             {isAssistantOpen && !isCustomizeOpen && !isMobile && (
-              <div className="h-full overflow-y-auto">
+              <div className="h-full overflow-y-auto scrollbar-hide">
                 <AishaAssistant
                   isMobile={false}
                   assistantMessages={assistantMessages}
@@ -3824,4 +3824,5 @@ export default function BrowserPage() {
 }
 
     
+
 
