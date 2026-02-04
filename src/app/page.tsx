@@ -348,7 +348,7 @@ const AishaAssistant = React.memo(({
   startVoiceSearch,
   listeningState,
   voiceSearchSource,
-  setIsAssistantOpen,
+  setActivePanel,
   setMobileMenuOpen,
   toggleMainSidebar,
   setMobileSheetContent,
@@ -367,7 +367,7 @@ const AishaAssistant = React.memo(({
   startVoiceSearch: (source: 'address' | 'assistant') => void;
   listeningState: 'listening' | 'error' | 'inactive';
   voiceSearchSource: 'address' | 'assistant' | null;
-  setIsAssistantOpen: (open: boolean) => void;
+  setActivePanel: (panel: string | null) => void;
   setMobileMenuOpen: (open: boolean) => void;
   toggleMainSidebar: () => void;
   setMobileSheetContent: (content: 'nav' | 'chat') => void;
@@ -1004,7 +1004,7 @@ const NewTabPage = ({
     voiceSearchSource,
     startVoiceSearch,
     setIsImageSearchOpen,
-    setIsAssistantOpen,
+    setActivePanel,
     aiTools,
     activeTabId,
     handleNavigation,
@@ -1032,7 +1032,7 @@ const NewTabPage = ({
     voiceSearchSource: 'address' | 'assistant' | null;
     startVoiceSearch: (source: 'address' | 'assistant') => void;
     setIsImageSearchOpen: (value: boolean) => void;
-    setIsAssistantOpen: (value: boolean) => void;
+    setActivePanel: (panel: string | null) => void;
     aiTools: any;
     activeTabId: string;
     handleNavigation: (tabId: string, url: string) => void;
@@ -1089,7 +1089,7 @@ const NewTabPage = ({
                     <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => { setIsAssistantOpen(true); setIsCustomizeOpen(false); }}>
+                              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => { setActivePanel('assistant'); }}>
                                 <Sparkles className="w-5 h-5" />
                               </Button>
                           </TooltipTrigger>
@@ -1263,8 +1263,7 @@ const BrowserApp = () => {
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
 
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
   const [assistantInput, setAssistantInput] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
@@ -1427,12 +1426,12 @@ const BrowserApp = () => {
   }, [currentUrl, toast]);
 
   const yourAishaToolsList = [
-    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
-    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => handleNavigation(activeTabId, 'about:addresses') },
-    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
-    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => toast({ title: "Reading List is not implemented." }) },
-    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
-    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => setActivePanel('payments') },
+    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => setActivePanel('addresses') },
+    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => setActivePanel('bookmarks') },
+    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => setActivePanel('reading-list') },
+    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => setActivePanel('history') },
+    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => setActivePanel('downloads') },
     { key: 'showDeleteData', icon: Trash2, label: 'Delete browsing data', action: () => setIsClearDataOpen(true) },
   ];
 
@@ -1720,7 +1719,7 @@ const BrowserApp = () => {
   const handleAssistantSearch = () => {
     if (assistantInput.trim()) {
         handleNavigation(activeTabId, assistantInput.trim());
-        setIsAssistantOpen(false);
+        setActivePanel(null);
     } else {
         toast({ title: "Nothing to search", description: "Please type something in the assistant box to search." });
     }
@@ -2369,7 +2368,7 @@ const BrowserApp = () => {
     { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
     { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
     { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
-    { icon: Pencil, label: 'Customize', action: () => { setIsCustomizeOpen(true); setIsAssistantOpen(false); if (isMobile) { setMobileMenuOpen(false); } } },
+    { icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); if (isMobile) { setMobileMenuOpen(false); } } },
     { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
   ];
 
@@ -2587,6 +2586,145 @@ const BrowserApp = () => {
     </div>
   );
 
+  const RightSidePanel = ({ title, icon: Icon, children, panelId, setOpen, isMobile = false }) => (
+    <aside className={cn("flex flex-col",
+        isMobile
+        ? "flex-1 h-full bg-background"
+        : "h-full w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+    )}>
+        <div className="flex items-center p-2 border-b shrink-0">
+            {isMobile && (
+                <Button variant="ghost" size="icon" onClick={() => setOpen(null)} className="mr-2">
+                    <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+                </Button>
+            )}
+            <Icon className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-base font-semibold ml-2">{title}</h2>
+            <div className="flex-grow" />
+            
+            <TooltipProvider>
+                <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => {
+                        handleNavigation(activeTabId, `about:${panelId}`);
+                        setOpen(null);
+                    }}>
+                    <SquareArrowOutUpRight className="w-5 h-5 text-muted-foreground" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                    <p>Open as page</p>
+                </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            {!isMobile && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setOpen(null)}>
+                    <X className="w-5 h-5 text-muted-foreground" />
+                </Button>
+            )}
+        </div>
+        <ScrollArea className="flex-1 pr-2 scrollbar-hide">
+            <div className="p-2 space-y-4">
+                {children}
+            </div>
+        </ScrollArea>
+    </aside>
+  );
+
+  const HistoryPanelContent = () => {
+    const historyItems = tabs.flatMap(t => t.history).filter(item => item !== DEFAULT_URL && !item.startsWith('about:'));
+    const uniqueHistory = [...new Set(historyItems)].reverse();
+    return (
+        <>
+          {uniqueHistory.length > 0 ? (
+            <div className="space-y-2">
+              {uniqueHistory.map((item, index) => (
+                <div key={`${item}-${index}`} className="p-3 flex items-center justify-between rounded-md hover:bg-muted/50">
+                  <span className="truncate cursor-pointer hover:underline" onClick={() => { handleNavigation(activeTabId, item); setActivePanel(null); }}>{item}</span>
+                  <Button variant="ghost" size="icon" onClick={() => toast({title: "Clearing specific history item is not implemented."})}>
+                    <Trash2 className="w-4 h-4 text-muted-foreground"/>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center pt-20">
+              <HistoryIcon className="w-16 h-16 mb-4"/>
+              <p>Your browsing history is empty.</p>
+            </div>
+          )}
+        </>
+    );
+  };
+  
+  const BookmarksPanelContent = () => (
+    <>
+      {bookmarks.length > 0 ? (
+         <div className="space-y-2">
+         {bookmarks.map((bookmark, index) => (
+           <div key={`${bookmark.url}-${index}`} className="p-3 flex items-center justify-between rounded-md hover:bg-muted/50">
+             <div>
+                <p className="font-semibold truncate cursor-pointer hover:underline" onClick={() => { handleNavigation(activeTabId, bookmark.url); setActivePanel(null); }}>{bookmark.title}</p>
+                <p className="text-sm text-muted-foreground truncate">{bookmark.url}</p>
+             </div>
+             <Button variant="ghost" size="icon" onClick={() => {
+                const newBookmarks = bookmarks.filter(b => b.url !== bookmark.url);
+                setBookmarks(newBookmarks);
+                localStorage.setItem('aisha-bookmarks', JSON.stringify(newBookmarks));
+                toast({title: "Bookmark removed"});
+             }}>
+               <Trash2 className="w-4 h-4 text-muted-foreground"/>
+             </Button>
+           </div>
+         ))}
+       </div>
+      ) : (
+        <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center pt-20">
+          <BookMarked className="w-16 h-16 mb-4"/>
+          <p>You have no bookmarks saved.</p>
+        </div>
+      )}
+    </>
+  );
+
+  const DownloadsPanelContent = () => (
+    <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center pt-20">
+        <Download className="w-16 h-16 mb-4"/>
+        <p>There are no downloads to show.</p>
+    </div>
+  );
+
+  const PaymentsPanelContent = () => (
+    <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center pt-20">
+        <CreditCard className="w-16 h-16 mb-4"/>
+        <p>Your saved payment methods would appear here.</p>
+    </div>
+  );
+
+  const AddressesPanelContent = () => (
+    <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center pt-20">
+        <MapPin className="w-16 h-16 mb-4"/>
+        <p>Your saved addresses would appear here.</p>
+    </div>
+  );
+
+  const ReadingListPanelContent = () => (
+    <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center pt-20">
+        <BookCopy className="w-16 h-16 mb-4"/>
+        <p>Your reading list is empty.</p>
+    </div>
+  );
+
+  const panelConfig: { [key: string]: { title: string; icon: React.ElementType; content: React.ReactNode; } } = {
+    'history': { title: 'History', icon: HistoryIcon, content: <HistoryPanelContent /> },
+    'downloads': { title: 'Downloads', icon: Download, content: <DownloadsPanelContent /> },
+    'bookmarks': { title: 'Bookmarks', icon: BookMarked, content: <BookmarksPanelContent /> },
+    'payments': { title: 'Payment Methods', icon: CreditCard, content: <PaymentsPanelContent /> },
+    'addresses': { title: 'Addresses', icon: MapPin, content: <AddressesPanelContent /> },
+    'reading-list': { title: 'Reading List', icon: BookCopy, content: <ReadingListPanelContent /> },
+  };
+
   const renderCurrentPage = () => {
     if (!activeTab) return <NewTabPage 
         searchContainerRef={searchContainerRef}
@@ -2601,8 +2739,8 @@ const BrowserApp = () => {
         voiceSearchSource={voiceSearchSource}
         startVoiceSearch={startVoiceSearch}
         setIsImageSearchOpen={setIsImageSearchOpen}
-        setIsAssistantOpen={setIsAssistantOpen}
-        setIsCustomizeOpen={setIsCustomizeOpen}
+        setActivePanel={setActivePanel}
+        setIsCustomizeOpen={(open) => setActivePanel(open ? 'customize' : null)}
         aiTools={aiTools}
         activeTabId={activeTabId}
         handleNavigation={handleNavigation}
@@ -2638,8 +2776,8 @@ const BrowserApp = () => {
               voiceSearchSource={voiceSearchSource}
               startVoiceSearch={startVoiceSearch}
               setIsImageSearchOpen={setIsImageSearchOpen}
-              setIsAssistantOpen={setIsAssistantOpen}
-              setIsCustomizeOpen={setIsCustomizeOpen}
+              setActivePanel={setActivePanel}
+              setIsCustomizeOpen={(open) => setActivePanel(open ? 'customize' : null)}
               aiTools={aiTools}
               activeTabId={activeTabId}
               handleNavigation={handleNavigation}
@@ -2862,10 +3000,16 @@ const BrowserApp = () => {
     large: 'text-lg',
   }[fontSize] || 'text-base';
 
+  const panelProps = {
+    setOpen: setActivePanel,
+    handleNavigation: handleNavigation,
+    activeTabId: activeTabId,
+  };
+
   return (
     <div className={cn("flex h-screen bg-background text-foreground", fontSizeClass)}>
       <Sidebar collapsible="icon">
-          {isAssistantOpen ? <ChatHistorySidebarContent/> : <NavigationSidebarContent />}
+          {activePanel === 'assistant' ? <ChatHistorySidebarContent/> : <NavigationSidebarContent />}
           <SidebarFooter>
               <SidebarMenu>
                   <SidebarMenuItem>
@@ -2964,167 +3108,44 @@ const BrowserApp = () => {
             </div>
             
             <div className="flex-shrink-0 flex items-center ml-auto">
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full"
-                   onClick={() => {
-                        const newState = !showToolbar;
-                        setShowToolbar(newState);
-                        if (!isIncognito) {
-                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
-                        }
-                   }}
-                 >
-                     <Menu className="w-5 h-5 text-muted-foreground" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                      <Share className="w-5 h-5 text-muted-foreground" />
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={toggleBookmark}>
+                <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant={activePanel === 'assistant' ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex rounded-full" onClick={() => setActivePanel(activePanel === 'assistant' ? null : 'assistant')}>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Assistant
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
-                      <LinkIcon className="mr-2 h-4 w-4" />
-                      <span>Copy Link</span>
-                    </DropdownMenuItem>}
-                    {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
-                      <QrCode className="mr-2 h-4 w-4" />
-                      <span>Create QR Code</span>
-                    </DropdownMenuItem>}
-                    <DropdownMenuItem onSelect={handleShare}>
-                      <Share className="mr-2 h-4 w-4" />
-                      <span>Share...</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => window.print()}>
-                        <Download className="mr-2 h-4 w-4" />
-                        <span>Save page as...</span>
-                    </DropdownMenuItem>
-                    {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
-                        <Computer className="mr-2 h-4 w-4" />
-                        <span>Send to your devices</span>
-                    </DropdownMenuItem>}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Open Assistant</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-                <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" 
-                        onClick={() => {
-                          if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                            setIsTranslateOpen(v => !v);
-                          } else {
-                            toast({ title: "Can't translate internal pages." });
-                          }
-                        }}>
-                        <Languages className="w-5 h-5 text-muted-foreground"/>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-auto p-0">
-                      <div className="flex items-center gap-1 p-1">
-                          <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-auto px-3 py-1 text-sm border-primary"
-                              onClick={() => {
-                                   const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                                   handleNavigation(activeTabId, googleTranslateUrl);
-                                   setIsTranslateOpen(false);
-                              }}
-                          >
-                              English
-                          </Button>
-                          <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-auto px-3 py-1 text-sm"
-                               onClick={() => {
-                                   const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=hi&u=${encodeURIComponent(currentUrl)}`;
-                                   handleNavigation(activeTabId, googleTranslateUrl);
-                                   setIsTranslateOpen(false);
-                              }}
-                          >
-                              Hindi
-                          </Button>
-                          
-                          <div className='flex-grow' />
-
-                          <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                                      <MoreVertical className="w-4 h-4" />
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onSelect={() => {
-                                      const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&u=${encodeURIComponent(currentUrl)}`;
-                                      handleNavigation(activeTabId, googleTranslateUrl);
-                                      setIsTranslateOpen(false);
-                                  }}>Choose another language</DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => {
-                                      toast({ title: "This feature is not fully implemented in the prototype." });
-                                      setIsTranslateOpen(false);
-                                  }}>Never translate this site</DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
-
-                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsTranslateOpen(false)}>
-                              <X className="w-4 h-4" />
-                          </Button>
-                      </div>
-                      <Separator />
-                      <div className="p-2">
-                           <p className="text-xs text-muted-foreground">Google Translate</p>
-                      </div>
-                  </PopoverContent>
-                 </Popover>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant={isAssistantOpen ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex rounded-full" onClick={() => { setIsAssistantOpen(!isAssistantOpen); setIsCustomizeOpen(false); }}>
-                         <Sparkles className="w-4 h-4 mr-2" />
-                         Assistant
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Open Assistant</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={toggleBookmark}>
-                        <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
-                      </Button>
-                     </TooltipTrigger>
-                     <TooltipContent><p>Bookmark this tab</p></TooltipContent>
-                  </Tooltip>
-                 </TooltipProvider>
-              </div>
-              <div className="flex items-center gap-1">
-                {yourAishaToolsList.map(tool => (
-                  toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
-                    <TooltipProvider key={tool.key}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full"
-                            onClick={tool.action}
-                          >
-                            <tool.icon className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{tool.label}</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )
-                ))}
-              </div>
-              <Separator orientation="vertical" className="h-6 mx-1" />
-              <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+              <div className="flex items-center gap-1 ml-auto">
+                <div className="hidden md:flex items-center gap-1">
+                  {yourAishaToolsList.map(tool => (
+                    toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                      <TooltipProvider key={tool.key}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full"
+                              onClick={tool.action}
+                            >
+                              <tool.icon className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{tool.label}</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )
+                  ))}
+                </div>
+                <Separator orientation="vertical" className="h-6 mx-1" />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -3405,7 +3426,7 @@ const BrowserApp = () => {
                           </DropdownMenuSubTrigger>
                           <DropdownMenuPortal>
                               <DropdownMenuSubContent>
-                              <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
+                              <DropdownMenuItem onSelect={() => setActivePanel('customize')}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   <span>Customize Aisha</span>
                               </DropdownMenuItem>
@@ -3593,6 +3614,120 @@ const BrowserApp = () => {
             </TooltipProvider>
 
             <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full"
+                  onClick={() => {
+                      const newState = !showToolbar;
+                      setShowToolbar(newState);
+                      if (!isIncognito) {
+                          localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                      }
+                  }}
+                >
+                    <Menu className="w-5 h-5 text-muted-foreground" />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                    <Share className="w-5 h-5 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    <span>Copy Link</span>
+                  </DropdownMenuItem>}
+                  {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
+                    <QrCode className="mr-2 h-4 w-4" />
+                    <span>Create QR Code</span>
+                  </DropdownMenuItem>}
+                  <DropdownMenuItem onSelect={handleShare}>
+                    <Share className="mr-2 h-4 w-4" />
+                    <span>Share...</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => window.print()}>
+                      <Download className="mr-2 h-4 w-4" />
+                      <span>Save page as...</span>
+                  </DropdownMenuItem>
+                  {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
+                      <Computer className="mr-2 h-4 w-4" />
+                      <span>Send to your devices</span>
+                  </DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" 
+                      onClick={() => {
+                        if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                          setIsTranslateOpen(v => !v);
+                        } else {
+                          toast({ title: "Can't translate internal pages." });
+                        }
+                      }}>
+                      <Languages className="w-5 h-5 text-muted-foreground"/>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-auto p-0">
+                    <div className="flex items-center gap-1 p-1">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-auto px-3 py-1 text-sm border-primary"
+                            onClick={() => {
+                                  const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                                  handleNavigation(activeTabId, googleTranslateUrl);
+                                  setIsTranslateOpen(false);
+                            }}
+                        >
+                            English
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-auto px-3 py-1 text-sm"
+                              onClick={() => {
+                                  const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=hi&u=${encodeURIComponent(currentUrl)}`;
+                                  handleNavigation(activeTabId, googleTranslateUrl);
+                                  setIsTranslateOpen(false);
+                            }}
+                        >
+                            Hindi
+                        </Button>
+                        
+                        <div className='flex-grow' />
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                                    <MoreVertical className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => {
+                                    const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&u=${encodeURIComponent(currentUrl)}`;
+                                    handleNavigation(activeTabId, googleTranslateUrl);
+                                    setIsTranslateOpen(false);
+                                }}>Choose another language</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => {
+                                    toast({ title: "This feature is not fully implemented in the prototype." });
+                                    setIsTranslateOpen(false);
+                                }}>Never translate this site</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsTranslateOpen(false)}>
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
+                    <Separator />
+                    <div className="p-2">
+                          <p className="text-xs text-muted-foreground">Google Translate</p>
+                    </div>
+                </PopoverContent>
+                </Popover>
+
               {otherToolsList.map(tool => (
                 toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
                   <TooltipProvider key={tool.key}>
@@ -3617,7 +3752,7 @@ const BrowserApp = () => {
         </div>
 
         <div className="flex flex-1 min-h-0">
-          <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide">
+          <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide min-w-0">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -3640,63 +3775,74 @@ const BrowserApp = () => {
                   </Card>
               )}
           </main>
-          {isCustomizeOpen && !isMobile && (
-              <CustomizePanel 
-                setIsOpen={setIsCustomizeOpen} 
-                handleThemeChange={handleThemeChange}
-                theme={theme}
-                showShortcuts={showShortcutsOnNtp}
-                setShowShortcuts={(show) => {
-                    setShowShortcutsOnNtp(show);
-                    if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
-                }}
-                shortcutSetting={shortcutSetting}
-                setShortcutSetting={(setting) => {
-                    setShortcutSetting(setting);
-                     if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
-                }}
-                showCards={showCardsOnNtp}
-                setShowCards={(show) => {
-                    setShowCardsOnNtp(show);
-                    if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
-                }}
-                showContinueWithTabs={showContinueWithTabsCard}
-                setShowContinueWithTabs={(show) => {
-                    setShowContinueWithTabsCard(show);
-                    if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
-                }}
-                handleResetToDefault={handleResetToDefault}
-                followDeviceTheme={followDeviceTheme}
-                setFollowDeviceTheme={(follow) => {
-                    setFollowDeviceTheme(follow);
-                    if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
-                }}
-                toast={toast}
-                toolbarSettings={toolbarSettings}
-                onToolbarSettingChange={handleToolbarSettingsChange}
-              />
-          )}
-          {isAssistantOpen && !isCustomizeOpen && !isMobile && (
-              <AishaAssistant
-                isMobile={false}
-                assistantMessages={assistantMessages}
-                setAssistantMessages={setAssistantMessages}
-                isAssistantLoading={isAssistantLoading}
-                assistantInput={assistantInput}
-                setAssistantInput={setAssistantInput}
-                handleAssistantSubmit={() => handleAssistantSubmit()}
-                toast={toast}
-                startVoiceSearch={startVoiceSearch}
-                listeningState={listeningState}
-                voiceSearchSource={voiceSearchSource}
-                setIsAssistantOpen={setIsAssistantOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
-                toggleMainSidebar={toggleMainSidebar}
-                setMobileSheetContent={setMobileSheetContent}
-                handleInstallClick={handleInstallClick}
-                handleAssistantSearch={handleAssistantSearch}
-                handleAttachment={handleAttachment}
-              />
+          {activePanel && !isMobile && (
+            <>
+              {activePanel === 'customize' && <CustomizePanel 
+                  setIsOpen={(isOpen) => !isOpen && setActivePanel(null)}
+                  handleThemeChange={handleThemeChange}
+                  theme={theme}
+                  showShortcuts={showShortcutsOnNtp}
+                  setShowShortcuts={(show) => {
+                      setShowShortcutsOnNtp(show);
+                      if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
+                  }}
+                  shortcutSetting={shortcutSetting}
+                  setShortcutSetting={(setting) => {
+                      setShortcutSetting(setting);
+                       if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                  }}
+                  showCards={showCardsOnNtp}
+                  setShowCards={(show) => {
+                      setShowCardsOnNtp(show);
+                      if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                  }}
+                  showContinueWithTabs={showContinueWithTabsCard}
+                  setShowContinueWithTabs={(show) => {
+                      setShowContinueWithTabsCard(show);
+                      if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
+                  }}
+                  handleResetToDefault={handleResetToDefault}
+                  followDeviceTheme={followDeviceTheme}
+                  setFollowDeviceTheme={(follow) => {
+                      setFollowDeviceTheme(follow);
+                      if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
+                  }}
+                  toast={toast}
+                  toolbarSettings={toolbarSettings}
+                  onToolbarSettingChange={handleToolbarSettingsChange}
+              />}
+              {activePanel === 'assistant' && <AishaAssistant
+                  isMobile={false}
+                  assistantMessages={assistantMessages}
+                  setAssistantMessages={setAssistantMessages}
+                  isAssistantLoading={isAssistantLoading}
+                  assistantInput={assistantInput}
+                  setAssistantInput={setAssistantInput}
+                  handleAssistantSubmit={() => handleAssistantSubmit()}
+                  toast={toast}
+                  startVoiceSearch={startVoiceSearch}
+                  listeningState={listeningState}
+                  voiceSearchSource={voiceSearchSource}
+                  setActivePanel={setActivePanel}
+                  setMobileMenuOpen={setMobileMenuOpen}
+                  toggleMainSidebar={toggleMainSidebar}
+                  setMobileSheetContent={setMobileSheetContent}
+                  handleInstallClick={handleInstallClick}
+                  handleAssistantSearch={handleAssistantSearch}
+                  handleAttachment={handleAttachment}
+                />
+              }
+              {Object.keys(panelConfig).includes(activePanel) && (
+                <RightSidePanel 
+                  title={panelConfig[activePanel].title} 
+                  icon={panelConfig[activePanel].icon} 
+                  panelId={activePanel} 
+                  {...panelProps}
+                >
+                  {panelConfig[activePanel].content}
+                </RightSidePanel>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -3858,76 +4004,80 @@ const BrowserApp = () => {
               {mobileSheetContent === 'chat' ? <ChatHistorySheetContent /> : <NavigationSheetContent />}
           </SheetContent>
       </Sheet>
-      {isMobile && (
-          <Dialog open={isAssistantOpen} onOpenChange={setIsAssistantOpen}>
+      
+       {isMobile && activePanel && (
+          <Dialog open={!!activePanel} onOpenChange={(isOpen) => !isOpen && setActivePanel(null)}>
               <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
-                  <DialogHeader className="sr-only">
-                    <DialogTitle>AI Assistant</DialogTitle>
-                    <DialogDescription>
-                      This is the AI assistant panel. You can ask it anything.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <AishaAssistant 
-                    isMobile={true}
-                    assistantMessages={assistantMessages}
-                    setAssistantMessages={setAssistantMessages}
-                    isAssistantLoading={isAssistantLoading}
-                    assistantInput={assistantInput}
-                    setAssistantInput={setAssistantInput}
-                    handleAssistantSubmit={() => handleAssistantSubmit()}
-                    toast={toast}
-                    startVoiceSearch={startVoiceSearch}
-                    listeningState={listeningState}
-                    voiceSearchSource={voiceSearchSource}
-                    setIsAssistantOpen={setIsAssistantOpen}
-                    setMobileMenuOpen={setMobileMenuOpen}
-                    toggleMainSidebar={toggleMainSidebar}
-                    setMobileSheetContent={setMobileSheetContent}
-                    handleInstallClick={handleInstallClick}
-                    handleAssistantSearch={handleAssistantSearch}
-                    handleAttachment={handleAttachment}
-                  />
-              </DialogContent>
-          </Dialog>
-      )}
-       {isMobile && (
-          <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
-              <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
-                   <CustomizePanel 
-                    setIsOpen={setIsCustomizeOpen} 
-                    handleThemeChange={handleThemeChange} 
-                    theme={theme} 
-                    isMobile 
-                    showShortcuts={showShortcutsOnNtp}
-                    setShowShortcuts={(show) => {
-                        setShowShortcutsOnNtp(show);
-                        if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
-                    }}
-                    shortcutSetting={shortcutSetting}
-                    setShortcutSetting={(setting) => {
-                        setShortcutSetting(setting);
-                       if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
-                    }}
-                    showCards={showCardsOnNtp}
-                    setShowCards={(show) => {
-                        setShowCardsOnNtp(show);
-                      if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
-                    }}
-                    showContinueWithTabs={showContinueWithTabsCard}
-                    setShowContinueWithTabs={(show) => {
-                        setShowContinueWithTabsCard(show);
-                        if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
-                    }}
-                    handleResetToDefault={handleResetToDefault}
-                    followDeviceTheme={followDeviceTheme}
-                    setFollowDeviceTheme={(follow) => {
-                        setFollowDeviceTheme(follow);
-                        if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
-                    }}
-                    toast={toast}
-                    toolbarSettings={toolbarSettings}
-                    onToolbarSettingChange={handleToolbarSettingsChange}
-                   />
+                  {activePanel === 'assistant' && (
+                      <AishaAssistant 
+                        isMobile={true}
+                        assistantMessages={assistantMessages}
+                        setAssistantMessages={setAssistantMessages}
+                        isAssistantLoading={isAssistantLoading}
+                        assistantInput={assistantInput}
+                        setAssistantInput={setAssistantInput}
+                        handleAssistantSubmit={() => handleAssistantSubmit()}
+                        toast={toast}
+                        startVoiceSearch={startVoiceSearch}
+                        listeningState={listeningState}
+                        voiceSearchSource={voiceSearchSource}
+                        setActivePanel={setActivePanel}
+                        setMobileMenuOpen={setMobileMenuOpen}
+                        toggleMainSidebar={toggleMainSidebar}
+                        setMobileSheetContent={setMobileSheetContent}
+                        handleInstallClick={handleInstallClick}
+                        handleAssistantSearch={handleAssistantSearch}
+                        handleAttachment={handleAttachment}
+                      />
+                  )}
+                  {activePanel === 'customize' && (
+                      <CustomizePanel 
+                        setIsOpen={(isOpen) => !isOpen && setActivePanel(null)}
+                        handleThemeChange={handleThemeChange} 
+                        theme={theme} 
+                        isMobile 
+                        showShortcuts={showShortcutsOnNtp}
+                        setShowShortcuts={(show) => {
+                            setShowShortcutsOnNtp(show);
+                            if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
+                        }}
+                        shortcutSetting={shortcutSetting}
+                        setShortcutSetting={(setting) => {
+                            setShortcutSetting(setting);
+                           if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                        }}
+                        showCards={showCardsOnNtp}
+                        setShowCards={(show) => {
+                            setShowCardsOnNtp(show);
+                          if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                        }}
+                        showContinueWithTabs={showContinueWithTabsCard}
+                        setShowContinueWithTabs={(show) => {
+                            setShowContinueWithTabsCard(show);
+                            if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
+                        }}
+                        handleResetToDefault={handleResetToDefault}
+                        followDeviceTheme={followDeviceTheme}
+                        setFollowDeviceTheme={(follow) => {
+                            setFollowDeviceTheme(follow);
+                            if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
+                        }}
+                        toast={toast}
+                        toolbarSettings={toolbarSettings}
+                        onToolbarSettingChange={handleToolbarSettingsChange}
+                       />
+                  )}
+                  {Object.keys(panelConfig).includes(activePanel) && (
+                    <RightSidePanel
+                      isMobile
+                      title={panelConfig[activePanel].title}
+                      icon={panelConfig[activePanel].icon}
+                      panelId={activePanel}
+                      {...panelProps}
+                    >
+                      {panelConfig[activePanel].content}
+                    </RightSidePanel>
+                  )}
               </DialogContent>
           </Dialog>
       )}
@@ -3946,6 +4096,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
