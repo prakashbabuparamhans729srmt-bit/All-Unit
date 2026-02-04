@@ -3088,452 +3088,453 @@ const BrowserApp = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {showYourAishaTools && (
-                <>
-                  <div className="flex items-center gap-1 hidden md:flex">
-                    {yourAishaToolsList.map(tool => (
-                      toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
-                        <TooltipProvider key={tool.key}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full"
-                                onClick={tool.action}
-                              >
-                                <tool.icon className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{tool.label}</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )
-                    ))}
-                  </div>
-                  <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
-                </>
+                <div className="flex items-center gap-1">
+                  {yourAishaToolsList.map(tool => (
+                    toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                      <TooltipProvider key={tool.key}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full"
+                              onClick={tool.action}
+                            >
+                              <tool.icon className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{tool.label}</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )
+                  ))}
+                </div>
               )}
-               <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                      <AppGridIcon className="w-5 h-5" />
-                  </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-80">
-                  <ScrollArea className="h-96 scrollbar-hide">
-                      <div className="grid grid-cols-3 gap-x-4 gap-y-2 p-4">
-                      {companyApps.map((app) => (
-                          <button
-                          key={app.name}
-                          onClick={() => handleNavigation(activeTabId, app.url)}
-                          className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent text-center"
-                          >
-                          <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-full">
-                              <app.icon className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                          <span className="text-xs">{app.name}</span>
-                          </button>
-                      ))}
-                      </div>
-                  </ScrollArea>
-                  </DropdownMenuContent>
-              </DropdownMenu>
-              <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                      <Avatar className="w-7 h-7">
-                      <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
-                      <AvatarFallback>PB</AvatarFallback>
-                      </Avatar>
-                  </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                      <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'https://myaccount.google.com/')}>
-                          <User className="mr-2 h-4 w-4"/>
-                          <span>Manage Profile</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={handleSignOut}>
-                          <LogOut className="mr-2 h-4 w-4"/>
-                          <span>Sign Out</span>
-                      </DropdownMenuItem>
-                  </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <div className="hidden md:block">
+              {showYourAishaTools && <Separator orientation="vertical" className="h-6 mx-1" />}
+
+               <div className="flex items-center gap-1">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-5 h-5" />
+                        <AppGridIcon className="w-5 h-5" />
                     </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto scrollbar-hide">
-                        <DropdownMenuItem onSelect={addTab}>
-                            <FilePlus className="mr-2 h-4 w-4" />
-                            <span>New tab</span>
-                            <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
+                    <DropdownMenuContent align="end" className="w-80">
+                    <ScrollArea className="h-96 scrollbar-hide">
+                        <div className="grid grid-cols-3 gap-x-4 gap-y-2 p-4">
+                        {companyApps.map((app) => (
+                            <button
+                            key={app.name}
+                            onClick={() => handleNavigation(activeTabId, app.url)}
+                            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent text-center"
+                            >
+                            <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-full">
+                                <app.icon className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                            <span className="text-xs">{app.name}</span>
+                            </button>
+                        ))}
+                        </div>
+                    </ScrollArea>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Avatar className="w-7 h-7">
+                        <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
+                        <AvatarFallback>PB</AvatarFallback>
+                        </Avatar>
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'https://myaccount.google.com/')}>
+                            <User className="mr-2 h-4 w-4"/>
+                            <span>Manage Profile</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
-                            <PlusSquare className="mr-2 h-4 w-4" />
-                            <span>New window</span>
-                            <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
-                            <ShieldOff className="mr-2 h-4 w-4" />
-                            <span>New Incognito window</span>
-                            <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                            <KeyRound className="mr-2 h-4 w-4" />
-                            <span>Autofill and passwords</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
-                                    <KeyRound className="mr-2 h-4 w-4" />
-                                    <span>Password Manager</span>
-                                </DropdownMenuItem>
-                                {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:payments')}>
-                                    <CreditCard className="mr-2 h-4 w-4" />
-                                    <span>Payment methods</span>
-                                </DropdownMenuItem>}
-                                {toolbarSettings.showAddresses && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:addresses')}>
-                                    <MapPin className="mr-2 h-4 w-4" />
-                                    <span>Addresses and more</span>
-                                </DropdownMenuItem>}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                        {toolbarSettings.showHistory && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
-                            <HistoryIcon className="mr-2 h-4 w-4" />
-                            <span>History</span>
-                            <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
-                        </DropdownMenuItem>}
-                        {toolbarSettings.showDownloads && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Downloads</span>
-                            <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
-                        </DropdownMenuItem>}
-                        {toolbarSettings.showBookmarks && <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <Bookmark className="mr-2 h-4 w-4" />
-                            <span>Bookmarks and lists</span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-80">
-                            <DropdownMenuItem onSelect={toggleBookmark}>
-                                <BookmarkPlus className="mr-2 h-4 w-4" />
-                                <span>Bookmark this tab...</span>
-                                <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={bookmarkAllTabs}>
-                                <BookCopy className="mr-2 h-4 w-4" />
-                                <span>Bookmark all tabs...</span>
-                                <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
-                                <BookMarked className="mr-2 h-4 w-4" />
-                                <span>Bookmark manager</span>
-                                <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                            {toolbarSettings.showReadingList && (
-                                <DropdownMenuItem onSelect={() => toast({ title: "Reading List is not implemented." })}>
-                                    <BookCopy className="mr-2 h-4 w-4" />
-                                    <span>Reading list</span>
-                                </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
-                            {bookmarks.slice(0, 5).map(b => (
-                                <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
-                                    <Star className="mr-2 h-4 w-4 text-yellow-500"/>
-                                    <span className="truncate">{b.title}</span>
-                                </DropdownMenuItem>
-                            ))}
-                            {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                        </DropdownMenuSub>}
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <PanelsTopLeft className="mr-2 h-4 w-4" />
-                                <span>Tab groups</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => toast({title: "Tab groups are not implemented in this prototype."})}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    <span>Create new tab group</span>
-                                </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <Sparkles className="mr-2 h-4 w-4" />
-                                <span>Extensions</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:extensions')}>
-                                    <Puzzle className="mr-2 h-4 w-4" />
-                                    <span>Manage Extensions</span>
-                                </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleThemeChange(theme === 'light' ? 'dark' : 'light')}>
-                        {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
-                        <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
-                        </DropdownMenuItem>
-                        {toolbarSettings.showDeleteData && <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Clear browsing data...</span>
-                            <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
-                        </DropdownMenuItem>}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <ZoomIn className="mr-2 h-4 w-4" />
-                                <span>Zoom</span>
-                                <div className="ml-auto flex items-center gap-2">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
-                                    <span>{zoomLevel}%</span>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
-                                </div>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        {toolbarSettings.showPrint && <DropdownMenuItem onSelect={() => window.print()}>
-                            <Printer className="mr-2 h-4 w-4" />
-                            <span>Print...</span>
-                            <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
-                        </DropdownMenuItem>}
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <Search className="mr-2 h-4 w-4" />
-                                <span>Find and edit</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onSelect={handleFind}>
-                                        <Search className="mr-2 h-4 w-4" />
-                                        <span>Find...</span>
-                                        <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
-                                        <Scissors className="mr-2 h-4 w-4" />
-                                        <span>Cut</span>
-                                        <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
-                                        <Copy className="mr-2 h-4 w-4" />
-                                        <span>Copy</span>
-                                        <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
-                                        const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
-                                        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-                                            activeElement.value += text;
-                                        }
-                                    })}>
-                                        <ClipboardPaste className="mr-2 h-4 w-4" />
-                                        <span>Paste</span>
-                                        <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
-                                    </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                            <Cast className="mr-2 h-4 w-4" />
-                            <span>Cast, save, and share</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                            <DropdownMenuSubContent className="w-80">
-                                {toolbarSettings.showCast && <DropdownMenuItem onSelect={() => toast({title: "Casting is not supported in this prototype."})}>
-                                    <Cast className="mr-2 h-4 w-4" />
-                                    <span>Cast...</span>
-                                </DropdownMenuItem>}
-                                {toolbarSettings.showCast && <DropdownMenuSeparator />}
-                                <DropdownMenuItem onSelect={() => window.print()}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    <span>Save page as...</span>
-                                    <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleOpenAddShortcut()}>
-                                    <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
-                                    <span>Create shortcut...</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
-                                    <LinkIcon className="mr-2 h-4 w-4" />
-                                    <span>Copy link</span>
-                                </DropdownMenuItem>}
-                                {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
-                                    <Computer className="mr-2 h-4 w-4" />
-                                    <span>Send to your devices</span>
-                                </DropdownMenuItem>}
-                                {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
-                                    <QrCode className="mr-2 h-4 w-4" />
-                                    <span>Create QR Code</span>
-                                </DropdownMenuItem>}
-                            </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            <span>More tools</span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                <span>Customize Aisha</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:performance')}>
-                                <Gauge className="mr-2 h-4 w-4" />
-                                <span>Performance</span>
-                            </DropdownMenuItem>
-                            {toolbarSettings.showReadingMode && <DropdownMenuItem onSelect={() => toast({ title: "Reading Mode is not implemented." })}>
-                                <BookOpen className="mr-2 h-4 w-4" />
-                                <span>Reading mode</span>
-                            </DropdownMenuItem>}
-                            {toolbarSettings.showTaskManager && <DropdownMenuItem onSelect={() => toast({ title: "Task Manager is not implemented." })}>
-                                <Gauge className="mr-2 h-4 w-4" />
-                                <span>Task manager</span>
-                            </DropdownMenuItem>}
-                            {toolbarSettings.showDevTools && <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
-                                <Terminal className="mr-2 h-4 w-4" />
-                                <span>Developer Console</span>
-                            </DropdownMenuItem>}
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Settings</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <HelpCircle className="mr-2 h-4 w-4" />
-                            <span>Help</span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
-                                <Info className="mr-2 h-4 w-4"/>
-                                <span>About Aisha</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
-                                <MessageSquare className="mr-2 h-4 w-4"/>
-                                <span>Send Feedback</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                        </DropdownMenuSub>
-
-                        <DropdownMenuItem onSelect={() => toast({title: "Exit is not available in a web application."})}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Exit</span>
+                        <DropdownMenuItem onSelect={handleSignOut}>
+                            <LogOut className="mr-2 h-4 w-4"/>
+                            <span>Sign Out</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-              <div className="block md:hidden">
+                
+                <div className="hidden md:block">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-5 h-5" />
-                          </Button>
+                      <Button variant="ghost" size="icon">
+                          <MoreVertical className="w-5 h-5" />
+                      </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-80">
-                           <div className="flex items-center justify-around px-2 py-2">
-                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
-                                    <BookMarked className="h-6 w-6 text-muted-foreground" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); }}>
-                                    <Download className="h-6 w-6 text-muted-foreground" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:history'); }}>
-                                    <HistoryIcon className="h-6 w-6 text-muted-foreground" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:settings'); }}>
-                                    <Settings className="h-6 w-6 text-muted-foreground" />
-                                </Button>
-                          </div>
-                          <DropdownMenuSeparator />
+                      <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto scrollbar-hide">
                           <DropdownMenuItem onSelect={addTab}>
-                              <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <FilePlus className="mr-2 h-4 w-4" />
                               <span>New tab</span>
+                              <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
+                              <PlusSquare className="mr-2 h-4 w-4" />
+                              <span>New window</span>
+                              <DropdownMenuShortcut>Ctrl+N</DropdownMenuShortcut>
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
-                              <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
+                              <ShieldOff className="mr-2 h-4 w-4" />
                               <span>New Incognito window</span>
+                              <DropdownMenuShortcut>Ctrl+Shift+N</DropdownMenuShortcut>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={handleShare}>
-                              <Share className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Share...</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={handleFind}>
-                              <Search className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Find in page</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => {
-                              if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                                  const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                                  handleNavigation(activeTabId, googleTranslateUrl);
-                              } else {
-                                  toast({ title: "Can't translate internal pages." });
-                              }
-                          }}>
-                              <Languages className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Translate...</span>
-                          </DropdownMenuItem>
-                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={handleInstallClick}>
-                              <PlusSquare className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Add to Home screen</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuCheckboxItem
-                              checked={isDesktopSite}
-                              onCheckedChange={(checked) => {
-                                  setIsDesktopSite(checked as boolean);
-                                  toast({ title: `Desktop site ${checked ? 'enabled' : 'disabled'}. Page reload may be required.` });
-                              }}
-                          >
-                              <div className="flex items-center">
-                                  <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
-                                  <span>Desktop site</span>
-                              </div>
-                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                              <KeyRound className="mr-2 h-4 w-4" />
+                              <span>Autofill and passwords</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                                  <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
+                                      <KeyRound className="mr-2 h-4 w-4" />
+                                      <span>Password Manager</span>
+                                  </DropdownMenuItem>
+                                  {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:payments')}>
+                                      <CreditCard className="mr-2 h-4 w-4" />
+                                      <span>Payment methods</span>
+                                  </DropdownMenuItem>}
+                                  {toolbarSettings.showAddresses && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:addresses')}>
+                                      <MapPin className="mr-2 h-4 w-4" />
+                                      <span>Addresses and more</span>
+                                  </DropdownMenuItem>}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
                           <DropdownMenuSeparator />
-                           <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
-                                <Info className="mr-4 h-5 w-5 text-muted-foreground"/>
-                                <span>About Aisha</span>
-                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
-                              <HelpCircle className="mr-4 h-5 w-5 text-muted-foreground" />
-                              <span>Help & feedback</span>
+                          {toolbarSettings.showHistory && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:history')}>
+                              <HistoryIcon className="mr-2 h-4 w-4" />
+                              <span>History</span>
+                              <DropdownMenuShortcut>Ctrl+H</DropdownMenuShortcut>
+                          </DropdownMenuItem>}
+                          {toolbarSettings.showDownloads && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:downloads')}>
+                              <Download className="mr-2 h-4 w-4" />
+                              <span>Downloads</span>
+                              <DropdownMenuShortcut>Ctrl+J</DropdownMenuShortcut>
+                          </DropdownMenuItem>}
+                          {toolbarSettings.showBookmarks && <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                              <Bookmark className="mr-2 h-4 w-4" />
+                              <span>Bookmarks and lists</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                              <DropdownMenuSubContent className="w-80">
+                              <DropdownMenuItem onSelect={toggleBookmark}>
+                                  <BookmarkPlus className="mr-2 h-4 w-4" />
+                                  <span>Bookmark this tab...</span>
+                                  <DropdownMenuShortcut>Ctrl+D</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={bookmarkAllTabs}>
+                                  <BookCopy className="mr-2 h-4 w-4" />
+                                  <span>Bookmark all tabs...</span>
+                                  <DropdownMenuShortcut>Ctrl+Shift+D</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}>
+                                  <BookMarked className="mr-2 h-4 w-4" />
+                                  <span>Bookmark manager</span>
+                                  <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
+                              </DropdownMenuItem>
+                              {toolbarSettings.showReadingList && (
+                                  <DropdownMenuItem onSelect={() => toast({ title: "Reading List is not implemented." })}>
+                                      <BookCopy className="mr-2 h-4 w-4" />
+                                      <span>Reading list</span>
+                                  </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
+                              {bookmarks.slice(0, 5).map(b => (
+                                  <DropdownMenuItem key={b.url} onSelect={() => handleNavigation(activeTabId, b.url)}>
+                                      <Star className="mr-2 h-4 w-4 text-yellow-500"/>
+                                      <span className="truncate">{b.title}</span>
+                                  </DropdownMenuItem>
+                              ))}
+                              {bookmarks.length > 5 && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:bookmarks')}><ChevronRight className="mr-2 h-4 w-4"/><span>Show all...</span></DropdownMenuItem>}
+                              </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                          </DropdownMenuSub>}
+                          <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                  <PanelsTopLeft className="mr-2 h-4 w-4" />
+                                  <span>Tab groups</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                  <DropdownMenuItem onSelect={() => toast({title: "Tab groups are not implemented in this prototype."})}>
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      <span>Create new tab group</span>
+                                  </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                              </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                  <Sparkles className="mr-2 h-4 w-4" />
+                                  <span>Extensions</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                  <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:extensions')}>
+                                      <Puzzle className="mr-2 h-4 w-4" />
+                                      <span>Manage Extensions</span>
+                                  </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                              </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleThemeChange(theme === 'light' ? 'dark' : 'light')}>
+                          {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
+                          <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={handleSignOut}>
-                            <LogOut className="mr-4 h-5 w-5 text-muted-foreground"/>
-                            <span>Sign Out</span>
+                          {toolbarSettings.showDeleteData && <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Clear browsing data...</span>
+                              <DropdownMenuShortcut>Ctrl+Shift+Del</DropdownMenuShortcut>
+                          </DropdownMenuItem>}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuGroup>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <ZoomIn className="mr-2 h-4 w-4" />
+                                  <span>Zoom</span>
+                                  <div className="ml-auto flex items-center gap-2">
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(z => Math.max(z - 10, 20))}><Minus className="w-4 h-4"/></Button>
+                                      <span>{zoomLevel}%</span>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(z => Math.min(z + 10, 200))}><Plus className="w-4 h-4"/></Button>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setZoomLevel(100)}><Square className="w-4 h-4"/></Button>
+                                  </div>
+                              </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                          {toolbarSettings.showPrint && <DropdownMenuItem onSelect={() => window.print()}>
+                              <Printer className="mr-2 h-4 w-4" />
+                              <span>Print...</span>
+                              <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+                          </DropdownMenuItem>}
+                          <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                  <Search className="mr-2 h-4 w-4" />
+                                  <span>Find and edit</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                      <DropdownMenuItem onSelect={handleFind}>
+                                          <Search className="mr-2 h-4 w-4" />
+                                          <span>Find...</span>
+                                          <DropdownMenuShortcut>Ctrl+F</DropdownMenuShortcut>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onSelect={() => document.execCommand('cut')}>
+                                          <Scissors className="mr-2 h-4 w-4" />
+                                          <span>Cut</span>
+                                          <DropdownMenuShortcut>Ctrl+X</DropdownMenuShortcut>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onSelect={() => document.execCommand('copy')}>
+                                          <Copy className="mr-2 h-4 w-4" />
+                                          <span>Copy</span>
+                                          <DropdownMenuShortcut>Ctrl+C</DropdownMenuShortcut>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => {
+                                          const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement;
+                                          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                                              activeElement.value += text;
+                                          }
+                                      })}>
+                                          <ClipboardPaste className="mr-2 h-4 w-4" />
+                                          <span>Paste</span>
+                                          <DropdownMenuShortcut>Ctrl+V</DropdownMenuShortcut>
+                                      </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                              </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                              <Cast className="mr-2 h-4 w-4" />
+                              <span>Cast, save, and share</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuPortal>
+                              <DropdownMenuSubContent className="w-80">
+                                  {toolbarSettings.showCast && <DropdownMenuItem onSelect={() => toast({title: "Casting is not supported in this prototype."})}>
+                                      <Cast className="mr-2 h-4 w-4" />
+                                      <span>Cast...</span>
+                                  </DropdownMenuItem>}
+                                  {toolbarSettings.showCast && <DropdownMenuSeparator />}
+                                  <DropdownMenuItem onSelect={() => window.print()}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      <span>Save page as...</span>
+                                      <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleOpenAddShortcut()}>
+                                      <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+                                      <span>Create shortcut...</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
+                                      <LinkIcon className="mr-2 h-4 w-4" />
+                                      <span>Copy link</span>
+                                  </DropdownMenuItem>}
+                                  {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
+                                      <Computer className="mr-2 h-4 w-4" />
+                                      <span>Send to your devices</span>
+                                  </DropdownMenuItem>}
+                                  {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
+                                      <QrCode className="mr-2 h-4 w-4" />
+                                      <span>Create QR Code</span>
+                                  </DropdownMenuItem>}
+                              </DropdownMenuSubContent>
+                              </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              <span>More tools</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                              <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  <span>Customize Aisha</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:performance')}>
+                                  <Gauge className="mr-2 h-4 w-4" />
+                                  <span>Performance</span>
+                              </DropdownMenuItem>
+                              {toolbarSettings.showReadingMode && <DropdownMenuItem onSelect={() => toast({ title: "Reading Mode is not implemented." })}>
+                                  <BookOpen className="mr-2 h-4 w-4" />
+                                  <span>Reading mode</span>
+                              </DropdownMenuItem>}
+                              {toolbarSettings.showTaskManager && <DropdownMenuItem onSelect={() => toast({ title: "Task Manager is not implemented." })}>
+                                  <Gauge className="mr-2 h-4 w-4" />
+                                  <span>Task manager</span>
+                              </DropdownMenuItem>}
+                              {toolbarSettings.showDevTools && <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
+                                  <Terminal className="mr-2 h-4 w-4" />
+                                  <span>Developer Console</span>
+                              </DropdownMenuItem>}
+                              </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:settings')}>
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>Settings</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                              <HelpCircle className="mr-2 h-4 w-4" />
+                              <span>Help</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                                  <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
+                                  <Info className="mr-2 h-4 w-4"/>
+                                  <span>About Aisha</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
+                                  <MessageSquare className="mr-2 h-4 w-4"/>
+                                  <span>Send Feedback</span>
+                                  </DropdownMenuItem>
+                              </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                          </DropdownMenuSub>
+
+                          <DropdownMenuItem onSelect={() => toast({title: "Exit is not available in a web application."})}>
+                              <LogOut className="mr-2 h-4 w-4" />
+                              <span>Exit</span>
                           </DropdownMenuItem>
                       </DropdownMenuContent>
                   </DropdownMenu>
-              </div>
+                </div>
+                <div className="block md:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical className="w-5 h-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-80">
+                             <div className="flex items-center justify-around px-2 py-2">
+                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
+                                      <BookMarked className="h-6 w-6 text-muted-foreground" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); }}>
+                                      <Download className="h-6 w-6 text-muted-foreground" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:history'); }}>
+                                      <HistoryIcon className="h-6 w-6 text-muted-foreground" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:settings'); }}>
+                                      <Settings className="h-6 w-6 text-muted-foreground" />
+                                  </Button>
+                            </div>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={addTab}>
+                                <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>New tab</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
+                                <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>New Incognito window</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={handleShare}>
+                                <Share className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>Share...</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleFind}>
+                                <Search className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>Find in page</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => {
+                                if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+                                    const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
+                                    handleNavigation(activeTabId, googleTranslateUrl);
+                                } else {
+                                    toast({ title: "Can't translate internal pages." });
+                                }
+                            }}>
+                                <Languages className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>Translate...</span>
+                            </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={handleInstallClick}>
+                                <PlusSquare className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>Add to Home screen</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuCheckboxItem
+                                checked={isDesktopSite}
+                                onCheckedChange={(checked) => {
+                                    setIsDesktopSite(checked as boolean);
+                                    toast({ title: `Desktop site ${checked ? 'enabled' : 'disabled'}. Page reload may be required.` });
+                                }}
+                            >
+                                <div className="flex items-center">
+                                    <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
+                                    <span>Desktop site</span>
+                                </div>
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuSeparator />
+                             <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
+                                  <Info className="mr-4 h-5 w-5 text-muted-foreground"/>
+                                  <span>About Aisha</span>
+                             </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
+                                <HelpCircle className="mr-4 h-5 w-5 text-muted-foreground" />
+                                <span>Help & feedback</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleSignOut}>
+                              <LogOut className="mr-4 h-5 w-5 text-muted-foreground"/>
+                              <span>Sign Out</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+               </div>
             </div>
           </div>
         </header>
@@ -3911,5 +3912,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
+    
 
     
