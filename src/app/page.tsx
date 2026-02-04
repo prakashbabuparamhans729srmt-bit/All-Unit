@@ -1388,6 +1388,49 @@ const BrowserApp = () => {
     setNtpInputValue("");
   }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
 
+  const copyLink = useCallback(() => {
+    if (currentUrl !== DEFAULT_URL) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        toast({ title: "Copied to clipboard!" });
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+        toast({ title: "Failed to copy link", variant: "destructive" });
+      });
+    }
+  }, [currentUrl, toast]);
+
+  const createQRCode = useCallback(() => {
+    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
+    } else {
+      toast({ title: "Can't create QR code for this page." });
+    }
+  }, [currentUrl, toast]);
+
+  const yourAishaToolsList = [
+    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
+    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => handleNavigation(activeTabId, 'about:addresses') },
+    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => toast({ title: "Reading List is not implemented." }) },
+    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
+    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { key: 'showDeleteData', icon: Trash2, label: 'Delete browsing data', action: () => setIsClearDataOpen(true) },
+  ];
+
+  const otherToolsList = [
+    { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
+    { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
+    { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
+    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
+    { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
+    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
+    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
+    { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
+    { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
+    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
+  ];
+  
+
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
     if (!currentInput.trim()) return;
@@ -2311,45 +2354,6 @@ const BrowserApp = () => {
 
   const isInternalPage = currentUrl.startsWith('about:');
 
-  const copyLink = useCallback(() => {
-    if (currentUrl !== DEFAULT_URL) {
-      navigator.clipboard.writeText(currentUrl).then(() => {
-        toast({ title: "Copied to clipboard!" });
-      }).catch(err => {
-        console.error("Failed to copy:", err);
-        toast({ title: "Failed to copy link", variant: "destructive" });
-      });
-    }
-  }, [currentUrl, toast]);
-
-  const createQRCode = useCallback(() => {
-    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
-    } else {
-      toast({ title: "Can't create QR code for this page." });
-    }
-  }, [currentUrl, toast]);
-
-  const allToolbarTools = [
-    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
-    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => handleNavigation(activeTabId, 'about:addresses') },
-    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
-    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => toast({ title: "Reading List is not implemented." }) },
-    { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
-    { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
-    { key: 'showDeleteData', icon: Trash2, label: 'Delete browsing data', action: () => setIsClearDataOpen(true) },
-    { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
-    { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
-    { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
-    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
-    { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
-    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
-    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
-    { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
-    { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
-    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
-  ];
-
   const SettingsPage = () => {
     try {
       const SettingsContent = require('@/app/settings/page').default;
@@ -2937,6 +2941,30 @@ const BrowserApp = () => {
                 placeholder="Ask anything or navigate..."
               />
               <div className="flex items-center gap-1">
+                {yourAishaToolsList.map(tool => (
+                  toolbarSettings[tool.key] && (
+                    <TooltipProvider key={tool.key}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-full hidden md:flex"
+                            onClick={tool.action}
+                          >
+                            <tool.icon className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{tool.label}</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )
+                ))}
+                
+                {yourAishaToolsList.some(tool => toolbarSettings[tool.key]) && (
+                  <Separator orientation="vertical" className="h-5 mx-1 hidden md:block" />
+                )}
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
@@ -3515,7 +3543,7 @@ const BrowserApp = () => {
           }}
         >
           <div
-            className={cn("absolute top-0 left-0 w-full h-2", !showToolbar ? "block" : "hidden")}
+            className={cn("absolute top-0 left-0 w-full h-2 z-30", !showToolbar ? "block" : "hidden")}
             onMouseEnter={() => {
               if (!showToolbar) setIsToolbarHovered(true);
             }}
@@ -3524,13 +3552,14 @@ const BrowserApp = () => {
             className={cn(
               "flex h-9 items-center gap-1 overflow-x-auto border-b bg-card px-2 transition-all duration-300 ease-in-out scrollbar-hide",
               showToolbar || isToolbarHovered
-                ? "opacity-100"
-                : "h-0 -translate-y-full opacity-0 border-none"
+                ? "translate-y-0 opacity-100"
+                : "-translate-y-full opacity-0",
+              !showToolbar && !isToolbarHovered && "h-0 border-none !p-0"
             )}
           >
             <div className="flex items-center gap-1">
-              {allToolbarTools.map(tool => (
-                toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+              {otherToolsList.map(tool => (
+                toolbarSettings[tool.key] && (
                   <TooltipProvider key={tool.key}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -3882,6 +3911,8 @@ export default function BrowserPage() {
 }
 
     
+
+
 
 
 
