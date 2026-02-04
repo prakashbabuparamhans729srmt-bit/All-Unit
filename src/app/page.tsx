@@ -506,7 +506,7 @@ const ToolbarSettingsPanel = ({
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
-        isMobile ? "flex-1 h-full" : "w-[350px] flex-shrink-0 border-l border-border"
+        isMobile ? "flex-1 h-full" : "h-[calc(100vh-80px)] w-[350px] flex-shrink-0 border-l border-border"
     )}>
       <div className="flex items-center p-3 border-b shrink-0">
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full mr-2" onClick={() => setCustomizeView('main')}>
@@ -630,6 +630,7 @@ const CustomizePanelMain = ({
   handleResetToDefault,
   followDeviceTheme,
   setFollowDeviceTheme,
+  toast,
 }) => {
   const handleModeChange = (mode) => {
     if (!followDeviceTheme) {
@@ -676,7 +677,7 @@ const CustomizePanelMain = ({
               <CardTitle className="text-base">Appearance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => {}}>
+              <Button variant="outline" className="w-full justify-center text-sm font-normal" onClick={() => toast({ title: "Theme marketplace is not implemented." })}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> Change theme
               </Button>
 
@@ -698,7 +699,7 @@ const CustomizePanelMain = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button className="w-10 h-10 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
-                          onClick={() => {}}>
+                          onClick={() => toast({ title: "Custom color themes are not implemented." })}>
                           <div className="w-full h-full rounded-full" style={{ backgroundColor: color.bg }} />
                           {color.selected && (
                             <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
@@ -714,7 +715,7 @@ const CustomizePanelMain = ({
                  <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => {}}>
+                      <button className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => toast({ title: "Custom color picker is not implemented." })}>
                         <Pencil className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </TooltipTrigger>
@@ -875,6 +876,7 @@ const CustomizePanel = ({
       handleResetToDefault={handleResetToDefault}
       followDeviceTheme={followDeviceTheme}
       setFollowDeviceTheme={setFollowDeviceTheme}
+      toast={toast}
     />
   );
 };
@@ -3201,6 +3203,12 @@ const BrowserApp = () => {
                                 <span>Bookmark manager</span>
                                 <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
                             </DropdownMenuItem>
+                            {toolbarSettings.showReadingList && (
+                                <DropdownMenuItem onSelect={() => toast({ title: "Reading List is not implemented." })}>
+                                    <BookCopy className="mr-2 h-4 w-4" />
+                                    <span>Reading list</span>
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel>All Bookmarks</DropdownMenuLabel>
                             {bookmarks.slice(0, 5).map(b => (
@@ -3246,10 +3254,28 @@ const BrowserApp = () => {
                         {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="w-4 h-4 mr-2" />}
                         <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
                         </DropdownMenuItem>
-                        {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
-                            <KeyRound className="mr-2 h-4 w-4" />
-                            <span>Passwords and autofill</span>
-                        </DropdownMenuItem>}
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <KeyRound className="mr-2 h-4 w-4" />
+                                <span>Autofill and passwords</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:passwords')}>
+                                        <KeyRound className="mr-2 h-4 w-4" />
+                                        <span>Password Manager</span>
+                                    </DropdownMenuItem>
+                                    {toolbarSettings.showPayments && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:payments')}>
+                                        <CreditCard className="mr-2 h-4 w-4" />
+                                        <span>Payment methods</span>
+                                    </DropdownMenuItem>}
+                                    {toolbarSettings.showAddresses && <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:addresses')}>
+                                        <MapPin className="mr-2 h-4 w-4" />
+                                        <span>Addresses and more</span>
+                                    </DropdownMenuItem>}
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
                         {toolbarSettings.showDeleteData && <DropdownMenuItem onSelect={() => setIsClearDataOpen(true)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Clear browsing data...</span>
@@ -3377,6 +3403,14 @@ const BrowserApp = () => {
                                 <Gauge className="mr-2 h-4 w-4" />
                                 <span>Performance</span>
                             </DropdownMenuItem>
+                            {toolbarSettings.showReadingMode && <DropdownMenuItem onSelect={() => toast({ title: "Reading Mode is not implemented." })}>
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                <span>Reading mode</span>
+                            </DropdownMenuItem>}
+                            {toolbarSettings.showTaskManager && <DropdownMenuItem onSelect={() => toast({ title: "Task Manager is not implemented." })}>
+                                <Gauge className="mr-2 h-4 w-4" />
+                                <span>Task manager</span>
+                            </DropdownMenuItem>}
                             {toolbarSettings.showDevTools && <DropdownMenuItem onSelect={() => setIsConsoleOpen(true)}>
                                 <Terminal className="mr-2 h-4 w-4" />
                                 <span>Developer Console</span>
@@ -3883,6 +3917,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
