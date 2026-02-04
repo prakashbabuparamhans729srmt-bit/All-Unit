@@ -5,6 +5,7 @@
 import React, { useState, useRef, useEffect, KeyboardEvent, useCallback } from "react";
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
+import Link from 'next/link';
 import {
   ArrowLeft,
   ArrowRight,
@@ -377,7 +378,23 @@ const AishaAssistant = React.memo(({
         </Button>
       </div>
       <div className="flex-grow" />
-      <Button variant="ghost" size="icon" className={cn(isMobile && "mr-10")} onClick={() => {
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+              <Link href="/assistant">
+                <SquareArrowOutUpRight className="w-5 h-5 text-muted-foreground" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>Open as page</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-full", isMobile && "mr-10")} onClick={() => {
         setAssistantMessages([]);
         toast({ title: "New chat started." });
       }}>
@@ -1430,8 +1447,6 @@ const BrowserApp = () => {
     { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
   ];
   
-  const showYourAishaTools = yourAishaToolsList.some(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings]);
-
   const handleAssistantSubmit = useCallback(async (text?: string) => {
     const currentInput = text || assistantInput;
     if (!currentInput.trim()) return;
@@ -2941,7 +2956,10 @@ const BrowserApp = () => {
                 className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light text-sm flex-1"
                 placeholder="Ask anything or navigate..."
               />
-              <div className="flex items-center">
+            </div>
+            
+            <div className="flex-shrink-0 flex items-center ml-auto">
+              <div className="flex items-center gap-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
@@ -3056,27 +3074,10 @@ const BrowserApp = () => {
                     <TooltipContent><p>Open Assistant</p></TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
+                
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => {
-                        const newState = !showToolbar;
-                        setShowToolbar(newState);
-                        if (!isIncognito) {
-                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
-                        }
-                      }}>
-                        {showToolbar ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{showToolbar ? 'Hide toolbar' : 'Show toolbar'}</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                 <TooltipProvider>
-                   <Tooltip>
-                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={toggleBookmark}>
                         <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
                       </Button>
@@ -3085,10 +3086,8 @@ const BrowserApp = () => {
                   </Tooltip>
                  </TooltipProvider>
               </div>
-            </div>
-            
-            <div className="flex-shrink-0 flex items-center ml-auto">
-              <div className="flex items-center gap-1">
+
+               <div className="flex items-center gap-1">
                 {yourAishaToolsList.map(tool => (
                   toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
                     <TooltipProvider key={tool.key}>
@@ -3109,8 +3108,8 @@ const BrowserApp = () => {
                   )
                 ))}
               </div>
-              {showYourAishaTools && <Separator orientation="vertical" className="h-6 mx-1" />}
-               <div className="flex items-center gap-1 sm:gap-2">
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <div className="flex items-center gap-1 sm:gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -3536,7 +3535,7 @@ const BrowserApp = () => {
         </header>
         
         <div
-          className="relative"
+          className="relative overflow-hidden"
           onMouseLeave={() => {
             if (!showToolbar) setIsToolbarHovered(false);
           }}
@@ -3556,6 +3555,28 @@ const BrowserApp = () => {
                !showToolbar && !isToolbarHovered && "border-none"
             )}
           >
+             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                        const newState = !showToolbar;
+                        setShowToolbar(newState);
+                        if (!isIncognito) {
+                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                        }
+                        }}
+                    >
+                        {showToolbar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom"><p>{showToolbar ? 'Hide toolbar' : 'Show toolbar'}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
             <div className="flex items-center gap-1">
               {otherToolsList.map(tool => (
                 toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
@@ -3910,6 +3931,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
