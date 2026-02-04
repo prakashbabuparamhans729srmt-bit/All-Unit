@@ -3062,29 +3062,28 @@ const BrowserApp = () => {
                      <TooltipContent><p>Bookmark this tab</p></TooltipContent>
                   </Tooltip>
                  </TooltipProvider>
-
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                            const newState = !showToolbar;
+                            setShowToolbar(newState);
+                            if (!isIncognito) {
+                                localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                            }
+                            }}>
+                            <ChevronUp className={cn("w-5 h-5 text-muted-foreground transition-transform", !showToolbar && "rotate-180")} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{showToolbar ? "Hide toolbar" : "Show toolbar"}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
             
             <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
-              <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                          const newState = !showToolbar;
-                          setShowToolbar(newState);
-                          if (!isIncognito) {
-                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
-                          }
-                        }}>
-                          <ChevronUp className={cn("w-5 h-5 text-muted-foreground transition-transform", !showToolbar && "rotate-180")} />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{showToolbar ? "Hide toolbar" : "Show toolbar"}</p>
-                    </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
               <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -3511,8 +3510,8 @@ const BrowserApp = () => {
         
         <div
           className={cn(
-            "relative group/toolbar transition-all duration-200",
-            showToolbar ? "h-9" : "h-2"
+            "relative group/toolbar transition-all duration-200 overflow-hidden",
+            (showToolbar || isToolbarHovered) ? "h-9" : "h-2"
           )}
           onMouseEnter={() => {
             if (!showToolbar) {
@@ -3525,8 +3524,7 @@ const BrowserApp = () => {
         >
           <div
             className={cn(
-              "flex items-center gap-1 px-2 bg-card border-b h-9 w-full overflow-x-auto scrollbar-hide transition-opacity",
-              (showToolbar || isToolbarHovered) ? "opacity-100" : "opacity-0 pointer-events-none"
+              "flex items-center gap-1 px-2 bg-card border-b h-9 w-full overflow-x-auto scrollbar-hide"
             )}
           >
             <div className="flex items-center gap-1">
@@ -3845,12 +3843,12 @@ const BrowserApp = () => {
                     shortcutSetting={shortcutSetting}
                     setShortcutSetting={(setting) => {
                         setShortcutSetting(setting);
-                        if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                       if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
                     }}
                     showCards={showCardsOnNtp}
                     setShowCards={(show) => {
                         setShowCardsOnNtp(show);
-                        if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                      if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
                     }}
                     showContinueWithTabs={showContinueWithTabsCard}
                     setShowContinueWithTabs={(show) => {
@@ -3883,6 +3881,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
