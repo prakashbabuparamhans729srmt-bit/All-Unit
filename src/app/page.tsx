@@ -2941,30 +2941,6 @@ const BrowserApp = () => {
                 placeholder="Ask anything or navigate..."
               />
               <div className="flex items-center gap-1">
-                {yourAishaToolsList.map(tool => (
-                  toolbarSettings[tool.key] && (
-                    <TooltipProvider key={tool.key}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 rounded-full hidden md:flex"
-                            onClick={tool.action}
-                          >
-                            <tool.icon className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{tool.label}</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )
-                ))}
-                
-                {yourAishaToolsList.some(tool => toolbarSettings[tool.key]) && (
-                  <Separator orientation="vertical" className="h-5 mx-1 hidden md:block" />
-                )}
-
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
@@ -3109,6 +3085,28 @@ const BrowserApp = () => {
                     </Tooltip>
                 </TooltipProvider>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-1 hidden md:flex">
+              {yourAishaToolsList.map(tool => (
+                toolbarSettings[tool.key] && (
+                  <TooltipProvider key={tool.key}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={tool.action}
+                        >
+                          <tool.icon className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>{tool.label}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              ))}
             </div>
             
             <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
@@ -3911,6 +3909,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
