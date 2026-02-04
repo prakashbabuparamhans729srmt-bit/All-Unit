@@ -1307,7 +1307,7 @@ const BrowserApp = () => {
     showDevTools: true,
   });
 
-  const copyLink = () => {
+  const copyLink = useCallback(() => {
     if (currentUrl !== DEFAULT_URL) {
       navigator.clipboard.writeText(currentUrl).then(() => {
         toast({ title: "Copied to clipboard!" });
@@ -1316,15 +1316,15 @@ const BrowserApp = () => {
         toast({ title: "Failed to copy link", variant: "destructive" });
       });
     }
-  };
+  }, [currentUrl, toast]);
 
-  const createQRCode = () => {
+  const createQRCode = useCallback(() => {
     if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
       setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
     } else {
       toast({ title: "Can't create QR code for this page." });
     }
-  };
+  }, [currentUrl, toast]);
 
   const allToolbarTools = [
     { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
@@ -3508,9 +3508,12 @@ const BrowserApp = () => {
             </div>
           </div>
         </header>
-
+        
         <div
-          className="relative group/toolbar"
+          className={cn(
+            "relative group/toolbar transition-all duration-200",
+            showToolbar ? "h-9" : "h-2"
+          )}
           onMouseEnter={() => {
             if (!showToolbar) {
               setIsToolbarHovered(true);
@@ -3520,10 +3523,12 @@ const BrowserApp = () => {
             setIsToolbarHovered(false);
           }}
         >
-          <div className={cn(
-            "flex items-center gap-1 px-2 bg-card border-b transition-all duration-200 ease-in-out overflow-x-auto scrollbar-hide",
-            (showToolbar || isToolbarHovered) ? "h-9" : "h-0 opacity-0"
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-1 px-2 bg-card border-b h-9 w-full overflow-x-auto scrollbar-hide transition-opacity",
+              (showToolbar || isToolbarHovered) ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+          >
             <div className="flex items-center gap-1">
               {allToolbarTools.map(tool => (
                 toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
@@ -3546,7 +3551,6 @@ const BrowserApp = () => {
               ))}
             </div>
           </div>
-          {!showToolbar && <div className="absolute top-0 left-0 w-full h-2 -translate-y-2" />}
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -3879,6 +3883,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
