@@ -357,7 +357,7 @@ const AishaAssistant = React.memo(({
   <aside className={cn("flex flex-col",
       isMobile
       ? "flex-1 h-full bg-background"
-      : "h-[calc(100vh-80px)] w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+      : "h-full w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
   )}>
     <div className="flex items-center p-2 border-b shrink-0">
       <div className="flex items-center gap-2">
@@ -492,21 +492,19 @@ const ToolbarSettingsPanel = ({
   setCustomizeView,
   setIsOpen,
   isMobile = false,
-  toast,
   toolbarSettings,
   onSettingChange,
 }: {
   setCustomizeView: (view: string) => void;
   setIsOpen: (isOpen: boolean) => void;
   isMobile?: boolean;
-  toast: (options: any) => void;
   toolbarSettings: any;
   onSettingChange: (key: string, value: boolean) => void;
 }) => {
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
-        isMobile ? "flex-1 h-full" : "h-[calc(100vh-80px)] w-[350px] flex-shrink-0 border-l border-border"
+        isMobile ? "flex-1 h-full" : "h-full w-[350px] flex-shrink-0 border-l border-border"
     )}>
       <div className="flex items-center p-3 border-b shrink-0">
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full mr-2" onClick={() => setCustomizeView('main')}>
@@ -660,7 +658,7 @@ const CustomizePanelMain = ({
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
-        isMobile ? "flex-1 h-full" : "h-[calc(100vh-80px)] w-[350px] flex-shrink-0 border-l border-border"
+        isMobile ? "flex-1 h-full" : "h-full w-[350px] flex-shrink-0 border-l border-border"
     )}>
       <div className="flex items-center p-3 border-b shrink-0">
         <h2 className="text-base font-semibold">Customize Aisha</h2>
@@ -851,7 +849,6 @@ const CustomizePanel = ({
         setCustomizeView={setCustomizeView}
         setIsOpen={setIsOpen}
         isMobile={isMobile}
-        toast={toast}
         toolbarSettings={toolbarSettings}
         onSettingChange={onToolbarSettingChange}
       />
@@ -1291,32 +1288,62 @@ const BrowserApp = () => {
   const [isToolbarHovered, setIsToolbarHovered] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState({
-    showBookmarks: true,
     showPayments: true,
     showAddresses: true,
-    showReadingList: false,
+    showBookmarks: true,
+    showReadingList: true,
     showHistory: true,
     showDownloads: true,
-    showDeleteData: false,
+    showDeleteData: true,
     showPrint: true,
     showGoogleLens: true,
     showTranslate: true,
     showQRCode: true,
-    showCast: false,
-    showReadingMode: false,
+    showCast: true,
+    showReadingMode: true,
     showCopyLink: true,
     showSendToDevices: true,
-    showTaskManager: false,
+    showTaskManager: true,
     showDevTools: true,
   });
 
-  const secondaryToolbarTools = [
+  const copyLink = () => {
+    if (currentUrl !== DEFAULT_URL) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        toast({ title: "Copied to clipboard!" });
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+        toast({ title: "Failed to copy link", variant: "destructive" });
+      });
+    }
+  };
+
+  const createQRCode = () => {
+    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
+    } else {
+      toast({ title: "Can't create QR code for this page." });
+    }
+  };
+
+  const allToolbarTools = [
+    { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => handleNavigation(activeTabId, 'about:payments') },
+    { key: 'showAddresses', icon: MapPin, label: 'Addresses', action: () => handleNavigation(activeTabId, 'about:addresses') },
+    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { key: 'showReadingList', icon: BookCopy, label: 'Reading list', action: () => toast({ title: "Reading List is not implemented." }) },
     { key: 'showHistory', icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
     { key: 'showDownloads', icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
-    { key: 'showBookmarks', icon: BookMarked, label: 'Bookmarks', action: () => handleNavigation(activeTabId, 'about:bookmarks') },
+    { key: 'showDeleteData', icon: Trash2, label: 'Delete browsing data', action: () => setIsClearDataOpen(true) },
     { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
-    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
+    { key: 'showGoogleLens', icon: Camera, label: 'Search with Google Lens', action: () => setIsImageSearchOpen(true) },
+    { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
+    { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
+    { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
     { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
+    { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
+    { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
+    { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
+    { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
   ];
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
@@ -2017,17 +2044,6 @@ const BrowserApp = () => {
     }
   };
   
-  const copyLink = () => {
-    if (currentUrl !== DEFAULT_URL) {
-      navigator.clipboard.writeText(currentUrl).then(() => {
-        toast({ title: "Copied to clipboard!" });
-      }).catch(err => {
-        console.error("Failed to copy:", err);
-        toast({ title: "Failed to copy link", variant: "destructive" });
-      });
-    }
-  };
-  
   const toggleBookmark = () => {
     if (isIncognito) {
         toast({ title: "Can't add bookmarks in Incognito mode." });
@@ -2225,14 +2241,6 @@ const BrowserApp = () => {
     }
   };
   
-  const createQRCode = () => {
-    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
-    } else {
-      toast({ title: "Can't create QR code for this page." });
-    }
-  };
-
   const bookmarkAllTabs = () => {
     if (isIncognito) {
       toast({ title: "Can't add bookmarks in Incognito mode." });
@@ -2738,7 +2746,7 @@ const BrowserApp = () => {
               <span className="font-semibold text-lg">Browse</span>
           </SidebarMenuButton>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="scrollbar-hide">
           <SidebarMenu>
               {navItems.map((item, index) => (
                   <SidebarMenuItem key={index}>
@@ -3071,34 +3079,6 @@ const BrowserApp = () => {
                     </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              {toolbarSettings.showBookmarks && <TooltipProvider><Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:bookmarks')}><BookMarked className="w-5 h-5"/></Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                      <p>Bookmarks</p>
-                  </TooltipContent>
-              </Tooltip></TooltipProvider>}
-              <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:downloads')}><Download className="w-5 h-5"/></Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Downloads</p>
-                    </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-               <TooltipProvider>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={() => handleNavigation(activeTabId, 'about:history')}><HistoryIcon className="w-5 h-5"/></Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>History</p>
-                    </TooltipContent>
-                </Tooltip>
-               </TooltipProvider>
               <Separator orientation="vertical" className="h-6 mx-1 hidden md:block" />
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -3553,7 +3533,7 @@ const BrowserApp = () => {
             (showToolbar || isToolbarHovered) ? "opacity-100" : "opacity-0 h-0 border-none"
           )}>
               <div className="flex items-center gap-1">
-                {secondaryToolbarTools.map(tool => (
+                {allToolbarTools.map(tool => (
                   toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
                     <TooltipProvider key={tool.key}>
                       <Tooltip>
@@ -3917,6 +3897,8 @@ export default function BrowserPage() {
 }
 
     
+
+
 
 
 
