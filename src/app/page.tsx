@@ -94,6 +94,7 @@ import {
   Check,
   ChevronDown,
   Circle as CircleIcon,
+  Pipette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -702,9 +703,25 @@ const CustomizePanelMain = ({
   };
   
   const colors = [
-    { bg: '#fdd663', selected: false }, { bg: '#f28b82', selected: false }, { bg: '#d4e1f5', selected: false }, { bg: '#e8daef', selected: false },
-    { bg: '#a3d1b0', selected: false }, { bg: '#fde293', selected: false }, { bg: '#e9a18d', selected: false }, { bg: '#d3bde0', selected: false },
-    { bg: '#4274e0', selected: false }, { bg: '#e8eaed', selected: true }, { bg: '#202124', selected: false },
+    // Row 1
+    { top: '#0b57d0', bottomLeft: '#a8c7fa', bottomRight: '#747775', selected: false, name: 'Blue' },
+    { top: '#444746', bottomLeft: '#a8c7fa', bottomRight: '#747775', selected: false, name: 'Grey/Blue' },
+    { top: '#1f4e8e', bottomLeft: '#d3e3fd', bottomRight: '#5f6368', selected: false, name: 'Dark Blue' },
+    { top: '#343A40', bottomLeft: '#C2D7EF', bottomRight: '#6C757D', selected: false, name: 'Slate Blue' },
+    // Row 2
+    { top: '#3c4043', bottomLeft: '#e8eaed', bottomRight: '#9aa0a6', selected: true, name: 'Default' },
+    { top: '#004d40', bottomLeft: '#76d2c4', bottomRight: '#607d8b', selected: false, name: 'Teal' },
+    { top: '#1e4e34', bottomLeft: '#b7d3b6', bottomRight: '#686e5c', selected: false, name: 'Green' },
+    { top: '#344f33', bottomLeft: '#d8e8d5', bottomRight: '#65695f', selected: false, name: 'Light Green' },
+    // Row 3
+    { top: '#4b4404', bottomLeft: '#e6d58f', bottomRight: '#79745c', selected: false, name: 'Olive' },
+    { top: '#613112', bottomLeft: '#fddcc4', bottomRight: '#9a7d6a', selected: false, name: 'Brown' },
+    { top: '#513628', bottomLeft: '#fbeadd', bottomRight: '#90776b', selected: false, name: 'Saddle Brown' },
+    { top: '#611f2a', bottomLeft: '#fcdadd', bottomRight: '#9c7a7f', selected: false, name: 'Maroon' },
+    // Row 4
+    { top: '#4a2133', bottomLeft: '#fde7f3', bottomRight: '#977a8a', selected: false, name: 'Dark Pink' },
+    { top: '#52298a', bottomLeft: '#fce1f9', bottomRight: '#836fa3', selected: false, name: 'Purple' },
+    { top: '#332561', bottomLeft: '#e9dfff', bottomRight: '#77709b', selected: false, name: 'Indigo' },
   ];
 
   return (
@@ -743,14 +760,22 @@ const CustomizePanelMain = ({
                 </Button>
               </div>
 
-              <div className="grid grid-cols-6 gap-2 pt-2 justify-items-center">
+              <div className="grid grid-cols-4 gap-2 pt-2 justify-items-center">
                 {colors.map((color, i) => (
                   <TooltipProvider key={i}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button className="w-10 h-10 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
-                          onClick={() => toast({ title: "Custom color themes are not implemented." })}>
-                          <div className="w-full h-full rounded-full" style={{ backgroundColor: color.bg }} />
+                        <button
+                          className="w-10 h-10 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
+                          onClick={() => toast({ title: "Custom color themes are not implemented." })}
+                        >
+                          <div className="relative w-full h-full rounded-full overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1/2" style={{ backgroundColor: color.top }} />
+                            <div className="absolute bottom-0 left-0 w-full h-1/2 flex">
+                              <div className="w-1/2 h-full" style={{ backgroundColor: color.bottomLeft }} />
+                              <div className="w-1/2 h-full" style={{ backgroundColor: color.bottomRight }} />
+                            </div>
+                          </div>
                           {color.selected && (
                             <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
                               <Check className="text-white" />
@@ -758,15 +783,18 @@ const CustomizePanelMain = ({
                           )}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent><p>Default</p></TooltipContent>
+                      <TooltipContent><p>{color.name}</p></TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 ))}
-                 <TooltipProvider>
+                <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center" onClick={() => toast({ title: "Custom color picker is not implemented." })}>
-                        <Pencil className="w-5 h-5 text-muted-foreground" />
+                      <button
+                        className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
+                        onClick={() => toast({ title: "Custom color picker is not implemented." })}
+                      >
+                        <Pipette className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent><p>Custom Color</p></TooltipContent>
@@ -1337,7 +1365,7 @@ const BrowserApp = () => {
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(true);
-  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
+  const [showBookmarksBar, setShowBookmarksBar] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
 
@@ -2957,7 +2985,7 @@ const BrowserApp = () => {
                   src={url}
                   className="w-full h-full border-0"
                   onLoad={() => handleIframeLoad(activeTab.id)}
-                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation allow-clipboard-write allow-redirects-from-form-submit allow-clipboard-read"
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation allow-clipboard-write allow-redirects allow-clipboard-read"
                   allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture; clipboard-read; clipboard-write; presentation"
                 />
             );
@@ -3253,11 +3281,7 @@ const BrowserApp = () => {
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => {
-                    const newState = !showBookmarksBar;
-                    setShowBookmarksBar(newState);
-                    if (!isIncognito) {
-                      localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
-                    }
+                    setShowBookmarksBar(!showBookmarksBar);
                   }}
                 >
                   <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform duration-200", showBookmarksBar && "rotate-180")} />
@@ -3728,7 +3752,7 @@ const BrowserApp = () => {
               {/* Section 1: Bookmarks */}
               <div className="overflow-hidden">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
-                <ScrollArea className="h-[calc(100%-40px)]">
+                <ScrollArea className="h-[calc(100%-40px)] scrollbar-hide">
                   <div className="space-y-1 pr-4">
                     {bookmarks.length > 0 ? bookmarks.map(bookmark => (
                       <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
@@ -3743,7 +3767,7 @@ const BrowserApp = () => {
               {/* Section 2: Tab Groups */}
               <div className="overflow-hidden">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
-                <ScrollArea className="h-[calc(100%-40px)]">
+                <ScrollArea className="h-[calc(100%-40px)] scrollbar-hide">
                   <div className="space-y-1 pr-4">
                     {tabGroups.length > 0 ? tabGroups.map(group => (
                       <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); }}>
@@ -3759,7 +3783,7 @@ const BrowserApp = () => {
               {/* Section 3: Tools */}
               <div className="overflow-hidden">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
-                <ScrollArea className="h-[calc(100%-40px)]">
+                <ScrollArea className="h-[calc(100%-40px)] scrollbar-hide">
                   <div className="space-y-1 pr-4">
                     {panelQuickTools.map(tool => (
                       <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); }}>
@@ -4154,3 +4178,4 @@ export default function BrowserPage() {
 }
 
     
+
