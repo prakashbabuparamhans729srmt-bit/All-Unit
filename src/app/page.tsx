@@ -393,7 +393,7 @@ const AishaAssistant = React.memo(({
   <aside className={cn("flex flex-col",
       isMobile
       ? "flex-1 h-full bg-background"
-      : "h-full w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+      : "h-full w-full border-l border-border bg-background/80 backdrop-blur-sm"
   )}>
     <div className="flex items-center p-2 border-b shrink-0">
       <div className="flex items-center gap-2">
@@ -556,7 +556,7 @@ const ToolbarSettingsPanel = ({
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
-        isMobile ? "flex-1 h-full" : "h-full w-[350px] flex-shrink-0 border-l border-border"
+        isMobile ? "flex-1 h-full" : "h-full w-full border-l border-border"
     )}>
       <div className="flex items-center p-3 border-b shrink-0">
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full mr-2" onClick={() => setCustomizeView('main')}>
@@ -710,7 +710,7 @@ const CustomizePanelMain = ({
   return (
     <div className={cn(
         "flex flex-col bg-background/95 backdrop-blur-sm",
-        isMobile ? "flex-1 h-full" : "h-full w-[350px] flex-shrink-0 border-l border-border"
+        isMobile ? "flex-1 h-full" : "h-full w-full border-l border-border"
     )}>
       <div className="flex items-center p-3 border-b shrink-0">
         <h2 className="text-base font-semibold">Customize Aisha</h2>
@@ -1341,6 +1341,36 @@ const BrowserApp = () => {
   const [isBookmarksBarHovered, setIsBookmarksBarHovered] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
+
+  const [panelWidth, setPanelWidth] = useState(400);
+  const isResizingPanel = useRef(false);
+
+  const handlePanelResizePointerMove = useCallback((e: PointerEvent) => {
+    if (!isResizingPanel.current) return;
+    let newWidth = window.innerWidth - e.clientX;
+    const minWidth = 300;
+    const maxWidth = window.innerWidth * 0.6; // 60% of screen
+    if (newWidth < minWidth) newWidth = minWidth;
+    if (newWidth > maxWidth) newWidth = maxWidth;
+    setPanelWidth(newWidth);
+  }, []);
+  
+  const handlePanelResizePointerUp = useCallback(() => {
+    isResizingPanel.current = false;
+    document.body.style.cursor = 'default';
+    document.body.classList.remove('select-none');
+    window.removeEventListener('pointermove', handlePanelResizePointerMove);
+    window.removeEventListener('pointerup', handlePanelResizePointerUp);
+  }, [handlePanelResizePointerMove]);
+  
+  const handlePanelResizePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    isResizingPanel.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.classList.add('select-none');
+    window.addEventListener('pointermove', handlePanelResizePointerMove);
+    window.addEventListener('pointerup', handlePanelResizePointerUp);
+  }, [handlePanelResizePointerMove, handlePanelResizePointerUp]);
 
   const tabGroups = useMemo(() => {
     const groups = new Map<string, { name: string; color: string; tabs: Tab[] }>();
@@ -2626,7 +2656,7 @@ const BrowserApp = () => {
     <aside className={cn("flex flex-col",
         isMobile
         ? "flex-1 h-full bg-background"
-        : "h-full w-[400px] flex-shrink-0 border-l border-border bg-background/80 backdrop-blur-sm"
+        : "h-full w-full border-l border-border bg-background/80 backdrop-blur-sm"
     )}>
         <div className="flex items-center p-2 border-b shrink-0">
             {isMobile && (
@@ -3753,73 +3783,82 @@ const BrowserApp = () => {
               )}
           </main>
           {activePanel && !isMobile && (
-            <>
-              {activePanel === 'customize' && <CustomizePanel 
-                  setIsOpen={(isOpen) => !isOpen && setActivePanel(null)}
-                  handleThemeChange={handleThemeChange}
-                  theme={theme}
-                  showShortcuts={showShortcutsOnNtp}
-                  setShowShortcuts={(show) => {
-                      setShowShortcutsOnNtp(show);
-                      if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
-                  }}
-                  shortcutSetting={shortcutSetting}
-                  setShortcutSetting={(setting) => {
-                      setShortcutSetting(setting);
-                       if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
-                  }}
-                  showCards={showCardsOnNtp}
-                  setShowCards={(show) => {
-                      setShowCardsOnNtp(show);
-                      if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
-                  }}
-                  showContinueWithTabs={showContinueWithTabsCard}
-                  setShowContinueWithTabs={(show) => {
-                      setShowContinueWithTabsCard(show);
-                      if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
-                  }}
-                  handleResetToDefault={handleResetToDefault}
-                  followDeviceTheme={followDeviceTheme}
-                  setFollowDeviceTheme={(follow) => {
-                      setFollowDeviceTheme(follow);
-                      if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
-                  }}
-                  toast={toast}
-                  toolbarSettings={toolbarSettings}
-                  onToolbarSettingChange={handleToolbarSettingsChange}
-              />}
-              {activePanel === 'assistant' && <AishaAssistant
-                  isMobile={false}
-                  assistantMessages={assistantMessages}
-                  setAssistantMessages={setAssistantMessages}
-                  isAssistantLoading={isAssistantLoading}
-                  assistantInput={assistantInput}
-                  setAssistantInput={setAssistantInput}
-                  handleAssistantSubmit={() => handleAssistantSubmit()}
-                  toast={toast}
-                  startVoiceSearch={startVoiceSearch}
-                  listeningState={listeningState}
-                  voiceSearchSource={voiceSearchSource}
-                  setActivePanel={setActivePanel}
-                  setMobileMenuOpen={setMobileMenuOpen}
-                  toggleMainSidebar={toggleMainSidebar}
-                  setMobileSheetContent={setMobileSheetContent}
-                  handleInstallClick={handleInstallClick}
-                  handleAssistantSearch={handleAssistantSearch}
-                  handleAttachment={handleAttachment}
-                />
-              }
-              {Object.keys(panelConfig).includes(activePanel) && (
-                <RightSidePanel 
-                  title={panelConfig[activePanel].title} 
-                  icon={panelConfig[activePanel].icon} 
-                  panelId={activePanel} 
-                  {...panelProps}
-                >
-                  {panelConfig[activePanel].content}
-                </RightSidePanel>
-              )}
-            </>
+            <aside 
+              style={{ width: `${panelWidth}px` }} 
+              className="relative h-full flex-shrink-0 flex flex-col"
+            >
+              <div 
+                onPointerDown={handlePanelResizePointerDown}
+                className="absolute left-0 -ml-1 top-0 h-full w-2 cursor-col-resize z-50"
+              />
+              <div className="flex-1 flex flex-col min-h-0">
+                {activePanel === 'customize' && <CustomizePanel 
+                    setIsOpen={(isOpen) => !isOpen && setActivePanel(null)}
+                    handleThemeChange={handleThemeChange}
+                    theme={theme}
+                    showShortcuts={showShortcutsOnNtp}
+                    setShowShortcuts={(show) => {
+                        setShowShortcutsOnNtp(show);
+                        if (!isIncognito) localStorage.setItem('aisha-show-shortcuts', JSON.stringify(show));
+                    }}
+                    shortcutSetting={shortcutSetting}
+                    setShortcutSetting={(setting) => {
+                        setShortcutSetting(setting);
+                        if (!isIncognito) localStorage.setItem('aisha-shortcut-setting', setting);
+                    }}
+                    showCards={showCardsOnNtp}
+                    setShowCards={(show) => {
+                        setShowCardsOnNtp(show);
+                        if (!isIncognito) localStorage.setItem('aisha-show-cards', JSON.stringify(show));
+                    }}
+                    showContinueWithTabs={showContinueWithTabsCard}
+                    setShowContinueWithTabs={(show) => {
+                        setShowContinueWithTabsCard(show);
+                        if (!isIncognito) localStorage.setItem('aisha-continue-tabs', JSON.stringify(show));
+                    }}
+                    handleResetToDefault={handleResetToDefault}
+                    followDeviceTheme={followDeviceTheme}
+                    setFollowDeviceTheme={(follow) => {
+                        setFollowDeviceTheme(follow);
+                        if (!isIncognito) localStorage.setItem('aisha-follow-theme', JSON.stringify(follow));
+                    }}
+                    toast={toast}
+                    toolbarSettings={toolbarSettings}
+                    onToolbarSettingChange={handleToolbarSettingsChange}
+                />}
+                {activePanel === 'assistant' && <AishaAssistant
+                    isMobile={false}
+                    assistantMessages={assistantMessages}
+                    setAssistantMessages={setAssistantMessages}
+                    isAssistantLoading={isAssistantLoading}
+                    assistantInput={assistantInput}
+                    setAssistantInput={setAssistantInput}
+                    handleAssistantSubmit={() => handleAssistantSubmit()}
+                    toast={toast}
+                    startVoiceSearch={startVoiceSearch}
+                    listeningState={listeningState}
+                    voiceSearchSource={voiceSearchSource}
+                    setActivePanel={setActivePanel}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    toggleMainSidebar={toggleMainSidebar}
+                    setMobileSheetContent={setMobileSheetContent}
+                    handleInstallClick={handleInstallClick}
+                    handleAssistantSearch={handleAssistantSearch}
+                    handleAttachment={handleAttachment}
+                  />
+                }
+                {Object.keys(panelConfig).includes(activePanel) && (
+                  <RightSidePanel 
+                    title={panelConfig[activePanel].title} 
+                    icon={panelConfig[activePanel].icon} 
+                    panelId={activePanel} 
+                    {...panelProps}
+                  >
+                    {panelConfig[activePanel].content}
+                  </RightSidePanel>
+                )}
+              </div>
+            </aside>
           )}
         </div>
       </div>
@@ -4096,5 +4135,6 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
