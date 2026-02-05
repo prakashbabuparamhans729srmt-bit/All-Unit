@@ -2596,19 +2596,26 @@ const BrowserApp = () => {
     setNewGroupColor(groupColors[0]);
   };
 
-  const navItems = [
-    { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
-    { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
-    { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
-    { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'about:groups') },
-    { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://kiraana-pro.vercel.app/') },
-    { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
-    { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
-    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
-    { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
-    { icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); if (isMobile) { setMobileMenuOpen(false); } } },
-    { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
-  ];
+  const navItems = useMemo(() => {
+    const allItems = [
+      { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
+      { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
+      { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
+      { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'about:groups') },
+      { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://kiraana-pro.vercel.app/') },
+      { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
+      { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
+      { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+      { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
+      { icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); if (isMobile) { setMobileMenuOpen(false); } } },
+      { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
+    ];
+    if (isMobile) {
+      return allItems.filter(item => item.label !== 'Customize');
+    }
+    return allItems;
+  }, [isMobile, activeTabId, handleNavigation, setActivePanel, setMobileMenuOpen]);
+
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -3390,16 +3397,18 @@ const BrowserApp = () => {
                     <TooltipContent><p>Open Assistant</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => {
-                    setShowBookmarksBar(!showBookmarksBar);
-                  }}
-                >
-                  <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform duration-200", showBookmarksBar && "rotate-180")} />
-                </Button>
+                {!isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => {
+                      setShowBookmarksBar(!showBookmarksBar);
+                    }}
+                  >
+                    <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform duration-200", showBookmarksBar && "rotate-180")} />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleBookmark}>
                     <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
                 </Button>
@@ -3851,70 +3860,72 @@ const BrowserApp = () => {
           </div>
         </header>
         
-        <div className="relative">
-          <div
-            style={{ height: `${bookmarksBarHeight}px` }}
-            className={cn(
-              "overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out relative",
-              showBookmarksBar
-                ? "opacity-100 p-4"
-                : "opacity-0 p-0",
-               !showBookmarksBar ? "border-transparent" : "border-border"
-            )}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
-              {/* Section 1: Bookmarks */}
-              <div className="overflow-hidden flex flex-col">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
-                <ScrollArea className="flex-1 scrollbar-hide">
-                  <div className="space-y-1 pr-4">
-                    {bookmarks.length > 0 ? bookmarks.map(bookmark => (
-                      <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
-                        <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
-                        <span className="text-xs font-light truncate">{bookmark.title}</span>
-                      </Button>
-                    )) : <p className="text-xs text-muted-foreground p-2">No bookmarks yet.</p>}
-                  </div>
-                </ScrollArea>
-              </div>
-
-              {/* Section 2: Tab Groups */}
-              <div className="overflow-hidden flex flex-col">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
-                <ScrollArea className="flex-1 scrollbar-hide">
-                  <div className="space-y-1 pr-4">
-                    {tabGroups.length > 0 ? tabGroups.map(group => (
-                      <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); }}>
-                        <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: group.color, fill: group.color }} />
-                        <span className="text-xs font-light truncate flex-1">{group.name}</span>
-                        <span className="text-xs font-light text-muted-foreground">{group.tabs.length}</span>
-                      </Button>
-                    )) : <p className="text-xs text-muted-foreground p-2">No tab groups created.</p>}
-                  </div>
-                </ScrollArea>
-              </div>
-
-              {/* Section 3: Tools */}
-              <div className="overflow-hidden flex flex-col">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
-                <ScrollArea className="flex-1 scrollbar-hide">
-                  <div className="space-y-1 pr-4">
-                    {panelQuickTools.map(tool => (
-                      <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); }}>
-                        <tool.icon className="w-4 h-4 mr-2 text-muted-foreground"/>
-                        <span className="text-xs font-light truncate">{tool.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
+        {!isMobile && (
+          <div className="relative">
             <div
-              onPointerDown={handleBookmarksBarResizePointerDown}
-              className="absolute bottom-0 left-0 w-full h-2 cursor-row-resize z-20"
-            />
+              style={{ height: `${bookmarksBarHeight}px` }}
+              className={cn(
+                "overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out relative",
+                showBookmarksBar
+                  ? "opacity-100 p-4"
+                  : "opacity-0 p-0",
+                 !showBookmarksBar ? "border-transparent" : "border-border"
+              )}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+                {/* Section 1: Bookmarks */}
+                <div className="overflow-hidden flex flex-col">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
+                  <ScrollArea className="flex-1 scrollbar-hide">
+                    <div className="space-y-1 pr-4">
+                      {bookmarks.length > 0 ? bookmarks.map(bookmark => (
+                        <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
+                          <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
+                          <span className="text-xs font-light truncate">{bookmark.title}</span>
+                        </Button>
+                      )) : <p className="text-xs text-muted-foreground p-2">No bookmarks yet.</p>}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                {/* Section 2: Tab Groups */}
+                <div className="overflow-hidden flex flex-col">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
+                  <ScrollArea className="flex-1 scrollbar-hide">
+                    <div className="space-y-1 pr-4">
+                      {tabGroups.length > 0 ? tabGroups.map(group => (
+                        <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); }}>
+                          <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: group.color, fill: group.color }} />
+                          <span className="text-xs font-light truncate flex-1">{group.name}</span>
+                          <span className="text-xs font-light text-muted-foreground">{group.tabs.length}</span>
+                        </Button>
+                      )) : <p className="text-xs text-muted-foreground p-2">No tab groups created.</p>}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                {/* Section 3: Tools */}
+                <div className="overflow-hidden flex flex-col">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
+                  <ScrollArea className="flex-1 scrollbar-hide">
+                    <div className="space-y-1 pr-4">
+                      {panelQuickTools.map(tool => (
+                        <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); }}>
+                          <tool.icon className="w-4 h-4 mr-2 text-muted-foreground"/>
+                          <span className="text-xs font-light truncate">{tool.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+              <div
+                onPointerDown={handleBookmarksBarResizePointerDown}
+                className="absolute bottom-0 left-0 w-full h-2 cursor-row-resize z-20"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-1 min-h-0">
           <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide min-w-0">
@@ -4298,5 +4309,6 @@ export default function BrowserPage() {
 }
 
     
+
 
 
