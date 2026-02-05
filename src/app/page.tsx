@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect, KeyboardEvent, useCallback } from "react";
+import React, { useState, useRef, useEffect, KeyboardEvent, useCallback, useMemo } from "react";
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
@@ -1341,6 +1341,31 @@ const BrowserApp = () => {
   const [isBookmarksBarHovered, setIsBookmarksBarHovered] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
+
+  const tabGroups = useMemo(() => {
+    const groups = new Map<string, { name: string; color: string; tabs: Tab[] }>();
+    tabs.forEach(tab => {
+      if (tab.group) {
+        if (groups.has(tab.group.name)) {
+          groups.get(tab.group.name)!.tabs.push(tab);
+        } else {
+          groups.set(tab.group.name, { ...tab.group, tabs: [tab] });
+        }
+      }
+    });
+    return Array.from(groups.values());
+  }, [tabs]);
+
+  const quickTools = [
+    { icon: BookOpen, label: 'Reading mode', action: () => setIsReadingModeOpen(true) },
+    { icon: Terminal, label: 'Developer Console', action: () => setIsConsoleOpen(true) },
+    { icon: Gauge, label: 'Performance', action: () => handleNavigation(activeTabId, 'about:performance') },
+    { icon: Trash2, label: 'Clear browsing data', action: () => setIsClearDataOpen(true) },
+    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+    { icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
+    { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
+    { icon: Puzzle, label: 'Extensions', action: () => handleNavigation(activeTabId, 'about:extensions') },
+  ];
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
@@ -3076,7 +3101,7 @@ const BrowserApp = () => {
                           {tab.group && <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: tab.group.color, fill: tab.group.color }} />}
                           {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
                           <span className="truncate max-w-[150px]">
-                              {tab.group ? tab.group.name : tab.isLoading ? "Loading..." : tab.title}
+                              {tab.group ? `${tab.group.name}: ${tab.title}` : tab.isLoading ? "Loading..." : tab.title}
                           </span>
                           <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20 focus-visible:outline-none" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
                               <X className="w-4 h-4" />
@@ -3618,42 +3643,83 @@ const BrowserApp = () => {
           />
           <div
             className={cn(
-              "flex h-9 items-center gap-1 overflow-x-auto border-b bg-card px-2 transition-all duration-300 ease-in-out scrollbar-hide",
+              "overflow-hidden border-b bg-card transition-all duration-300 ease-in-out",
               showBookmarksBar || isBookmarksBarHovered
-                ? "max-h-9 opacity-100"
-                : "max-h-0 opacity-0",
+                ? "max-h-80 opacity-100 p-4"
+                : "max-h-0 opacity-0 p-0",
                !showBookmarksBar && !isBookmarksBarHovered ? "border-transparent" : "border-border"
             )}
           >
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => {
-                        const newState = !showBookmarksBar;
-                        setShowBookmarksBar(newState);
-                        if (!isIncognito) {
-                            localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
-                        }
-                        }}
-                    >
-                        {showBookmarksBar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom"><p>{showBookmarksBar ? 'Hide Bookmarks Bar' : 'Show Bookmarks Bar'}</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {/* Section 1: Bookmarks */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
+                <ScrollArea className="h-60">
+                  <div className="space-y-1 pr-4">
+                    {bookmarks.length > 0 ? bookmarks.map(bookmark => (
+                      <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); setIsBookmarksBarHovered(false); }}>
+                        <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
+                        <span className="text-xs font-light truncate">{bookmark.title}</span>
+                      </Button>
+                    )) : <p className="text-xs text-muted-foreground p-2">No bookmarks yet.</p>}
+                  </div>
+                </ScrollArea>
+              </div>
 
-            <div className="flex items-center gap-1">
-              {bookmarks.map(bookmark => (
-                <Button key={bookmark.url} variant="ghost" size="sm" className="h-7 px-2" onClick={() => handleNavigation(activeTabId, bookmark.url)}>
-                  <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
-                  <span className="text-xs font-light truncate">{bookmark.title}</span>
-                </Button>
-              ))}
+              {/* Section 2: Tab Groups */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
+                <ScrollArea className="h-60">
+                  <div className="space-y-1 pr-4">
+                    {tabGroups.length > 0 ? tabGroups.map(group => (
+                      <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); setIsBookmarksBarHovered(false); }}>
+                        <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: group.color, fill: group.color }} />
+                        <span className="text-xs font-light truncate flex-1">{group.name}</span>
+                        <span className="text-xs font-light text-muted-foreground">{group.tabs.length}</span>
+                      </Button>
+                    )) : <p className="text-xs text-muted-foreground p-2">No tab groups created.</p>}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Section 3: Tools */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
+                <ScrollArea className="h-60">
+                  <div className="space-y-1 pr-4">
+                    {quickTools.map(tool => (
+                      <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); setIsBookmarksBarHovered(false); }}>
+                        <tool.icon className="w-4 h-4 mr-2 text-muted-foreground"/>
+                        <span className="text-xs font-light truncate">{tool.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+              
+              <div className="absolute -top-2 -right-2">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                const newState = !showBookmarksBar;
+                                setShowBookmarksBar(newState);
+                                if (!isIncognito) {
+                                    localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
+                                }
+                                }}
+                            >
+                                {showBookmarksBar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom"><p>{showBookmarksBar ? 'Hide Panel' : 'Show Panel'}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
             </div>
           </div>
         </div>
@@ -3760,6 +3826,7 @@ const BrowserApp = () => {
           style={{
             transform: `translate(${fabPosition.x}px, ${fabPosition.y}px)`,
             transition: isFabDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out',
+            opacity: isFabDragging ? 0.8 : 1,
           }}
         >
             <Button
@@ -4025,3 +4092,4 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
