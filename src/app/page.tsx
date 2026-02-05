@@ -1418,9 +1418,9 @@ const BrowserApp = () => {
         g = "0x" + H[3] + H[4];
         b = "0x" + H[5] + H[6];
       }
-      let r_num = Number(r) / 255;
-      let g_num = Number(g) / 255;
-      let b_num = Number(b) / 255;
+      let r_num = parseInt(r) / 255;
+      let g_num = parseInt(g) / 255;
+      let b_num = parseInt(b) / 255;
 
       let cmin = Math.min(r_num, g_num, b_num),
           cmax = Math.max(r_num, g_num, b_num),
@@ -3253,34 +3253,36 @@ const BrowserApp = () => {
 
   return (
     <div className={cn("flex h-screen bg-background text-foreground", fontSizeClass)}>
-      <Sidebar collapsible="icon">
-          {activePanel === 'assistant' ? <ChatHistorySidebarContent/> : <NavigationSidebarContent />}
-          <SidebarFooter>
-              <SidebarMenu>
-                  <SidebarMenuItem>
-                      <SidebarTrigger asChild>
-                          <SidebarMenuButton
-                              tooltip={{ children: 'Toggle sidebar', side: 'right' }}
-                              className="w-full justify-center data-[state=open]:justify-start h-12"
-                          >
-                              <PanelLeft className="size-6" />
-                              <span className="group-data-[collapsible=icon]:hidden">Collapse</span>
-                          </SidebarMenuButton>
-                      </SidebarTrigger>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <SidebarMenuButton
-                          tooltip={{ children: 'Logout', side: 'right' }}
-                           onClick={handleSignOut}
-                          className="w-full justify-center data-[state=open]:justify-start h-12"
-                      >
-                          <LogOut className="size-6" />
-                          <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-                      </SidebarMenuButton>
-                  </SidebarMenuItem>
-              </SidebarMenu>
-          </SidebarFooter>
-      </Sidebar>
+      {!isMobile && (
+        <Sidebar collapsible="icon">
+            {activePanel === 'assistant' ? <ChatHistorySidebarContent/> : <NavigationSidebarContent />}
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarTrigger asChild>
+                            <SidebarMenuButton
+                                tooltip={{ children: 'Toggle sidebar', side: 'right' }}
+                                className="w-full justify-center data-[state=open]:justify-start h-12"
+                            >
+                                <PanelLeft className="size-6" />
+                                <span className="group-data-[collapsible=icon]:hidden">Collapse</span>
+                            </SidebarMenuButton>
+                        </SidebarTrigger>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip={{ children: 'Logout', side: 'right' }}
+                            onClick={handleSignOut}
+                            className="w-full justify-center data-[state=open]:justify-start h-12"
+                        >
+                            <LogOut className="size-6" />
+                            <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
+      )}
 
       <div className="flex flex-1 flex-col min-w-0">
         <header className="flex-shrink-0 z-20">
@@ -3716,10 +3718,10 @@ const BrowserApp = () => {
                           </DropdownMenuSubTrigger>
                           <DropdownMenuPortal>
                               <DropdownMenuSubContent>
-                              <DropdownMenuItem onSelect={() => setActivePanel('customize')}>
+                              {!isMobile && <DropdownMenuItem onSelect={() => setActivePanel('customize')}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   <span>Customize Aisha</span>
-                              </DropdownMenuItem>
+                              </DropdownMenuItem>}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:performance')}>
                                   <Gauge className="mr-2 h-4 w-4" />
@@ -4309,6 +4311,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
