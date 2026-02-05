@@ -2927,7 +2927,7 @@ const BrowserApp = () => {
                   src={url}
                   className="w-full h-full border-0"
                   onLoad={() => handleIframeLoad(activeTab.id)}
-                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads"
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
                   allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture"
                 />
             );
@@ -4135,6 +4135,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
