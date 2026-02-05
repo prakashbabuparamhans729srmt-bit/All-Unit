@@ -246,6 +246,10 @@ const initialToolbarSettings = {
   showSendToDevices: true,
   showTaskManager: true,
   showDevTools: true,
+  showShare: true,
+  showExtensions: true,
+  showSettings: true,
+  showHelp: true,
 };
 
 type Shortcut = {
@@ -647,6 +651,22 @@ const ToolbarSettingsPanel = ({
               <div className="flex items-center justify-between py-2">
                 <Label htmlFor="show-dev-tools" className="text-sm font-normal flex items-center gap-3"><Code className="w-5 h-5 text-muted-foreground"/> Developer tools</Label>
                 <Switch id="show-dev-tools" checked={toolbarSettings.showDevTools} onCheckedChange={(val) => onSettingChange('showDevTools', val)} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-share" className="text-sm font-normal flex items-center gap-3"><Share className="w-5 h-5 text-muted-foreground"/> Share</Label>
+                <Switch id="show-share" checked={toolbarSettings.showShare} onCheckedChange={(val) => onSettingChange('showShare', val)} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-extensions" className="text-sm font-normal flex items-center gap-3"><Puzzle className="w-5 h-5 text-muted-foreground"/> Extensions</Label>
+                <Switch id="show-extensions" checked={toolbarSettings.showExtensions} onCheckedChange={(val) => onSettingChange('showExtensions', val)} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-settings" className="text-sm font-normal flex items-center gap-3"><Settings className="w-5 h-5 text-muted-foreground"/> Settings</Label>
+                <Switch id="show-settings" checked={toolbarSettings.showSettings} onCheckedChange={(val) => onSettingChange('showSettings', val)} />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="show-help" className="text-sm font-normal flex items-center gap-3"><HelpCircle className="w-5 h-5 text-muted-foreground"/> Help</Label>
+                <Switch id="show-help" checked={toolbarSettings.showHelp} onCheckedChange={(val) => onSettingChange('showHelp', val)} />
               </div>
             </CardContent>
           </Card>
@@ -1390,6 +1410,120 @@ const BrowserApp = () => {
   const [bookmarksBarHeight, setBookmarksBarHeight] = useState(300);
   const isResizingBookmarksBar = useRef(false);
 
+  const updateTab = (id: string, updates: Partial<Tab>) => {
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
+    );
+  };
+  
+  const handleNavigation = useCallback((tabId: string, url: string) => {
+    let newUrl = url.trim();
+    if (!newUrl) return;
+
+    if (newUrl.startsWith('aisha:')) {
+      newUrl = newUrl.replace('aisha://', 'about:');
+    }
+    
+    if (newUrl.startsWith("about:")) {
+        if (isIncognito && (newUrl === 'about:history' || newUrl === 'about:bookmarks')) {
+             toast({ title: "History and Bookmarks are disabled in Incognito mode." });
+             return;
+        }
+        const currentTab = tabs.find(t => t.id === tabId);
+        if (!currentTab) return;
+        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
+        newHistory.push(newUrl);
+
+        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
+        updateTab(tabId, { 
+            history: newHistory,
+            currentIndex: newHistory.length - 1,
+            isLoading: false,
+            title: pageTitle,
+            loadFailed: false,
+        });
+        setInputValue(newUrl);
+        return;
+    }
+
+    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?=&%#:-]*)*\/?$/;
+    const isLocalhost = newUrl.includes('localhost');
+    const isUrl = isUrlRegex.test(newUrl) || isLocalhost;
+
+    if (isUrl) {
+      if (!/^(https?:\/\/)/i.test(newUrl)) {
+          newUrl = `https://${newUrl}`;
+      }
+    } else {
+      if (!isIncognito) {
+          setSearchHistory(prevHistory => {
+              const updatedHistory = [{ query: newUrl }, ...prevHistory.filter(item => item.query.toLowerCase() !== newUrl.toLowerCase())].slice(0, 8);
+              localStorage.setItem('aisha-search-history', JSON.stringify(updatedHistory));
+              return updatedHistory;
+          });
+      }
+      const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
+      newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
+    }
+    
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    
+    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
+    newHistory.push(newUrl);
+
+    updateTab(tabId, { 
+        history: newHistory,
+        currentIndex: newHistory.length - 1,
+        isLoading: true,
+        title: "Loading...",
+        loadFailed: false,
+    });
+    setInputValue(newUrl);
+    setNtpInputValue("");
+  }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
+
+  const copyLink = useCallback(() => {
+    if (currentUrl !== DEFAULT_URL) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        toast({ title: "Copied to clipboard!" });
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+        toast({ title: "Failed to copy link", variant: "destructive" });
+      });
+    }
+  }, [currentUrl, toast]);
+
+  const createQRCode = useCallback(() => {
+    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
+    } else {
+      toast({ title: "Can't create QR code for this page." });
+    }
+  }, [currentUrl, toast]);
+
+  const handleShare = () => {
+    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
+        navigator.share({
+            title: activeTab.title,
+            text: `Check out this page: ${activeTab.title}`,
+            url: currentUrl,
+        })
+        .then(() => console.log('Shared successfully'))
+        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
+    } else {
+        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
+    }
+  };
+
+  const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
+    const newSettings = { ...toolbarSettings, [key]: value };
+    setToolbarSettings(newSettings);
+    if (!isIncognito) {
+      localStorage.setItem('aisha-toolbar-settings', JSON.stringify(newSettings));
+    }
+  };
+
   const applyCustomTheme = useCallback((color) => {
     const styleId = 'custom-color-theme';
     let styleTag = document.getElementById(styleId);
@@ -1445,22 +1579,19 @@ const BrowserApp = () => {
       return `${h} ${s}% ${l}%`;
     }
 
-    const darkColorHsl = hexToHSL(color.top);
-    const lightColorHsl = hexToHSL(color.bottomLeft);
-    const midColorHsl = hexToHSL(color.bottomRight);
+    const primaryHsl = hexToHSL(color.top);
+    const accentHsl = hexToHSL(color.bottomRight);
 
     const css = `
       :root {
-        --primary: ${darkColorHsl};
-        --primary-foreground: ${lightColorHsl};
-        --accent: ${midColorHsl};
-        --ring: ${darkColorHsl};
+        --primary: ${primaryHsl};
+        --accent: ${accentHsl};
+        --ring: ${primaryHsl};
       }
       .dark {
-        --primary: ${lightColorHsl};
-        --primary-foreground: ${darkColorHsl};
-        --accent: ${midColorHsl};
-        --ring: ${lightColorHsl};
+        --primary: ${primaryHsl};
+        --accent: ${accentHsl};
+        --ring: ${primaryHsl};
       }
     `;
     styleTag.innerHTML = css;
@@ -1543,134 +1674,24 @@ const BrowserApp = () => {
     return Array.from(groups.values());
   }, [tabs]);
 
-  const copyLink = useCallback(() => {
-    if (currentUrl !== DEFAULT_URL) {
-      navigator.clipboard.writeText(currentUrl).then(() => {
-        toast({ title: "Copied to clipboard!" });
-      }).catch(err => {
-        console.error("Failed to copy:", err);
-        toast({ title: "Failed to copy link", variant: "destructive" });
-      });
-    }
-  }, [currentUrl, toast]);
+  const panelQuickTools = useMemo(() => {
+    const allTools = [
+      { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => setIsReadingModeOpen(true) },
+      { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
+      { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
+      { key: 'showShare', icon: Share, label: 'Share', action: handleShare },
+      { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
+      { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
+      { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
+      { key: 'showTaskManager', icon: Gauge, label: 'Performance', action: () => handleNavigation(activeTabId, 'about:performance') },
+      { key: 'showDeleteData', icon: Trash2, label: 'Clear browsing data', action: () => setIsClearDataOpen(true) },
+      { key: 'showExtensions', icon: Puzzle, label: 'Extensions', action: () => handleNavigation(activeTabId, 'about:extensions') },
+      { key: 'showSettings', icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+      { key: 'showHelp', icon: HelpCircle, label: 'Help', action: () => setIsFeedbackOpen(true) },
+    ];
 
-  const createQRCode = useCallback(() => {
-    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
-    } else {
-      toast({ title: "Can't create QR code for this page." });
-    }
-  }, [currentUrl, toast]);
-
-  const handleShare = () => {
-    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
-        navigator.share({
-            title: activeTab.title,
-            text: `Check out this page: ${activeTab.title}`,
-            url: currentUrl,
-        })
-        .then(() => console.log('Shared successfully'))
-        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
-    } else {
-        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
-    }
-  };
-
-  const panelQuickTools = [
-    { icon: BookOpen, label: 'Reading mode', action: () => setIsReadingModeOpen(true) },
-    { icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
-    { icon: Printer, label: 'Print', action: () => window.print() },
-    { icon: Share, label: 'Share', action: handleShare },
-    { icon: QrCode, label: 'Create QR Code', action: createQRCode },
-    { icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
-    { icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
-    { icon: Gauge, label: 'Performance', action: () => handleNavigation(activeTabId, 'about:performance') },
-    { icon: Trash2, label: 'Clear browsing data', action: () => setIsClearDataOpen(true) },
-    { icon: Puzzle, label: 'Extensions', action: () => handleNavigation(activeTabId, 'about:extensions') },
-    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
-    { icon: HelpCircle, label: 'Help', action: () => setIsFeedbackOpen(true) },
-  ];
-
-  const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
-    const newSettings = { ...toolbarSettings, [key]: value };
-    setToolbarSettings(newSettings);
-    if (!isIncognito) {
-      localStorage.setItem('aisha-toolbar-settings', JSON.stringify(newSettings));
-    }
-  };
-
-  const updateTab = (id: string, updates: Partial<Tab>) => {
-    setTabs((prevTabs) =>
-      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
-    );
-  };
-  
-  const handleNavigation = useCallback((tabId: string, url: string) => {
-    let newUrl = url.trim();
-    if (!newUrl) return;
-
-    if (newUrl.startsWith('aisha:')) {
-      newUrl = newUrl.replace('aisha://', 'about:');
-    }
-    
-    if (newUrl.startsWith("about:")) {
-        if (isIncognito && (newUrl === 'about:history' || newUrl === 'about:bookmarks')) {
-             toast({ title: "History and Bookmarks are disabled in Incognito mode." });
-             return;
-        }
-        const currentTab = tabs.find(t => t.id === tabId);
-        if (!currentTab) return;
-        const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
-        newHistory.push(newUrl);
-
-        const pageTitle = newUrl.split(':')[1].charAt(0).toUpperCase() + newUrl.split(':')[1].slice(1).replace('-',' ');
-        updateTab(tabId, { 
-            history: newHistory,
-            currentIndex: newHistory.length - 1,
-            isLoading: false,
-            title: pageTitle,
-            loadFailed: false,
-        });
-        setInputValue(newUrl);
-        return;
-    }
-
-    const isUrlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .?=&%#:-]*)*\/?$/;
-    const isLocalhost = newUrl.includes('localhost');
-    const isUrl = isUrlRegex.test(newUrl) || isLocalhost;
-
-    if (isUrl) {
-      if (!/^(https?:\/\/)/i.test(newUrl)) {
-          newUrl = `https://${newUrl}`;
-      }
-    } else {
-      if (!isIncognito) {
-          setSearchHistory(prevHistory => {
-              const updatedHistory = [{ query: newUrl }, ...prevHistory.filter(item => item.query.toLowerCase() !== newUrl.toLowerCase())].slice(0, 8);
-              localStorage.setItem('aisha-search-history', JSON.stringify(updatedHistory));
-              return updatedHistory;
-          });
-      }
-      const searchUrl = searchEngines[searchEngine]?.url || searchEngines.google.url;
-      newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
-    }
-    
-    const tab = tabs.find(t => t.id === tabId);
-    if (!tab) return;
-    
-    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
-    newHistory.push(newUrl);
-
-    updateTab(tabId, { 
-        history: newHistory,
-        currentIndex: newHistory.length - 1,
-        isLoading: true,
-        title: "Loading...",
-        loadFailed: false,
-    });
-    setInputValue(newUrl);
-    setNtpInputValue("");
-  }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
+    return allTools.filter(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings]);
+  }, [toolbarSettings, currentUrl, activeTabId, handleNavigation, handleShare, createQRCode, toast]);
 
   const yourAishaToolsList = [
     { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => setActivePanel('payments') },
@@ -4314,6 +4335,8 @@ export default function BrowserPage() {
 }
 
     
+
+
 
 
 
