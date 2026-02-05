@@ -2388,7 +2388,7 @@ const BrowserApp = () => {
     if (isIncognito) return;
     
     handleThemeChange('dark');
-    setFollowDeviceTheme(false);
+    setFollowDeviceTheme(true);
     setShowShortcutsOnNtp(true);
     setShortcutSetting("my-shortcuts");
     setShowCardsOnNtp(true);
@@ -2927,8 +2927,8 @@ const BrowserApp = () => {
                   src={url}
                   className="w-full h-full border-0"
                   onLoad={() => handleIframeLoad(activeTab.id)}
-                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                  allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture"
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation"
+                  allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture; clipboard-read; clipboard-write"
                 />
             );
     }
@@ -3874,8 +3874,8 @@ const BrowserApp = () => {
         >
             <Button
               size="icon"
-              variant="ghost"
-              className="rounded-full h-14 w-14 shadow-lg touch-none border bg-background/30 backdrop-blur-sm hover:bg-background/50"
+              variant="default"
+              className="rounded-full h-14 w-14 shadow-lg touch-none"
               onPointerDown={handleFabPointerDown}
               onPointerMove={handleFabPointerMove}
               onPointerUp={handleFabPointerUp}
@@ -4135,6 +4135,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
