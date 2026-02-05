@@ -2958,7 +2958,7 @@ const BrowserApp = () => {
                   src={url}
                   className="w-full h-full border-0"
                   onLoad={() => handleIframeLoad(activeTab.id)}
-                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation allow-clipboard-write"
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation allow-clipboard-write allow-redirects-from-form-submit allow-clipboard-read"
                   allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture; clipboard-read; clipboard-write; presentation"
                 />
             );
@@ -3232,20 +3232,29 @@ const BrowserApp = () => {
             </div>
             
             <div className="flex-shrink-0 flex items-center ml-auto">
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={toggleBookmark}>
-                <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
-              </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant={activePanel === 'assistant' ? "secondary" : "ghost"} size="sm" className="h-7 px-3 font-light hidden md:inline-flex rounded-full" onClick={() => setActivePanel(activePanel === 'assistant' ? null : 'assistant')}>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Assistant
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Open Assistant</p></TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleShare}>
+                    <Upload className="w-5 h-5 text-muted-foreground" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } }}>
+                    <Languages className="w-5 h-5 text-muted-foreground" />
+                </Button>
+                <TooltipProvider>
+                    <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant={activePanel === 'assistant' ? "secondary" : "ghost"} size="sm" className="h-8 px-3 font-light inline-flex rounded-full" onClick={() => setActivePanel(activePanel === 'assistant' ? null : 'assistant')}>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Assistant
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Open Assistant</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => toast({ title: "Not implemented" })}>
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleBookmark}>
+                    <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
+                </Button>
 
               <div className="flex items-center gap-1">
                 <div className="hidden md:flex items-center gap-1">
@@ -4168,9 +4177,4 @@ export default function BrowserPage() {
   )
 }
 
-
-
-
-
-
-
+    
