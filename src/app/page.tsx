@@ -1356,15 +1356,52 @@ const BrowserApp = () => {
     return Array.from(groups.values());
   }, [tabs]);
 
-  const quickTools = [
+  const copyLink = useCallback(() => {
+    if (currentUrl !== DEFAULT_URL) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        toast({ title: "Copied to clipboard!" });
+      }).catch(err => {
+        console.error("Failed to copy:", err);
+        toast({ title: "Failed to copy link", variant: "destructive" });
+      });
+    }
+  }, [currentUrl, toast]);
+
+  const createQRCode = useCallback(() => {
+    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
+      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
+    } else {
+      toast({ title: "Can't create QR code for this page." });
+    }
+  }, [currentUrl, toast]);
+
+  const handleShare = () => {
+    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
+        navigator.share({
+            title: activeTab.title,
+            text: `Check out this page: ${activeTab.title}`,
+            url: currentUrl,
+        })
+        .then(() => console.log('Shared successfully'))
+        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
+    } else {
+        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
+    }
+  };
+
+  const panelQuickTools = [
     { icon: BookOpen, label: 'Reading mode', action: () => setIsReadingModeOpen(true) },
-    { icon: Terminal, label: 'Developer Console', action: () => setIsConsoleOpen(true) },
+    { icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
+    { icon: Printer, label: 'Print', action: () => window.print() },
+    { icon: Share, label: 'Share', action: handleShare },
+    { icon: QrCode, label: 'Create QR Code', action: createQRCode },
+    { icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
+    { icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
     { icon: Gauge, label: 'Performance', action: () => handleNavigation(activeTabId, 'about:performance') },
     { icon: Trash2, label: 'Clear browsing data', action: () => setIsClearDataOpen(true) },
-    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
-    { icon: HistoryIcon, label: 'History', action: () => handleNavigation(activeTabId, 'about:history') },
-    { icon: Download, label: 'Downloads', action: () => handleNavigation(activeTabId, 'about:downloads') },
     { icon: Puzzle, label: 'Extensions', action: () => handleNavigation(activeTabId, 'about:extensions') },
+    { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+    { icon: HelpCircle, label: 'Help', action: () => setIsFeedbackOpen(true) },
   ];
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
@@ -1447,25 +1484,6 @@ const BrowserApp = () => {
     setInputValue(newUrl);
     setNtpInputValue("");
   }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
-
-  const copyLink = useCallback(() => {
-    if (currentUrl !== DEFAULT_URL) {
-      navigator.clipboard.writeText(currentUrl).then(() => {
-        toast({ title: "Copied to clipboard!" });
-      }).catch(err => {
-        console.error("Failed to copy:", err);
-        toast({ title: "Failed to copy link", variant: "destructive" });
-      });
-    }
-  }, [currentUrl, toast]);
-
-  const createQRCode = useCallback(() => {
-    if (currentUrl && currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`);
-    } else {
-      toast({ title: "Can't create QR code for this page." });
-    }
-  }, [currentUrl, toast]);
 
   const yourAishaToolsList = [
     { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => setActivePanel('payments') },
@@ -1657,9 +1675,9 @@ const BrowserApp = () => {
   const handleFabPointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     if (isFabDragging) {
-        fabReturnTimer.current = setTimeout(() => {
-            setFabPosition({ x: 0, y: 0 });
-        }, 10000);
+        // fabReturnTimer.current = setTimeout(() => {
+        //     setFabPosition({ x: 0, y: 0 });
+        // }, 10000);
         setIsFabDragging(false);
     } else {
         setMobileSheetContent('nav');
@@ -1705,20 +1723,6 @@ const BrowserApp = () => {
         return;
     }
     (installPrompt as any).prompt();
-  };
-
-  const handleShare = () => {
-    if (navigator.share && activeTab && currentUrl !== DEFAULT_URL) {
-        navigator.share({
-            title: activeTab.title,
-            text: `Check out this page: ${activeTab.title}`,
-            url: currentUrl,
-        })
-        .then(() => console.log('Shared successfully'))
-        .catch((error) => toast({ title: "Sharing failed", description: error.message, variant: 'destructive' }));
-    } else {
-        toast({ title: "Web Share not available", description: "Your browser does not support the Web Share API, or there is nothing to share." });
-    }
   };
 
   const handleAttachment = () => {
@@ -3687,7 +3691,7 @@ const BrowserApp = () => {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
                 <ScrollArea className="h-60">
                   <div className="space-y-1 pr-4">
-                    {quickTools.map(tool => (
+                    {panelQuickTools.map(tool => (
                       <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); setIsBookmarksBarHovered(false); }}>
                         <tool.icon className="w-4 h-4 mr-2 text-muted-foreground"/>
                         <span className="text-xs font-light truncate">{tool.label}</span>
@@ -4092,4 +4096,5 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
