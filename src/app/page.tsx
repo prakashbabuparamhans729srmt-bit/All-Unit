@@ -140,8 +140,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { summarizeText } from "@/ai/flows/summarize-flow";
-import { describeImage } from "@/ai/flows/describe-image-flow";
+import { summarizeText } from '@/ai/flows/summarize-flow';
+import { describeImage } from '@/ai/flows/describe-image-flow';
 import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -3715,7 +3715,7 @@ const BrowserApp = () => {
         
         <div className="relative">
           <div
-            style={showBookmarksBar ? { height: `${bookmarksBarHeight}px` } : { height: "0px" }}
+            style={{ height: `${bookmarksBarHeight}px` }}
             className={cn(
               "overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out relative",
               showBookmarksBar
@@ -3726,7 +3726,7 @@ const BrowserApp = () => {
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
               {/* Section 1: Bookmarks */}
-              <div>
+              <div className="overflow-hidden">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
                 <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
@@ -3741,7 +3741,7 @@ const BrowserApp = () => {
               </div>
 
               {/* Section 2: Tab Groups */}
-              <div>
+              <div className="overflow-hidden">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
                 <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
@@ -3757,7 +3757,7 @@ const BrowserApp = () => {
               </div>
 
               {/* Section 3: Tools */}
-              <div>
+              <div className="overflow-hidden">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
                 <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
