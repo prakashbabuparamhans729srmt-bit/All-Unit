@@ -1345,6 +1345,37 @@ const BrowserApp = () => {
   const [panelWidth, setPanelWidth] = useState(400);
   const isResizingPanel = useRef(false);
 
+  const [bookmarksBarHeight, setBookmarksBarHeight] = useState(300);
+  const isResizingBookmarksBar = useRef(false);
+
+  const handleBookmarksBarResizePointerMove = useCallback((e: PointerEvent) => {
+    if (!isResizingBookmarksBar.current) return;
+    let newHeight = e.clientY - 84; // 84px is approx height of header part.
+    const minHeight = 150;
+    const maxHeight = window.innerHeight * 0.7; // Max 70% of viewport height.
+    if (newHeight < minHeight) newHeight = minHeight;
+    if (newHeight > maxHeight) newHeight = maxHeight;
+    setBookmarksBarHeight(newHeight);
+  }, []);
+
+  const handleBookmarksBarResizePointerUp = useCallback(() => {
+    if (!isResizingBookmarksBar.current) return;
+    isResizingBookmarksBar.current = false;
+    document.body.style.cursor = 'default';
+    document.body.classList.remove('select-none');
+    window.removeEventListener('pointermove', handleBookmarksBarResizePointerMove);
+    window.removeEventListener('pointerup', handleBookmarksBarResizePointerUp);
+  }, [handleBookmarksBarResizePointerMove]);
+  
+  const handleBookmarksBarResizePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    isResizingBookmarksBar.current = true;
+    document.body.style.cursor = 'row-resize';
+    document.body.classList.add('select-none');
+    window.addEventListener('pointermove', handleBookmarksBarResizePointerMove);
+    window.addEventListener('pointerup', handleBookmarksBarResizePointerUp);
+  }, [handleBookmarksBarResizePointerMove, handleBookmarksBarResizePointerUp]);
+
   const handlePanelResizePointerMove = useCallback((e: PointerEvent) => {
     if (!isResizingPanel.current) return;
     let newWidth = window.innerWidth - e.clientX;
@@ -2927,8 +2958,8 @@ const BrowserApp = () => {
                   src={url}
                   className="w-full h-full border-0"
                   onLoad={() => handleIframeLoad(activeTab.id)}
-                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation"
-                  allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture; clipboard-read; clipboard-write"
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-top-navigation allow-presentation allow-clipboard-write"
+                  allow="geolocation; microphone; camera; midi; encrypted-media; fullscreen; display-capture; clipboard-read; clipboard-write; presentation"
                 />
             );
     }
@@ -3676,19 +3707,20 @@ const BrowserApp = () => {
             }}
           />
           <div
+            style={showBookmarksBar || isBookmarksBarHovered ? { height: `${bookmarksBarHeight}px` } : { height: "0px" }}
             className={cn(
-              "overflow-hidden border-b bg-card transition-all duration-300 ease-in-out",
+              "overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out relative",
               showBookmarksBar || isBookmarksBarHovered
-                ? "max-h-80 opacity-100 p-4"
-                : "max-h-0 opacity-0 p-0",
+                ? "opacity-100 p-4"
+                : "opacity-0 p-0",
                !showBookmarksBar && !isBookmarksBarHovered ? "border-transparent" : "border-border"
             )}
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
               {/* Section 1: Bookmarks */}
               <div>
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
-                <ScrollArea className="h-60">
+                <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
                     {bookmarks.length > 0 ? bookmarks.map(bookmark => (
                       <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); setIsBookmarksBarHovered(false); }}>
@@ -3703,7 +3735,7 @@ const BrowserApp = () => {
               {/* Section 2: Tab Groups */}
               <div>
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
-                <ScrollArea className="h-60">
+                <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
                     {tabGroups.length > 0 ? tabGroups.map(group => (
                       <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); setIsBookmarksBarHovered(false); }}>
@@ -3719,7 +3751,7 @@ const BrowserApp = () => {
               {/* Section 3: Tools */}
               <div>
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
-                <ScrollArea className="h-60">
+                <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
                     {panelQuickTools.map(tool => (
                       <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); setIsBookmarksBarHovered(false); }}>
@@ -3730,31 +3762,34 @@ const BrowserApp = () => {
                   </div>
                 </ScrollArea>
               </div>
-              
-              <div className="absolute -top-2 -right-2">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => {
-                                const newState = !showBookmarksBar;
-                                setShowBookmarksBar(newState);
-                                if (!isIncognito) {
-                                    localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
-                                }
-                                }}
-                            >
-                                {showBookmarksBar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                            </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom"><p>{showBookmarksBar ? 'Hide Panel' : 'Show Panel'}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
             </div>
+            <div className="absolute -top-2 -right-2 z-10">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                            const newState = !showBookmarksBar;
+                            setShowBookmarksBar(newState);
+                            if (!isIncognito) {
+                                localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
+                            }
+                            }}
+                        >
+                            {showBookmarksBar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom"><p>{showBookmarksBar ? 'Hide Panel' : 'Show Panel'}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+            <div
+              onPointerDown={handleBookmarksBarResizePointerDown}
+              className="absolute bottom-0 left-0 w-full h-2 cursor-row-resize z-20"
+            />
           </div>
         </div>
 
@@ -3864,25 +3899,22 @@ const BrowserApp = () => {
       </div>
 
       {isMobile && (
-        <div
-          className="fixed bottom-6 right-6 z-50"
+        <button
+          className="fixed bottom-6 right-6 z-50 touch-none"
           style={{
             transform: `translate(${fabPosition.x}px, ${fabPosition.y}px)`,
-            transition: isFabDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out',
-            opacity: isFabDragging ? 0.8 : 1,
+            transition: isFabDragging ? 'none' : 'transform 0.3s ease-out',
           }}
+          onPointerDown={handleFabPointerDown}
+          onPointerMove={handleFabPointerMove}
+          onPointerUp={handleFabPointerUp}
         >
-            <Button
-              size="icon"
-              variant="default"
-              className="rounded-full h-14 w-14 shadow-lg touch-none"
-              onPointerDown={handleFabPointerDown}
-              onPointerMove={handleFabPointerMove}
-              onPointerUp={handleFabPointerUp}
+            <div
+              className="w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
             >
               <Menu className="w-6 h-6" />
-            </Button>
-        </div>
+            </div>
+        </button>
       )}
 
       <AlertDialog open={isClearDataOpen} onOpenChange={setIsClearDataOpen}>
@@ -4135,6 +4167,7 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
+
 
 
 
