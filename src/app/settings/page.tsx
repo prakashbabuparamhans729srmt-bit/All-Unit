@@ -189,7 +189,7 @@ export default function SettingsPage() {
   const [searchEngine, setSearchEngine] = useState('google');
   
   const [showHomeButton, setShowHomeButton] = useState(true);
-  const [showToolbar, setShowToolbar] = useState(true);
+  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -210,8 +210,8 @@ export default function SettingsPage() {
     const savedShowHome = localStorage.getItem('aisha-show-home-button');
     setShowHomeButton(savedShowHome ? JSON.parse(savedShowHome) : true);
 
-    const savedShowToolbar = localStorage.getItem('aisha-show-toolbar');
-    setShowToolbar(savedShowToolbar ? JSON.parse(savedShowToolbar) : true);
+    const savedShowBookmarksBar = localStorage.getItem('aisha-show-bookmarks-bar');
+    setShowBookmarksBar(savedShowBookmarksBar ? JSON.parse(savedShowBookmarksBar) : true);
 
   }, []);
 
@@ -229,9 +229,9 @@ export default function SettingsPage() {
       updateSetting('aisha-show-home-button', checked);
   }
 
-  const handleShowToolbarChange = (checked: boolean) => {
-      setShowToolbar(checked);
-      updateSetting('aisha-show-toolbar', checked);
+  const handleShowBookmarksBarChange = (checked: boolean) => {
+      setShowBookmarksBar(checked);
+      updateSetting('aisha-show-bookmarks-bar', checked);
   }
 
   const handleSearchEngineChange = (value: string) => {
@@ -252,16 +252,16 @@ export default function SettingsPage() {
     localStorage.removeItem('aisha-shortcuts');
     localStorage.removeItem('aisha-search-engine');
     localStorage.removeItem('aisha-show-home-button');
-    localStorage.removeItem('aisha-show-toolbar');
+    localStorage.removeItem('aisha-show-bookmarks-bar');
     localStorage.removeItem('aisha-toolbar-settings');
 
     setSearchEngine('google');
     setShowHomeButton(true);
-    setShowToolbar(true);
+    setShowBookmarksBar(true);
 
     window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-search-engine', newValue: 'google' }));
     window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-show-home-button', newValue: 'true' }));
-    window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-show-toolbar', newValue: 'true' }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'aisha-show-bookmarks-bar', newValue: 'true' }));
 
     window.parent.postMessage({ type: 'reset' }, '*');
     toast({ title: "Settings reset", description: "All settings have been restored to their defaults." });
@@ -641,8 +641,8 @@ export default function SettingsPage() {
                 <SettingsItem icon={Home} title="Show home button">
                     <Switch checked={showHomeButton} onCheckedChange={handleShowHomeButtonChange}/>
                 </SettingsItem>
-                <SettingsItem title="Show secondary tools toolbar" description="Show or hide the secondary toolbar with quick access to tools.">
-                    <Switch checked={showToolbar} onCheckedChange={handleShowToolbarChange}/>
+                <SettingsItem title="Show bookmarks bar" description="Show or hide the bookmarks bar below the address bar.">
+                    <Switch checked={showBookmarksBar} onCheckedChange={handleShowBookmarksBarChange}/>
                 </SettingsItem>
                  <div className="p-4 flex items-center justify-between">
                     <div>
@@ -845,11 +845,3 @@ export default function SettingsPage() {
     
 
     
-
-
-
-
-
-
-
-

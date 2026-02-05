@@ -93,6 +93,7 @@ import {
   Upload,
   Check,
   ChevronDown,
+  Circle as CircleIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -260,6 +261,10 @@ type Tab = {
   title: string;
   isLoading: boolean;
   loadFailed: boolean;
+  group?: {
+    name: string;
+    color: string;
+  };
 };
 
 type BookmarkItem = {
@@ -276,6 +281,16 @@ type AssistantMessage = {
 type SearchHistoryItem = {
   query: string;
 };
+
+const groupColors = [
+  "#3b82f6", // blue-500
+  "#ef4444", // red-500
+  "#22c55e", // green-500
+  "#eab308", // yellow-500
+  "#8b5cf6", // violet-500
+  "#ec4899", // pink-500
+  "#f97316", // orange-500
+];
 
 const VoiceSearchOverlay = ({
   state,
@@ -1033,6 +1048,7 @@ const NewTabPage = ({
     startVoiceSearch: (source: 'address' | 'assistant') => void;
     setIsImageSearchOpen: (value: boolean) => void;
     setActivePanel: (panel: string | null) => void;
+    setIsCustomizeOpen: (value: boolean) => void;
     aiTools: any;
     activeTabId: string;
     handleNavigation: (tabId: string, url: string) => void;
@@ -1043,7 +1059,6 @@ const NewTabPage = ({
     handleOpenAddShortcut: () => void;
     handleOpenEditShortcut: (shortcut: Shortcut) => void;
     handleRemoveShortcut: (shortcut: Shortcut) => void;
-    setIsCustomizeOpen: (value: boolean) => void;
     showShortcuts: boolean;
     showCards: boolean;
     showContinueWithTabs: boolean;
@@ -1276,6 +1291,7 @@ const BrowserApp = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isClearDataOpen, setIsClearDataOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
+  const [isReadingModeOpen, setIsReadingModeOpen] = useState(false);
   
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
@@ -1296,16 +1312,17 @@ const BrowserApp = () => {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isBookmarkAlertOpen, setIsBookmarkAlertOpen] = useState(false);
   const [isCloseLastTabAlertOpen, setIsCloseLastTabAlertOpen] = useState(false);
+  const [groupPopoverAnchor, setGroupPopoverAnchor] = useState<HTMLElement | null>(null);
+  const [activeTabForGrouping, setActiveTabForGrouping] = useState<string | null>(null);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupColor, setNewGroupColor] = useState(groupColors[0]);
 
   const { toggleSidebar: toggleMainSidebar } = useSidebar();
   
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [fontSize, setFontSize] = useState('medium');
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [showFab, setShowFab] = useState(true);
 
-  // FAB State
   const [fabPosition, setFabPosition] = useState({ x: 0, y: 0 });
   const [isFabDragging, setIsFabDragging] = useState(false);
   const fabReturnTimer = useRef<NodeJS.Timeout | null>(null);
@@ -1320,8 +1337,8 @@ const BrowserApp = () => {
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(true);
-  const [showToolbar, setShowToolbar] = useState(true);
-  const [isToolbarHovered, setIsToolbarHovered] = useState(false);
+  const [showBookmarksBar, setShowBookmarksBar] = useState(true);
+  const [isBookmarksBarHovered, setIsBookmarksBarHovered] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
 
@@ -1441,7 +1458,7 @@ const BrowserApp = () => {
     { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
     { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
     { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
-    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => toast({ title: "Reading mode is not yet implemented." }) },
+    { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => setIsReadingModeOpen(true) },
     { key: 'showCopyLink', icon: LinkIcon, label: 'Copy link', action: copyLink },
     { key: 'showSendToDevices', icon: Computer, label: 'Send to your devices', action: () => toast({ title: "Sending to other devices is not implemented in this prototype." }) },
     { key: 'showTaskManager', icon: Gauge, label: 'Task manager', action: () => toast({ title: "Task Manager is not implemented." }) },
@@ -1657,28 +1674,6 @@ const BrowserApp = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const mainContent = document.getElementById('browser-content-area');
-    if (!mainContent) return;
-
-    const handleScroll = () => {
-        const currentScrollY = mainContent.scrollTop;
-        if (currentScrollY > lastScrollY && currentScrollY > 50) { 
-            setShowFab(false);
-        } else { 
-            setShowFab(true);
-        }
-        setLastScrollY(currentScrollY);
-    };
-
-    mainContent.addEventListener('scroll', handleScroll);
-    return () => {
-        mainContent.removeEventListener('scroll', handleScroll);
-    };
-  }, [isMobile, lastScrollY]);
-
   const handleInstallClick = () => {
     if (!installPrompt) {
         toast({ title: "App cannot be installed", description: "This app may already be installed or your browser may not support this feature." });
@@ -1788,9 +1783,9 @@ const BrowserApp = () => {
         const savedShowHome = localStorage.getItem('aisha-show-home-button');
         setShowHomeButton(savedShowHome ? JSON.parse(savedShowHome) : true);
       }
-      if (!e || e.key === 'aisha-show-toolbar') {
-        const savedShowToolbar = localStorage.getItem('aisha-show-toolbar');
-        setShowToolbar(savedShowToolbar ? JSON.parse(savedShowToolbar) : true);
+      if (!e || e.key === 'aisha-show-bookmarks-bar') {
+        const savedShowBookmarksBar = localStorage.getItem('aisha-show-bookmarks-bar');
+        setShowBookmarksBar(savedShowBookmarksBar ? JSON.parse(savedShowBookmarksBar) : true);
       }
       if (!e || e.key === 'aisha-font-size') {
         const savedFontSize = localStorage.getItem('aisha-font-size');
@@ -1853,9 +1848,9 @@ const BrowserApp = () => {
       if (savedToolbarSettings) {
           setToolbarSettings(prev => ({ ...initialToolbarSettings, ...JSON.parse(savedToolbarSettings)}));
       }
-       const savedToolbar = localStorage.getItem('aisha-show-toolbar');
-      if (savedToolbar) {
-          setShowToolbar(JSON.parse(savedToolbar));
+       const savedBookmarksBar = localStorage.getItem('aisha-show-bookmarks-bar');
+      if (savedBookmarksBar) {
+          setShowBookmarksBar(JSON.parse(savedBookmarksBar));
       }
 
     } catch (e) {
@@ -2340,6 +2335,7 @@ const BrowserApp = () => {
     setShowCardsOnNtp(true);
     setShowContinueWithTabsCard(true);
     setToolbarSettings(initialToolbarSettings);
+    setShowBookmarksBar(true);
 
     localStorage.removeItem('aisha-theme');
     localStorage.removeItem('aisha-follow-theme');
@@ -2348,6 +2344,7 @@ const BrowserApp = () => {
     localStorage.removeItem('aisha-show-cards');
     localStorage.removeItem('aisha-continue-tabs');
     localStorage.removeItem('aisha-toolbar-settings');
+    localStorage.removeItem('aisha-show-bookmarks-bar');
 
     toast({ title: "Customizations reset to default" });
   };
@@ -2356,6 +2353,16 @@ const BrowserApp = () => {
   const handleSignOut = () => {
     sessionStorage.removeItem('aisha-auth');
     router.push('/welcome');
+  };
+  
+  const handleSaveGroup = () => {
+    if (activeTabForGrouping) {
+      updateTab(activeTabForGrouping, { group: { name: newGroupName, color: newGroupColor } });
+    }
+    setActiveTabForGrouping(null);
+    setGroupPopoverAnchor(null);
+    setNewGroupName("");
+    setNewGroupColor(groupColors[0]);
   };
 
   const navItems = [
@@ -3042,26 +3049,53 @@ const BrowserApp = () => {
           <div className="flex items-end h-10 pt-1 bg-background draggable">
             <div className="flex items-center non-draggable overflow-x-auto scrollbar-hide h-full">
               {tabs.map((tab) => (
-                  <div
-                      key={tab.id}
-                      onClick={() => setActiveTabId(tab.id)}
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTabId(tab.id); }}}
-                      className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`,
-                        'font-light text-xs',
-                        activeTabId === tab.id
-                          ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
-                          : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
-                      )}
-                  >
-                      {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
-                      <span className="truncate max-w-[150px]">
-                          {tab.isLoading ? "Loading..." : tab.title}
-                      </span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20 focus-visible:outline-none" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
-                          <X className="w-4 h-4" />
-                      </Button>
-                  </div>
+                  <Popover
+                    key={`group-popover-${tab.id}`}
+                    open={activeTabForGrouping === tab.id}
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setActiveTabForGrouping(null);
+                            setGroupPopoverAnchor(null);
+                        }
+                    }}
+                   >
+                    <PopoverTrigger asChild>
+                      <div
+                          ref={activeTabForGrouping === tab.id ? setGroupPopoverAnchor : undefined}
+                          key={tab.id}
+                          onClick={() => setActiveTabId(tab.id)}
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTabId(tab.id); }}}
+                          className={cn(`relative flex items-center h-full px-4 rounded-t-lg cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`,
+                            'font-light text-xs',
+                            activeTabId === tab.id
+                              ? `z-10 ${isIncognito ? 'bg-gray-800 text-white' : 'bg-card'}`
+                              : `${isIncognito ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-secondary text-muted-foreground hover:bg-card/80'} border-r border-border`
+                          )}
+                      >
+                          {tab.group && <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: tab.group.color, fill: tab.group.color }} />}
+                          {isIncognito ? <ShieldOff className="w-4 h-4 mr-2 text-gray-400" /> : <Globe className="w-4 h-4 mr-2 text-muted-foreground" />}
+                          <span className="truncate max-w-[150px]">
+                              {tab.group ? tab.group.name : tab.isLoading ? "Loading..." : tab.title}
+                          </span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 rounded-full hover:bg-muted-foreground/20 focus-visible:outline-none" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>
+                              <X className="w-4 h-4" />
+                          </Button>
+                      </div>
+                    </PopoverTrigger>
+                     <PopoverContent className="w-64 p-2">
+                        <div className="space-y-3">
+                            <Label htmlFor="group-name">Group name</Label>
+                            <Input id="group-name" placeholder="My Awesome Group" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
+                            <div className="flex gap-2">
+                                {groupColors.map(color => (
+                                    <button key={color} onClick={() => setNewGroupColor(color)} className={cn("w-6 h-6 rounded-full border-2", newGroupColor === color ? 'border-ring' : 'border-transparent')} style={{ backgroundColor: color }} />
+                                ))}
+                            </div>
+                            <Button size="sm" className="w-full" onClick={handleSaveGroup}>Save Group</Button>
+                        </div>
+                    </PopoverContent>
+                  </Popover>
               ))}
               <div className="flex items-center self-center h-full">
                 <Button variant="ghost" size="icon" className="h-9 w-9 self-center flex-shrink-0 rounded-full focus-visible:outline-none" onClick={addTab}>
@@ -3086,7 +3120,7 @@ const BrowserApp = () => {
                 {activeTab?.isLoading ? <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div> : <RefreshCw className="w-5 h-5" />}
               </Button>
             </div>
-            <div className="flex-1 min-w-0 flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full px-2 sm:px-4 py-1.5">
+            <div className="flex-1 min-w-0 flex items-center bg-secondary focus-within:bg-card focus-within:shadow-md transition-all rounded-full px-2 sm:px-4 py-1.5 ml-1">
               {isInternalPage ? (
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
@@ -3200,11 +3234,25 @@ const BrowserApp = () => {
                       </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-80 max-h-[calc(100vh-150px)] overflow-y-auto scrollbar-hide">
-                          <DropdownMenuItem onSelect={addTab}>
-                              <FilePlus className="mr-2 h-4 w-4" />
-                              <span>New tab</span>
-                              <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
-                          </DropdownMenuItem>
+                          <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                  <PanelsTopLeft className="mr-2 h-4 w-4" />
+                                  <span>Tab</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                    <DropdownMenuItem onSelect={addTab}>
+                                        <FilePlus className="mr-2 h-4 w-4" />
+                                        <span>New tab</span>
+                                        <DropdownMenuShortcut>Ctrl+T</DropdownMenuShortcut>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setActiveTabForGrouping(activeTabId); }}>
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      <span>Add tab to new group</span>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuSubContent>
+                              </DropdownMenuPortal>
+                          </DropdownMenuSub>
                           <DropdownMenuItem onSelect={() => window.open(window.location.href)}>
                               <PlusSquare className="mr-2 h-4 w-4" />
                               <span>New window</span>
@@ -3290,20 +3338,6 @@ const BrowserApp = () => {
                               </DropdownMenuSubContent>
                           </DropdownMenuPortal>
                           </DropdownMenuSub>}
-                          <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                  <PanelsTopLeft className="mr-2 h-4 w-4" />
-                                  <span>Tab groups</span>
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuPortal>
-                                  <DropdownMenuSubContent>
-                                  <DropdownMenuItem onSelect={() => toast({title: "Tab groups are not implemented in this prototype."})}>
-                                      <Plus className="mr-2 h-4 w-4" />
-                                      <span>Create new tab group</span>
-                                  </DropdownMenuItem>
-                                  </DropdownMenuSubContent>
-                              </DropdownMenuPortal>
-                          </DropdownMenuSub>
                           <DropdownMenuSub>
                               <DropdownMenuSubTrigger>
                                   <Sparkles className="mr-2 h-4 w-4" />
@@ -3435,7 +3469,7 @@ const BrowserApp = () => {
                                   <Gauge className="mr-2 h-4 w-4" />
                                   <span>Performance</span>
                               </DropdownMenuItem>
-                              {toolbarSettings.showReadingMode && <DropdownMenuItem onSelect={() => toast({ title: "Reading Mode is not implemented." })}>
+                              {toolbarSettings.showReadingMode && <DropdownMenuItem onSelect={() => setIsReadingModeOpen(true)}>
                                   <BookOpen className="mr-2 h-4 w-4" />
                                   <span>Reading mode</span>
                               </DropdownMenuItem>}
@@ -3573,22 +3607,22 @@ const BrowserApp = () => {
         <div
           className="relative"
           onMouseLeave={() => {
-            if (!showToolbar) setIsToolbarHovered(false);
+            if (!showBookmarksBar) setIsBookmarksBarHovered(false);
           }}
         >
           <div
-            className={cn("absolute top-0 left-0 w-full h-2 z-30", !showToolbar ? "block" : "hidden")}
+            className={cn("absolute top-0 left-0 w-full h-2 z-30", !showBookmarksBar ? "block" : "hidden")}
             onMouseEnter={() => {
-              if (!showToolbar) setIsToolbarHovered(true);
+              if (!showBookmarksBar) setIsBookmarksBarHovered(true);
             }}
           />
           <div
             className={cn(
               "flex h-9 items-center gap-1 overflow-x-auto border-b bg-card px-2 transition-all duration-300 ease-in-out scrollbar-hide",
-              showToolbar || isToolbarHovered
+              showBookmarksBar || isBookmarksBarHovered
                 ? "max-h-9 opacity-100"
                 : "max-h-0 opacity-0",
-               !showToolbar && !isToolbarHovered ? "border-transparent" : "border-border"
+               !showBookmarksBar && !isBookmarksBarHovered ? "border-transparent" : "border-border"
             )}
           >
              <TooltipProvider>
@@ -3599,153 +3633,26 @@ const BrowserApp = () => {
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => {
-                        const newState = !showToolbar;
-                        setShowToolbar(newState);
+                        const newState = !showBookmarksBar;
+                        setShowBookmarksBar(newState);
                         if (!isIncognito) {
-                            localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
+                            localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
                         }
                         }}
                     >
-                        {showToolbar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        {showBookmarksBar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom"><p>{showToolbar ? 'Hide toolbar' : 'Show toolbar'}</p></TooltipContent>
+                    <TooltipContent side="bottom"><p>{showBookmarksBar ? 'Hide Bookmarks Bar' : 'Show Bookmarks Bar'}</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
 
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full"
-                  onClick={() => {
-                      const newState = !showToolbar;
-                      setShowToolbar(newState);
-                      if (!isIncognito) {
-                          localStorage.setItem('aisha-show-toolbar', JSON.stringify(newState));
-                      }
-                  }}
-                >
-                    <Menu className="w-5 h-5 text-muted-foreground" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                    <Share className="w-5 h-5 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {toolbarSettings.showCopyLink && <DropdownMenuItem onSelect={copyLink}>
-                    <LinkIcon className="mr-2 h-4 w-4" />
-                    <span>Copy Link</span>
-                  </DropdownMenuItem>}
-                  {toolbarSettings.showQRCode && <DropdownMenuItem onSelect={createQRCode}>
-                    <QrCode className="mr-2 h-4 w-4" />
-                    <span>Create QR Code</span>
-                  </DropdownMenuItem>}
-                  <DropdownMenuItem onSelect={handleShare}>
-                    <Share className="mr-2 h-4 w-4" />
-                    <span>Share...</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => window.print()}>
-                      <Download className="mr-2 h-4 w-4" />
-                      <span>Save page as...</span>
-                  </DropdownMenuItem>
-                  {toolbarSettings.showSendToDevices && <DropdownMenuItem onSelect={() => toast({title: "Sending to other devices is not implemented in this prototype."})}>
-                      <Computer className="mr-2 h-4 w-4" />
-                      <span>Send to your devices</span>
-                  </DropdownMenuItem>}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Popover open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" 
-                      onClick={() => {
-                        if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                          setIsTranslateOpen(v => !v);
-                        } else {
-                          toast({ title: "Can't translate internal pages." });
-                        }
-                      }}>
-                      <Languages className="w-5 h-5 text-muted-foreground"/>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-auto p-0">
-                    <div className="flex items-center gap-1 p-1">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-auto px-3 py-1 text-sm border-primary"
-                            onClick={() => {
-                                  const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                                  handleNavigation(activeTabId, googleTranslateUrl);
-                                  setIsTranslateOpen(false);
-                            }}
-                        >
-                            English
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-auto px-3 py-1 text-sm"
-                              onClick={() => {
-                                  const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=hi&u=${encodeURIComponent(currentUrl)}`;
-                                  handleNavigation(activeTabId, googleTranslateUrl);
-                                  setIsTranslateOpen(false);
-                            }}
-                        >
-                            Hindi
-                        </Button>
-                        
-                        <div className='flex-grow' />
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                                    <MoreVertical className="w-4 h-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={() => {
-                                    const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&u=${encodeURIComponent(currentUrl)}`;
-                                    handleNavigation(activeTabId, googleTranslateUrl);
-                                    setIsTranslateOpen(false);
-                                }}>Choose another language</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => {
-                                    toast({ title: "This feature is not fully implemented in the prototype." });
-                                    setIsTranslateOpen(false);
-                                }}>Never translate this site</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => setIsTranslateOpen(false)}>
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
-                    <Separator />
-                    <div className="p-2">
-                          <p className="text-xs text-muted-foreground">Google Translate</p>
-                    </div>
-                </PopoverContent>
-                </Popover>
-
-              {otherToolsList.map(tool => (
-                toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
-                  <TooltipProvider key={tool.key}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={tool.action}
-                        >
-                          <tool.icon className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom"><p>{tool.label}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
+              {bookmarks.map(bookmark => (
+                <Button key={bookmark.url} variant="ghost" size="sm" className="h-7 px-2" onClick={() => handleNavigation(activeTabId, bookmark.url)}>
+                  <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
+                  <span className="text-xs font-light truncate">{bookmark.title}</span>
+                </Button>
               ))}
             </div>
           </div>
@@ -3851,8 +3758,7 @@ const BrowserApp = () => {
         <div
           className="fixed bottom-6 right-6 z-50"
           style={{
-            transform: `translate(${fabPosition.x}px, ${fabPosition.y}px) ${!showFab ? 'translateY(6rem)' : 'translateY(0)'}`,
-            opacity: showFab ? 1 : 0,
+            transform: `translate(${fabPosition.x}px, ${fabPosition.y}px)`,
             transition: isFabDragging ? 'none' : 'transform 0.3s ease-out, opacity 0.3s ease-out',
           }}
         >
@@ -3977,6 +3883,33 @@ const BrowserApp = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={isReadingModeOpen} onOpenChange={setIsReadingModeOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{activeTab?.title || "Reading Mode"}</DialogTitle>
+            <DialogDescription>
+              A simplified, clutter-free view of the page.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] my-4 pr-4">
+            <div className="prose dark:prose-invert max-w-none">
+              <h2>A Demonstration of Reading Mode</h2>
+              <p>
+                This is a sample of how Reading Mode would look. It provides a clean, distraction-free environment to focus on the content. The original page's text, headings, and essential images would be displayed here.
+              </p>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi. 
+              </p>
+              <blockquote>
+                Please note: This is a conceptual feature in this prototype. Due to web security restrictions (cross-origin policies), it cannot display content from external websites.
+              </blockquote>
+              <p>
+                Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat. Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim. Pellentesque congue. Ut in risus volutpat libero pharetra tempor. Cras vestibulum bibendum augue. Praesent egestas leo in pede. Praesent blandit odio eu enim. Pellentesque sed dui ut augue blandit sodales.
+              </p>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <input
         type="file"
@@ -4092,16 +4025,3 @@ export default function BrowserPage() {
     </SidebarProvider>
   )
 }
-
-    
-
-    
-
-
-
-
-
-
-
-
-
