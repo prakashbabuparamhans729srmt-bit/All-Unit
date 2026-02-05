@@ -1287,7 +1287,7 @@ const BrowserApp = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSheetContent, setMobileSheetContent] = useState<'nav' | 'chat'>('nav');
   const isMobile = useIsMobile();
-  const [isDesktopSite, setIsDesktopSite] = useState(false);
+  const [isDesktopSite, setIsDesktopSite] = useState(true);
   
   const [showHomeButton, setShowHomeButton] = useState(true);
   
@@ -3123,7 +3123,7 @@ const BrowserApp = () => {
                 </Tooltip>
               </TooltipProvider>
 
-              <div className="flex items-center gap-1 ml-auto">
+              <div className="flex items-center gap-1">
                 <div className="hidden md:flex items-center gap-1">
                   {yourAishaToolsList.map(tool => (
                     toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
@@ -4096,6 +4096,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
