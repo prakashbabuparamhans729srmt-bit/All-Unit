@@ -682,6 +682,9 @@ const CustomizePanelMain = ({
   followDeviceTheme,
   setFollowDeviceTheme,
   toast,
+  colors,
+  activeColorTheme,
+  handleColorThemeChange,
 }) => {
   const handleModeChange = (mode) => {
     if (!followDeviceTheme) {
@@ -701,28 +704,8 @@ const CustomizePanelMain = ({
   const handleShowCardsChange = (checked: boolean) => {
     setShowCards(checked);
   };
-  
-  const colors = [
-    // Row 1
-    { top: '#0b57d0', bottomLeft: '#a8c7fa', bottomRight: '#747775', selected: false, name: 'Blue' },
-    { top: '#444746', bottomLeft: '#a8c7fa', bottomRight: '#747775', selected: false, name: 'Grey/Blue' },
-    { top: '#1f4e8e', bottomLeft: '#d3e3fd', bottomRight: '#5f6368', selected: false, name: 'Dark Blue' },
-    { top: '#343A40', bottomLeft: '#C2D7EF', bottomRight: '#6C757D', selected: false, name: 'Slate Blue' },
-    // Row 2
-    { top: '#3c4043', bottomLeft: '#e8eaed', bottomRight: '#9aa0a6', selected: true, name: 'Default' },
-    { top: '#004d40', bottomLeft: '#76d2c4', bottomRight: '#607d8b', selected: false, name: 'Teal' },
-    { top: '#1e4e34', bottomLeft: '#b7d3b6', bottomRight: '#686e5c', selected: false, name: 'Green' },
-    { top: '#344f33', bottomLeft: '#d8e8d5', bottomRight: '#65695f', selected: false, name: 'Light Green' },
-    // Row 3
-    { top: '#4b4404', bottomLeft: '#e6d58f', bottomRight: '#79745c', selected: false, name: 'Olive' },
-    { top: '#613112', bottomLeft: '#fddcc4', bottomRight: '#9a7d6a', selected: false, name: 'Brown' },
-    { top: '#513628', bottomLeft: '#fbeadd', bottomRight: '#90776b', selected: false, name: 'Saddle Brown' },
-    { top: '#611f2a', bottomLeft: '#fcdadd', bottomRight: '#9c7a7f', selected: false, name: 'Maroon' },
-    // Row 4
-    { top: '#4a2133', bottomLeft: '#fde7f3', bottomRight: '#977a8a', selected: false, name: 'Dark Pink' },
-    { top: '#52298a', bottomLeft: '#fce1f9', bottomRight: '#836fa3', selected: false, name: 'Purple' },
-    { top: '#332561', bottomLeft: '#e9dfff', bottomRight: '#77709b', selected: false, name: 'Indigo' },
-  ];
+
+  const displayColors = colors.map(c => ({...c, selected: c.name === activeColorTheme}));
 
   return (
     <div className={cn(
@@ -761,13 +744,13 @@ const CustomizePanelMain = ({
               </div>
 
               <div className="grid grid-cols-4 gap-2 pt-2 justify-items-center">
-                {colors.map((color, i) => (
+                {displayColors.map((color, i) => (
                   <TooltipProvider key={i}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           className="w-10 h-10 rounded-full border-2 border-transparent focus-visible:border-primary flex items-center justify-center relative group"
-                          onClick={() => toast({ title: "Custom color themes are not implemented." })}
+                          onClick={() => handleColorThemeChange(color)}
                         >
                           <div className="relative w-full h-full rounded-full overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1/2" style={{ backgroundColor: color.top }} />
@@ -901,6 +884,9 @@ const CustomizePanel = ({
   toast,
   toolbarSettings,
   onToolbarSettingChange,
+  colors,
+  activeColorTheme,
+  handleColorThemeChange,
 }: {
   setIsOpen: (isOpen: boolean) => void;
   handleThemeChange: (theme: 'light' | 'dark' | 'device') => void;
@@ -920,6 +906,9 @@ const CustomizePanel = ({
   toast: (options: any) => void;
   toolbarSettings: any;
   onToolbarSettingChange: (key: string, value: boolean) => void;
+  colors: any[];
+  activeColorTheme: string;
+  handleColorThemeChange: (color: any) => void;
 }) => {
   const [customizeView, setCustomizeView] = useState('main');
 
@@ -954,6 +943,9 @@ const CustomizePanel = ({
       followDeviceTheme={followDeviceTheme}
       setFollowDeviceTheme={setFollowDeviceTheme}
       toast={toast}
+      colors={colors}
+      activeColorTheme={activeColorTheme}
+      handleColorThemeChange={handleColorThemeChange}
     />
   );
 };
@@ -1274,6 +1266,28 @@ const NewTabPage = ({
   );
 }
 
+const colorThemes = [
+  // Row 1
+  { top: '#0b57d0', bottomLeft: '#a8c7fa', bottomRight: '#747775', name: 'Blue' },
+  { top: '#444746', bottomLeft: '#a8c7fa', bottomRight: '#747775', name: 'Grey/Blue' },
+  { top: '#1f4e8e', bottomLeft: '#d3e3fd', bottomRight: '#5f6368', name: 'Dark Blue' },
+  { top: '#343A40', bottomLeft: '#C2D7EF', bottomRight: '#6C757D', name: 'Slate Blue' },
+  // Row 2
+  { top: '#3c4043', bottomLeft: '#e8eaed', bottomRight: '#9aa0a6', name: 'Default' },
+  { top: '#004d40', bottomLeft: '#76d2c4', bottomRight: '#607d8b', name: 'Teal' },
+  { top: '#1e4e34', bottomLeft: '#b7d3b6', bottomRight: '#686e5c', name: 'Green' },
+  { top: '#344f33', bottomLeft: '#d8e8d5', bottomRight: '#65695f', name: 'Light Green' },
+  // Row 3
+  { top: '#4b4404', bottomLeft: '#e6d58f', bottomRight: '#79745c', name: 'Olive' },
+  { top: '#613112', bottomLeft: '#fddcc4', bottomRight: '#9a7d6a', name: 'Brown' },
+  { top: '#513628', bottomLeft: '#fbeadd', bottomRight: '#90776b', name: 'Saddle Brown' },
+  { top: '#611f2a', bottomLeft: '#fcdadd', bottomRight: '#9c7a7f', name: 'Maroon' },
+  // Row 4
+  { top: '#4a2133', bottomLeft: '#fde7f3', bottomRight: '#977a8a', name: 'Dark Pink' },
+  { top: '#52298a', bottomLeft: '#fce1f9', bottomRight: '#836fa3', name: 'Purple' },
+  { top: '#332561', bottomLeft: '#e9dfff', bottomRight: '#77709b', name: 'Indigo' },
+];
+
 const BrowserApp = () => {
   const router = useRouter();
   const [tabs, setTabs] = useState<Tab[]>([
@@ -1366,6 +1380,7 @@ const BrowserApp = () => {
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(true);
   const [showBookmarksBar, setShowBookmarksBar] = useState(false);
+  const [activeColorTheme, setActiveColorTheme] = useState('Default');
 
   const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
 
@@ -1374,6 +1389,90 @@ const BrowserApp = () => {
 
   const [bookmarksBarHeight, setBookmarksBarHeight] = useState(300);
   const isResizingBookmarksBar = useRef(false);
+
+  const applyCustomTheme = useCallback((color) => {
+    const styleId = 'custom-color-theme';
+    let styleTag = document.getElementById(styleId);
+
+    if (color.name === 'Default') {
+      if (styleTag) {
+        styleTag.remove();
+      }
+      return;
+    }
+
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = styleId;
+      document.head.appendChild(styleTag);
+    }
+    
+    function hexToHSL(H: string) {
+      let r = "0", g = "0", b = "0";
+      if (H.length == 4) {
+        r = "0x" + H[1] + H[1];
+        g = "0x" + H[2] + H[2];
+        b = "0x" + H[3] + H[3];
+      } else if (H.length == 7) {
+        r = "0x" + H[1] + H[2];
+        g = "0x" + H[3] + H[4];
+        b = "0x" + H[5] + H[6];
+      }
+      let r_num = Number(r) / 255;
+      let g_num = Number(g) / 255;
+      let b_num = Number(b) / 255;
+
+      let cmin = Math.min(r_num, g_num, b_num),
+          cmax = Math.max(r_num, g_num, b_num),
+          delta = cmax - cmin,
+          h = 0,
+          s = 0,
+          l = 0;
+
+      if (delta == 0) h = 0;
+      else if (cmax == r_num) h = ((g_num - b_num) / delta) % 6;
+      else if (cmax == g_num) h = (b_num - r_num) / delta + 2;
+      else h = (r_num - g_num) / delta + 4;
+
+      h = Math.round(h * 60);
+      if (h < 0) h += 360;
+
+      l = (cmax + cmin) / 2;
+      s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+      s = +(s * 100).toFixed(1);
+      l = +(l * 100).toFixed(1);
+
+      return `${h} ${s}% ${l}%`;
+    }
+
+    const darkColorHsl = hexToHSL(color.top);
+    const lightColorHsl = hexToHSL(color.bottomLeft);
+    const midColorHsl = hexToHSL(color.bottomRight);
+
+    const css = `
+      :root {
+        --primary: ${darkColorHsl};
+        --primary-foreground: ${lightColorHsl};
+        --accent: ${midColorHsl};
+        --ring: ${darkColorHsl};
+      }
+      .dark {
+        --primary: ${lightColorHsl};
+        --primary-foreground: ${darkColorHsl};
+        --accent: ${midColorHsl};
+        --ring: ${lightColorHsl};
+      }
+    `;
+    styleTag.innerHTML = css;
+  }, []);
+
+  const handleColorThemeChange = useCallback((color) => {
+    setActiveColorTheme(color.name);
+    if (!isIncognito) {
+      localStorage.setItem('aisha-color-theme', JSON.stringify(color));
+    }
+    applyCustomTheme(color);
+  }, [isIncognito, applyCustomTheme]);
 
   const handleBookmarksBarResizePointerMove = useCallback((e: PointerEvent) => {
     if (!isResizingBookmarksBar.current) return;
@@ -1970,10 +2069,19 @@ const BrowserApp = () => {
           setShowBookmarksBar(JSON.parse(savedBookmarksBar));
       }
 
+      const savedColorTheme = localStorage.getItem('aisha-color-theme');
+      if (savedColorTheme) {
+        const color = JSON.parse(savedColorTheme);
+        if (color && color.name) {
+          setActiveColorTheme(color.name);
+          applyCustomTheme(color);
+        }
+      }
+
     } catch (e) {
       console.error("Failed to parse settings from localStorage", e);
     }
-  }, [isIncognito]);
+  }, [isIncognito, applyCustomTheme]);
 
   useEffect(() => {
     const activeContent = document.getElementById('browser-content-area');
@@ -2453,6 +2561,12 @@ const BrowserApp = () => {
     setShowContinueWithTabsCard(true);
     setToolbarSettings(initialToolbarSettings);
     setShowBookmarksBar(true);
+
+    const defaultColorTheme = colorThemes.find(c => c.name === 'Default');
+    if (defaultColorTheme) {
+      handleColorThemeChange(defaultColorTheme);
+    }
+    localStorage.removeItem('aisha-color-theme');
 
     localStorage.removeItem('aisha-theme');
     localStorage.removeItem('aisha-follow-theme');
@@ -3750,9 +3864,9 @@ const BrowserApp = () => {
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
               {/* Section 1: Bookmarks */}
-              <div className="overflow-hidden">
+              <div className="overflow-hidden flex flex-col">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
-                <ScrollArea className="h-[calc(100%-40px)] scrollbar-hide">
+                <ScrollArea className="flex-1 scrollbar-hide">
                   <div className="space-y-1 pr-4">
                     {bookmarks.length > 0 ? bookmarks.map(bookmark => (
                       <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
@@ -3765,9 +3879,9 @@ const BrowserApp = () => {
               </div>
 
               {/* Section 2: Tab Groups */}
-              <div className="overflow-hidden">
+              <div className="overflow-hidden flex flex-col">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
-                <ScrollArea className="h-[calc(100%-40px)] scrollbar-hide">
+                <ScrollArea className="flex-1 scrollbar-hide">
                   <div className="space-y-1 pr-4">
                     {tabGroups.length > 0 ? tabGroups.map(group => (
                       <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); }}>
@@ -3781,9 +3895,9 @@ const BrowserApp = () => {
               </div>
 
               {/* Section 3: Tools */}
-              <div className="overflow-hidden">
+              <div className="overflow-hidden flex flex-col">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
-                <ScrollArea className="h-[calc(100%-40px)] scrollbar-hide">
+                <ScrollArea className="flex-1 scrollbar-hide">
                   <div className="space-y-1 pr-4">
                     {panelQuickTools.map(tool => (
                       <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); }}>
@@ -3869,6 +3983,9 @@ const BrowserApp = () => {
                     toast={toast}
                     toolbarSettings={toolbarSettings}
                     onToolbarSettingChange={handleToolbarSettingsChange}
+                    colors={colorThemes}
+                    activeColorTheme={activeColorTheme}
+                    handleColorThemeChange={handleColorThemeChange}
                 />}
                 {activePanel === 'assistant' && <AishaAssistant
                     isMobile={false}
@@ -4149,6 +4266,9 @@ const BrowserApp = () => {
                         toast={toast}
                         toolbarSettings={toolbarSettings}
                         onToolbarSettingChange={handleToolbarSettingsChange}
+                        colors={colorThemes}
+                        activeColorTheme={activeColorTheme}
+                        handleColorThemeChange={handleColorThemeChange}
                        />
                   )}
                   {Object.keys(panelConfig).includes(activePanel) && (
@@ -4178,4 +4298,5 @@ export default function BrowserPage() {
 }
 
     
+
 
