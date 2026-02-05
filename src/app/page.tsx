@@ -1319,7 +1319,7 @@ const BrowserApp = () => {
   const [shortcutSetting, setShortcutSetting] = useState("my-shortcuts");
   const [showCardsOnNtp, setShowCardsOnNtp] = useState(true);
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
-  const [followDeviceTheme, setFollowDeviceTheme] = useState(false);
+  const [followDeviceTheme, setFollowDeviceTheme] = useState(true);
   const [showToolbar, setShowToolbar] = useState(true);
   const [isToolbarHovered, setIsToolbarHovered] = useState(false);
 
@@ -1851,7 +1851,7 @@ const BrowserApp = () => {
 
       const savedToolbarSettings = localStorage.getItem('aisha-toolbar-settings');
       if (savedToolbarSettings) {
-          setToolbarSettings(prev => ({ ...prev, ...JSON.parse(savedToolbarSettings)}));
+          setToolbarSettings(prev => ({ ...initialToolbarSettings, ...JSON.parse(savedToolbarSettings)}));
       }
        const savedToolbar = localStorage.getItem('aisha-show-toolbar');
       if (savedToolbar) {
@@ -3571,7 +3571,7 @@ const BrowserApp = () => {
         </header>
         
         <div
-          className="relative overflow-hidden"
+          className="relative"
           onMouseLeave={() => {
             if (!showToolbar) setIsToolbarHovered(false);
           }}
@@ -3588,7 +3588,7 @@ const BrowserApp = () => {
               showToolbar || isToolbarHovered
                 ? "max-h-9 opacity-100"
                 : "max-h-0 opacity-0",
-               !showToolbar && !isToolbarHovered && "border-none"
+               !showToolbar && !isToolbarHovered ? "border-transparent" : "border-border"
             )}
           >
              <TooltipProvider>
@@ -4096,6 +4096,7 @@ export default function BrowserPage() {
     
 
     
+
 
 
 
