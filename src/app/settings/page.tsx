@@ -153,7 +153,7 @@ const LanguagesSettings = () => {
 
 
 const AccessibilitySettings = () => {
-    const [liveCaption, setLiveCaption] = useState(false);
+    const [liveCaption, setLiveCaption] = useState(true);
     const [showFocusHighlight, setShowFocusHighlight] = useState(true);
 
     return (
@@ -845,6 +845,7 @@ export default function SettingsPage() {
     
 
     
+
 
 
 
