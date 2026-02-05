@@ -1338,7 +1338,6 @@ const BrowserApp = () => {
   const [showContinueWithTabsCard, setShowContinueWithTabsCard] = useState(true);
   const [followDeviceTheme, setFollowDeviceTheme] = useState(true);
   const [showBookmarksBar, setShowBookmarksBar] = useState(true);
-  const [isBookmarksBarHovered, setIsBookmarksBarHovered] = useState(false);
 
   const [toolbarSettings, setToolbarSettings] = useState(initialToolbarSettings);
 
@@ -3249,8 +3248,19 @@ const BrowserApp = () => {
                     <TooltipContent><p>Open Assistant</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => toast({ title: "Not implemented" })}>
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={() => {
+                    const newState = !showBookmarksBar;
+                    setShowBookmarksBar(newState);
+                    if (!isIncognito) {
+                      localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
+                    }
+                  }}
+                >
+                  <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform duration-200", showBookmarksBar && "rotate-180")} />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={toggleBookmark}>
                     <Star className={`w-5 h-5 transition-colors ${isBookmarked ? 'text-yellow-400 fill-current' : 'text-muted-foreground hover:text-yellow-400'}`} />
@@ -3703,26 +3713,15 @@ const BrowserApp = () => {
           </div>
         </header>
         
-        <div
-          className="relative"
-          onMouseLeave={() => {
-            if (!showBookmarksBar) setIsBookmarksBarHovered(false);
-          }}
-        >
+        <div className="relative">
           <div
-            className={cn("absolute top-0 left-0 w-full h-2 z-30", !showBookmarksBar ? "block" : "hidden")}
-            onMouseEnter={() => {
-              if (!showBookmarksBar) setIsBookmarksBarHovered(true);
-            }}
-          />
-          <div
-            style={showBookmarksBar || isBookmarksBarHovered ? { height: `${bookmarksBarHeight}px` } : { height: "0px" }}
+            style={showBookmarksBar ? { height: `${bookmarksBarHeight}px` } : { height: "0px" }}
             className={cn(
               "overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out relative",
-              showBookmarksBar || isBookmarksBarHovered
+              showBookmarksBar
                 ? "opacity-100 p-4"
                 : "opacity-0 p-0",
-               !showBookmarksBar && !isBookmarksBarHovered ? "border-transparent" : "border-border"
+               !showBookmarksBar ? "border-transparent" : "border-border"
             )}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
@@ -3732,7 +3731,7 @@ const BrowserApp = () => {
                 <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
                     {bookmarks.length > 0 ? bookmarks.map(bookmark => (
-                      <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); setIsBookmarksBarHovered(false); }}>
+                      <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
                         <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
                         <span className="text-xs font-light truncate">{bookmark.title}</span>
                       </Button>
@@ -3747,7 +3746,7 @@ const BrowserApp = () => {
                 <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
                     {tabGroups.length > 0 ? tabGroups.map(group => (
-                      <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); setIsBookmarksBarHovered(false); }}>
+                      <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); }}>
                         <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: group.color, fill: group.color }} />
                         <span className="text-xs font-light truncate flex-1">{group.name}</span>
                         <span className="text-xs font-light text-muted-foreground">{group.tabs.length}</span>
@@ -3763,7 +3762,7 @@ const BrowserApp = () => {
                 <ScrollArea className="h-[calc(100%-40px)]">
                   <div className="space-y-1 pr-4">
                     {panelQuickTools.map(tool => (
-                      <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); setIsBookmarksBarHovered(false); }}>
+                      <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); }}>
                         <tool.icon className="w-4 h-4 mr-2 text-muted-foreground"/>
                         <span className="text-xs font-light truncate">{tool.label}</span>
                       </Button>
@@ -3771,29 +3770,6 @@ const BrowserApp = () => {
                   </div>
                 </ScrollArea>
               </div>
-            </div>
-            <div className="absolute -top-2 -right-2 z-10">
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => {
-                            const newState = !showBookmarksBar;
-                            setShowBookmarksBar(newState);
-                            if (!isIncognito) {
-                                localStorage.setItem('aisha-show-bookmarks-bar', JSON.stringify(newState));
-                            }
-                            }}
-                        >
-                            {showBookmarksBar ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom"><p>{showBookmarksBar ? 'Hide Panel' : 'Show Panel'}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
             </div>
             <div
               onPointerDown={handleBookmarksBarResizePointerDown}
