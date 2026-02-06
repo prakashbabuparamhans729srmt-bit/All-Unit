@@ -1023,8 +1023,8 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
 const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
   shortcut: Shortcut;
   onNavigate: (url: string) => void;
-  onEdit: (shortcut: Shortcut) => void;
-  onRemove: (shortcut: Shortcut) => void;
+  onEdit: () => void;
+  onRemove: () => void;
   isIncognito: boolean;
 }) => {
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -1069,10 +1069,10 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-40 p-1" onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-8" onClick={() => { onEdit(shortcut); setPopoverOpen(false); }}>
+              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-8" onClick={() => { onEdit(); setPopoverOpen(false); }}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit shortcut
               </Button>
-              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-8 text-destructive hover:text-destructive" onClick={() => { onRemove(shortcut); setPopoverOpen(false); }}>
+              <Button variant="ghost" className="w-full justify-start text-sm font-normal h-8 text-destructive hover:text-destructive" onClick={() => { onRemove(); setPopoverOpen(false); }}>
                 <Trash2 className="mr-2 h-4 w-4" /> Remove
               </Button>
             </PopoverContent>
@@ -1103,12 +1103,12 @@ const NewTabPage = ({
     handleNavigation,
     searchHistory,
     shortcuts,
+    dropdownShortcuts,
     shortcutSetting,
     isIncognito,
     handleOpenAddShortcut,
     handleOpenEditShortcut,
     handleRemoveShortcut,
-    setIsCustomizeOpen,
     showShortcuts,
     showCards,
     showContinueWithTabs,
@@ -1132,11 +1132,12 @@ const NewTabPage = ({
     handleNavigation: (tabId: string, url: string) => void;
     searchHistory: SearchHistoryItem[];
     shortcuts: Shortcut[];
+    dropdownShortcuts: Shortcut[];
     shortcutSetting: string;
     isIncognito: boolean;
-    handleOpenAddShortcut: () => void;
-    handleOpenEditShortcut: (shortcut: Shortcut) => void;
-    handleRemoveShortcut: (shortcut: Shortcut) => void;
+    handleOpenAddShortcut: (context: 'ntp' | 'dropdown') => void;
+    handleOpenEditShortcut: (shortcut: Shortcut, context: 'ntp' | 'dropdown') => void;
+    handleRemoveShortcut: (shortcut: Shortcut, context: 'ntp' | 'dropdown') => void;
     showShortcuts: boolean;
     showCards: boolean;
     showContinueWithTabs: boolean;
@@ -1156,7 +1157,7 @@ const NewTabPage = ({
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative z-20">
             <div className={cn(
-                "relative w-full",
+                "relative w-full transition-all",
                 isSearchFocused ? "rounded-t-3xl bg-card shadow-lg" : ""
             )}>
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-20" />
@@ -1221,7 +1222,7 @@ const NewTabPage = ({
                 </div>
             </div>
             {isSearchFocused && (
-                <div className="w-full bg-card rounded-b-3xl shadow-lg border-t relative">
+                <div className="w-full bg-card rounded-b-3xl shadow-lg border-t">
                     <CardContent className="p-0">
                          <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
                             {searchHistory.length > 0 && (
@@ -1250,18 +1251,18 @@ const NewTabPage = ({
                             )}
                             <div className="p-4">
                               <div className="grid grid-cols-5 gap-4">
-                                  {shortcuts.map((shortcut, index) => (
+                                  {dropdownShortcuts.map((shortcut, index) => (
                                       <ShortcutItem 
                                         key={`${shortcut.name}-${index}`}
                                         shortcut={shortcut}
                                         onNavigate={(url) => { handleNavigation(activeTabId, url); setIsSearchFocused(false); }}
-                                        onEdit={handleOpenEditShortcut}
-                                        onRemove={handleRemoveShortcut}
+                                        onEdit={() => handleOpenEditShortcut(shortcut, 'dropdown')}
+                                        onRemove={() => handleRemoveShortcut(shortcut, 'dropdown')}
                                         isIncognito={isIncognito}
                                       />
                                   ))}
-                                  {shortcuts.length < 100 && !isIncognito && (
-                                    <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
+                                  {dropdownShortcuts.length < 100 && !isIncognito && (
+                                    <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={() => handleOpenAddShortcut('dropdown')}>
                                         <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary/50 mb-2">
                                             <Plus className="w-8 h-8 text-muted-foreground" />
                                         </div>
@@ -1283,13 +1284,13 @@ const NewTabPage = ({
                             key={`main-shortcut-${shortcut.name}-${index}`}
                             shortcut={shortcut}
                             onNavigate={(url) => handleNavigation(activeTabId, url)}
-                            onEdit={handleOpenEditShortcut}
-                            onRemove={handleRemoveShortcut}
+                            onEdit={() => handleOpenEditShortcut(shortcut, 'ntp')}
+                            onRemove={() => handleRemoveShortcut(shortcut, 'ntp')}
                             isIncognito={isIncognito}
                         />
                     ))}
                     {shortcutSetting === 'my-shortcuts' && shortcuts.length < 100 && !isIncognito && (
-                      <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={handleOpenAddShortcut}>
+                      <div className="w-28 h-28 p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer group hover:bg-secondary" onClick={() => handleOpenAddShortcut('ntp')}>
                           <div className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary/50 mb-2">
                               <Plus className="w-8 h-8 text-muted-foreground" />
                           </div>
@@ -1371,10 +1372,12 @@ const BrowserApp = () => {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [shortcuts, setShortcuts] = useState<Shortcut[]>(initialShortcuts);
+  const [dropdownShortcuts, setDropdownShortcuts] = useState<Shortcut[]>(initialShortcuts);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   
   const [isAddOrEditShortcutOpen, setIsAddOrEditShortcutOpen] = useState(false);
   const [shortcutToEdit, setShortcutToEdit] = useState<Shortcut | null>(null);
+  const [shortcutModalContext, setShortcutModalContext] = useState<'ntp' | 'dropdown' | null>(null);
   const [newShortcutName, setNewShortcutName] = useState('');
   const [newShortcutUrl, setNewShortcutUrl] = useState('');
 
@@ -1563,14 +1566,14 @@ const BrowserApp = () => {
       { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
       { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
       { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
-      { icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); if (isMobile) { setMobileMenuOpen(false); } } },
-      { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
     ];
-    if (isMobile) {
-      return allItems.filter(item => item.label !== 'Customize');
+    if (!isMobile) {
+      allItems.push({ icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); } });
     }
+    allItems.push({ icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') });
+    
     return allItems;
-  }, [isMobile, activeTabId, setActivePanel, setMobileMenuOpen, handleNavigation]);
+  }, [isMobile, activeTabId, setActivePanel, handleNavigation]);
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
@@ -1981,6 +1984,91 @@ const BrowserApp = () => {
     }
   };
 
+  const handleOpenAddShortcut = (context: 'ntp' | 'dropdown') => {
+    if (isIncognito) {
+      toast({ title: "Can't add shortcuts in Incognito mode." });
+      return;
+    }
+    setShortcutToEdit(null);
+    setNewShortcutName('');
+    setNewShortcutUrl('');
+    setShortcutModalContext(context);
+    setIsAddOrEditShortcutOpen(true);
+  };
+  
+  const handleOpenEditShortcut = (shortcut: Shortcut, context: 'ntp' | 'dropdown') => {
+    if (isIncognito) return;
+    setShortcutToEdit(shortcut);
+    setNewShortcutName(shortcut.name);
+    setNewShortcutUrl(shortcut.url);
+    setShortcutModalContext(context);
+    setIsAddOrEditShortcutOpen(true);
+  };
+  
+  const handleRemoveShortcut = (shortcutToRemove: Shortcut, context: 'ntp' | 'dropdown') => {
+    if (isIncognito) return;
+    
+    const targetShortcuts = context === 'ntp' ? shortcuts : dropdownShortcuts;
+    const setTargetShortcuts = context === 'ntp' ? setShortcuts : setDropdownShortcuts;
+    const storageKey = context === 'ntp' ? 'aisha-shortcuts' : 'aisha-dropdown-shortcuts';
+
+    const newShortcuts = targetShortcuts.filter(s => s.name !== shortcutToRemove.name);
+    
+    setTargetShortcuts(newShortcuts);
+    localStorage.setItem(storageKey, JSON.stringify(newShortcuts));
+    toast({ title: 'Shortcut removed' });
+  };
+  
+  const handleSaveShortcut = () => {
+    if (isIncognito || !shortcutModalContext) return;
+    if (!newShortcutName.trim() || !newShortcutUrl.trim()) {
+      toast({ title: 'Please fill out both name and URL.', variant: 'destructive' });
+      return;
+    }
+    let url = newShortcutUrl.trim();
+    if (!/^(https?:\/\/)/i.test(url)) {
+      url = `https://${url}`;
+    }
+
+    const targetShortcuts = shortcutModalContext === 'ntp' ? shortcuts : dropdownShortcuts;
+    const setTargetShortcuts = shortcutModalContext === 'ntp' ? setShortcuts : setDropdownShortcuts;
+    const storageKey = shortcutModalContext === 'ntp' ? 'aisha-shortcuts' : 'aisha-dropdown-shortcuts';
+
+    let newShortcuts;
+    if (shortcutToEdit) {
+      // Editing existing shortcut
+      newShortcuts = targetShortcuts.map(s =>
+        s.name === shortcutToEdit.name
+          ? { ...s, name: newShortcutName, url: url, icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}` }
+          : s
+      );
+      toast({ title: "Shortcut updated!" });
+    } else {
+      // Adding new shortcut
+      if (targetShortcuts.length >= 100) {
+        toast({ title: 'You have reached the shortcut limit of 100.', variant: 'destructive' });
+        return;
+      }
+      const newShortcut: Shortcut = {
+        name: newShortcutName,
+        url: url,
+        icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`,
+        color: 'bg-secondary',
+      };
+      newShortcuts = [...targetShortcuts, newShortcut];
+      toast({ title: "Shortcut added!" });
+    }
+
+    setTargetShortcuts(newShortcuts);
+    localStorage.setItem(storageKey, JSON.stringify(newShortcuts));
+
+    setIsAddOrEditShortcutOpen(false);
+    setShortcutToEdit(null);
+    setNewShortcutName('');
+    setNewShortcutUrl('');
+    setShortcutModalContext(null);
+  };
+
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
     if (authStatus !== 'true') {
@@ -2103,6 +2191,19 @@ const BrowserApp = () => {
           }
       } else {
           setShortcuts(initialShortcuts);
+      }
+
+      const savedDropdownShortcutsString = localStorage.getItem('aisha-dropdown-shortcuts');
+      if (savedDropdownShortcutsString) {
+          try {
+              const savedDropdownShortcuts: Shortcut[] = JSON.parse(savedDropdownShortcutsString);
+              setDropdownShortcuts(savedDropdownShortcuts);
+          } catch (e) {
+              console.error("Failed to parse dropdown shortcuts from localStorage", e);
+              setDropdownShortcuts(initialShortcuts);
+          }
+      } else {
+        setDropdownShortcuts(initialShortcuts);
       }
 
       const savedShowShortcuts = localStorage.getItem('aisha-show-shortcuts');
@@ -2414,77 +2515,6 @@ const BrowserApp = () => {
     setIsFeedbackOpen(false);
     setFeedbackContent('');
     setFeedbackEmail('');
-  };
-  
-  const handleOpenAddShortcut = () => {
-    if (isIncognito) {
-      toast({ title: "Can't add shortcuts in Incognito mode." });
-      return;
-    }
-    setShortcutToEdit(null);
-    setNewShortcutName('');
-    setNewShortcutUrl('');
-    setIsAddOrEditShortcutOpen(true);
-  };
-  
-  const handleOpenEditShortcut = (shortcut: Shortcut) => {
-    setShortcutToEdit(shortcut);
-    setNewShortcutName(shortcut.name);
-    setNewShortcutUrl(shortcut.url);
-    setIsAddOrEditShortcutOpen(true);
-  };
-  
-  const handleRemoveShortcut = (shortcutToRemove: Shortcut) => {
-    if (isIncognito) return;
-    const newShortcuts = shortcuts.filter(s => s.name !== shortcutToRemove.name);
-    setShortcuts(newShortcuts);
-    localStorage.setItem('aisha-shortcuts', JSON.stringify(newShortcuts));
-    toast({ title: 'Shortcut removed' });
-  };
-  
-  const handleSaveShortcut = () => {
-    if (isIncognito) return;
-    if (!newShortcutName.trim() || !newShortcutUrl.trim()) {
-      toast({ title: 'Please fill out both name and URL.', variant: 'destructive' });
-      return;
-    }
-    let url = newShortcutUrl.trim();
-    if (!/^(https?:\/\/)/i.test(url)) {
-      url = `https://${url}`;
-    }
-
-    let newShortcuts;
-    if (shortcutToEdit) {
-      // Editing existing shortcut
-      newShortcuts = shortcuts.map(s =>
-        s.name === shortcutToEdit.name
-          ? { ...s, name: newShortcutName, url: url, icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}` }
-          : s
-      );
-      toast({ title: "Shortcut updated!" });
-    } else {
-      // Adding new shortcut
-      if (shortcuts.length >= 100) {
-        toast({ title: 'You have reached the shortcut limit of 100.', variant: 'destructive' });
-        return;
-      }
-      const newShortcut: Shortcut = {
-        name: newShortcutName,
-        url: url,
-        icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`,
-        color: 'bg-secondary',
-      };
-      newShortcuts = [...shortcuts, newShortcut];
-      toast({ title: "Shortcut added!" });
-    }
-
-    setShortcuts(newShortcuts);
-    localStorage.setItem('aisha-shortcuts', JSON.stringify(newShortcuts));
-
-    setIsAddOrEditShortcutOpen(false);
-    setShortcutToEdit(null);
-    setNewShortcutName('');
-    setNewShortcutUrl('');
   };
   
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -2869,7 +2899,7 @@ const BrowserApp = () => {
     </div>
   );
 
-  const RightSidePanel = ({ title, icon: Icon, children, panelId, onCloseRequest, isMobile = false }) => (
+  const RightSidePanel = ({ title, icon: Icon, children, panelId, onCloseRequest, isMobile = false }: { title: string, icon: React.ElementType, children: React.ReactNode, panelId: string, onCloseRequest: (id: string | null) => void, isMobile?: boolean }) => (
     <aside className={cn("flex flex-col",
         isMobile
         ? "flex-1 h-full bg-background"
@@ -3029,6 +3059,7 @@ const BrowserApp = () => {
         handleNavigation={handleNavigation}
         searchHistory={searchHistory}
         shortcuts={shortcuts}
+        dropdownShortcuts={dropdownShortcuts}
         shortcutSetting={shortcutSetting}
         isIncognito={isIncognito}
         handleOpenAddShortcut={handleOpenAddShortcut}
@@ -3066,6 +3097,7 @@ const BrowserApp = () => {
               handleNavigation={handleNavigation}
               searchHistory={searchHistory}
               shortcuts={shortcuts}
+              dropdownShortcuts={dropdownShortcuts}
               shortcutSetting={shortcutSetting}
               isIncognito={isIncognito}
               handleOpenAddShortcut={handleOpenAddShortcut}
@@ -3722,7 +3754,7 @@ const BrowserApp = () => {
                                       <span>Save page as...</span>
                                       <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => handleOpenAddShortcut()}>
+                                  <DropdownMenuItem onSelect={() => handleOpenAddShortcut('ntp')}>
                                       <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
                                       <span>Create shortcut...</span>
                                   </DropdownMenuItem>
@@ -3897,14 +3929,11 @@ const BrowserApp = () => {
           <main
             id="browser-content-area"
             className="flex-1 bg-background overflow-y-auto scrollbar-hide transition-all duration-300 ease-in-out"
-            style={{
-              paddingTop: showBookmarksBar && !isMobile ? `${bookmarksBarHeight}px` : '0px'
-            }}
           >
               <div
                 style={{ height: `${bookmarksBarHeight}px` }}
                 className={cn(
-                  "absolute top-0 left-0 right-0 z-10 overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out",
+                  "absolute top-0 left-0 right-0 z-10 overflow-hidden border-b bg-card transition-[height,opacity] duration-300 ease-in-out",
                   showBookmarksBar && !isMobile
                     ? "opacity-100 p-4 pointer-events-auto"
                     : "h-0 opacity-0 p-0 pointer-events-none",
@@ -3916,8 +3945,8 @@ const BrowserApp = () => {
                     {/* Section 1: Bookmarks */}
                     <div className="overflow-hidden flex flex-col">
                       <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><BookMarked className="w-4 h-4"/> Bookmarks</h3>
-                      <ScrollArea className="flex-1 scrollbar-hide">
-                        <div className="space-y-1 pr-4">
+                      <ScrollArea className="flex-1 -mr-4 pr-4">
+                        <div className="space-y-1">
                           {bookmarks.length > 0 ? bookmarks.map(bookmark => (
                             <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
                               <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
@@ -3931,8 +3960,8 @@ const BrowserApp = () => {
                     {/* Section 2: Tab Groups */}
                     <div className="overflow-hidden flex flex-col">
                       <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><PanelsTopLeft className="w-4 h-4"/> Tab Groups</h3>
-                       <ScrollArea className="flex-1 scrollbar-hide">
-                          <div className="space-y-1 pr-4">
+                       <ScrollArea className="flex-1 -mr-4 pr-4">
+                          <div className="space-y-1">
                             {tabGroups.length > 0 ? tabGroups.map(group => (
                               <Button key={group.name} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { setActiveTabId(group.tabs[0].id); }}>
                                 <CircleIcon className="w-2.5 h-2.5 mr-2" style={{ color: group.color, fill: group.color }} />
@@ -3947,8 +3976,8 @@ const BrowserApp = () => {
                     {/* Section 3: Tools */}
                     <div className="overflow-hidden flex flex-col">
                       <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4"/> Quick Tools</h3>
-                       <ScrollArea className="flex-1 scrollbar-hide">
-                          <div className="space-y-1 pr-4">
+                       <ScrollArea className="flex-1 -mr-4 pr-4">
+                          <div className="space-y-1">
                             {panelQuickTools.map(tool => (
                               <Button key={tool.label} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { tool.action(); }}>
                                 <tool.icon className="w-4 h-4 mr-2 text-muted-foreground"/>
@@ -3967,7 +3996,7 @@ const BrowserApp = () => {
               </div>
 
               {tabs.map(tab => (
-                  <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
+                  <div key={tab.id} className={`w-full h-full flex flex-col transition-all duration-300 ease-in-out ${activeTabId === tab.id ? 'block' : 'hidden'}`} style={{ paddingTop: showBookmarksBar && !isMobile ? `${bookmarksBarHeight}px` : '0px' }}>
                       {renderCurrentPage()}
                   </div>
               ))}
@@ -4346,6 +4375,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
