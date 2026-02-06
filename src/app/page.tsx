@@ -1221,7 +1221,7 @@ const NewTabPage = ({
                 </div>
             </div>
             {isSearchFocused && (
-                <Card className="w-full bg-card rounded-b-3xl shadow-lg border-t">
+                <div className="w-full bg-card rounded-b-3xl shadow-lg border-t relative">
                     <CardContent className="p-0">
                          <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
                             {searchHistory.length > 0 && (
@@ -1272,7 +1272,7 @@ const NewTabPage = ({
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </div>
             )}
         </div>
         {showShortcuts ? (
@@ -1445,15 +1445,11 @@ const BrowserApp = () => {
   const isResizingBookmarksBar = useRef(false);
   
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
-  const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
-
-  const updateTab = (id: string, updates: Partial<Tab>) => {
-    setTabs((prevTabs) =>
-      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
-    );
-  };
   
   const handleNavigation = useCallback((tabId: string, url: string) => {
+    const currentTab = tabs.find(t => t.id === tabId);
+    if (!currentTab) return;
+
     let newUrl = url.trim();
     if (!newUrl) return;
 
@@ -1466,8 +1462,6 @@ const BrowserApp = () => {
              toast({ title: "History and Bookmarks are disabled in Incognito mode." });
              return;
         }
-        const currentTab = tabs.find(t => t.id === tabId);
-        if (!currentTab) return;
         const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
         newHistory.push(newUrl);
 
@@ -1503,10 +1497,7 @@ const BrowserApp = () => {
       newUrl = `${searchUrl}${encodeURIComponent(newUrl)}`;
     }
     
-    const tab = tabs.find(t => t.id === tabId);
-    if (!tab) return;
-    
-    const newHistory = tab.history.slice(0, tab.currentIndex + 1);
+    const newHistory = currentTab.history.slice(0, currentTab.currentIndex + 1);
     newHistory.push(newUrl);
 
     updateTab(tabId, { 
@@ -1520,6 +1511,14 @@ const BrowserApp = () => {
     setNtpInputValue("");
   }, [tabs, isIncognito, searchEngine, toast]);
 
+  const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
+
+  const updateTab = (id: string, updates: Partial<Tab>) => {
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
+    );
+  };
+  
   const copyLink = useCallback(() => {
     if (currentUrl !== DEFAULT_URL) {
       navigator.clipboard.writeText(currentUrl).then(() => {
@@ -3449,28 +3448,26 @@ const BrowserApp = () => {
             </div>
             
             <div className="flex-shrink-0 flex items-center ml-auto">
-              <div className="flex items-center gap-1">
-                <div className="hidden md:flex items-center gap-1">
-                  {yourAishaToolsList.map(tool => (
-                    toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
-                      <TooltipProvider key={tool.key}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-full"
-                              onClick={tool.action}
-                            >
-                              <tool.icon className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>{tool.label}</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )
-                  ))}
-                </div>
+              <div className={cn("items-center gap-1", isMobile ? "hidden" : "flex")}>
+                {yourAishaToolsList.map(tool => (
+                  toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                    <TooltipProvider key={tool.key}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={tool.action}
+                          >
+                            <tool.icon className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{tool.label}</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )
+                ))}
                 <Separator orientation="vertical" className="h-6 mx-1" />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -3909,8 +3906,8 @@ const BrowserApp = () => {
                 className={cn(
                   "absolute top-0 left-0 right-0 z-10 overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out",
                   showBookmarksBar && !isMobile
-                    ? "opacity-100 p-4"
-                    : "h-0 opacity-0 p-0",
+                    ? "opacity-100 p-4 pointer-events-auto"
+                    : "h-0 opacity-0 p-0 pointer-events-none",
                   !showBookmarksBar ? "border-transparent" : "border-border"
                 )}
               >
@@ -4349,6 +4346,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
