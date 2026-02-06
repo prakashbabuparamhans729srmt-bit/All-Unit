@@ -117,7 +117,7 @@ const AssistantPage = () => {
                   </div>
                   {message.role === 'user' && (
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
+                      <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" alt="User avatar" />
                       <AvatarFallback>PB</AvatarFallback>
                     </Avatar>
                   )}

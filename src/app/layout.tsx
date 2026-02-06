@@ -1,6 +1,19 @@
 import type {Metadata} from 'next';
+import { Roboto, Rubik } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-roboto',
+});
+
+const rubik = Rubik({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-rubik',
+});
 
 export const metadata: Metadata = {
   title: 'Aisha Browser',
@@ -14,12 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
+    <html lang="en" className={`${roboto.variable} ${rubik.variable} dark`} style={{ colorScheme: 'dark' }}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,500,700" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="font-body antialiased bg-background">

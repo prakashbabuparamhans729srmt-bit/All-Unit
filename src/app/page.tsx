@@ -473,7 +473,7 @@ const AishaAssistant = React.memo(({
               </div>
                {message.role === 'user' && (
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
+                  <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" alt="User avatar" />
                   <AvatarFallback>PB</AvatarFallback>
                 </Avatar>
               )}
@@ -1154,7 +1154,7 @@ const NewTabPage = ({
 
     return (
     <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
-        <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
+        <h1 className="text-8xl font-bold mb-8 font-headline">Aisha</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative z-20">
             <div className={cn(
                 "relative w-full transition-all",
@@ -3136,7 +3136,7 @@ const BrowserApp = () => {
         case 'about:about':
             return <GenericInternalPage title="About Aisha" icon={Info}>
                 <div className="flex flex-col h-full items-center justify-center text-center">
-                    <h1 className="text-6xl font-bold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
+                    <h1 className="text-6xl font-bold mb-4 font-headline">Aisha</h1>
                     <p className="text-muted-foreground">Version 1.0 (Prototype)</p>
                     <p className="text-muted-foreground mt-2">Copyright © 2024. All rights reserved.</p>
                 </div>
@@ -3530,7 +3530,7 @@ const BrowserApp = () => {
                     <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
                         <Avatar className="w-7 h-7">
-                        <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" />
+                        <AvatarImage src="https://picsum.photos/seed/prakashbabu/100/100" alt="User avatar" />
                         <AvatarFallback>PB</AvatarFallback>
                         </Avatar>
                     </Button>
@@ -4375,6 +4375,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 

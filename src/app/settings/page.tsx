@@ -757,7 +757,7 @@ export default function SettingsPage() {
       case 'about-aisha':
         return (
           <div className="flex flex-col h-full items-center justify-center text-center p-10" id="about-aisha">
-            <h1 className="text-6xl font-bold mb-4" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
+            <h1 className="text-6xl font-bold mb-4 font-headline">Aisha</h1>
             <p className="text-muted-foreground">
               Version 1.0 (Prototype)
             </p>
