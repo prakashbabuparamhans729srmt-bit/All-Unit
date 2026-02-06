@@ -1554,6 +1554,26 @@ const BrowserApp = () => {
     }
   };
 
+  const navItems = useMemo(() => {
+    const allItems = [
+      { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
+      { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
+      { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
+      { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'about:groups') },
+      { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://kiraana-pro.vercel.app/') },
+      { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
+      { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
+      { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
+      { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
+      { icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); if (isMobile) { setMobileMenuOpen(false); } } },
+      { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
+    ];
+    if (isMobile) {
+      return allItems.filter(item => item.label !== 'Customize');
+    }
+    return allItems;
+  }, [isMobile, activeTabId, setActivePanel, setMobileMenuOpen, handleNavigation]);
+
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
     setToolbarSettings(newSettings);
@@ -1723,7 +1743,7 @@ const BrowserApp = () => {
     ];
 
     return allTools.filter(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings]);
-  }, [toolbarSettings, activeTabId, handleNavigation, handleShare, createQRCode, toast]);
+  }, [toolbarSettings, activeTabId, handleNavigation, handleShare]);
 
   const yourAishaToolsList = [
     { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => setActivePanel('payments') },
@@ -2647,27 +2667,6 @@ const BrowserApp = () => {
     setNewGroupName("");
     setNewGroupColor(groupColors[0]);
   };
-
-  const navItems = useMemo(() => {
-    const allItems = [
-      { icon: DotCircleIcon, label: 'U', action: () => handleNavigation(activeTabId, 'https://utru.vercel.app/') },
-      { icon: CustomBookReaderIcon, label: 'R', action: () => handleNavigation(activeTabId, 'https://www.goodreads.com/') },
-      { icon: CustomCommunityIcon, label: 'W', action: () => handleNavigation(activeTabId, 'https://mahila-suraksha.vercel.app/') },
-      { icon: CustomGroupIcon, label: 'G', action: () => handleNavigation(activeTabId, 'about:groups') },
-      { icon: ShoppingCart, label: 'S', action: () => handleNavigation(activeTabId, 'https://kiraana-pro.vercel.app/') },
-      { icon: CustomAiToolIcon, label: 'M', action: () => handleNavigation(activeTabId, 'https://mahadev-eight.vercel.app/') },
-      { icon: CustomAboutIcon, label: 'About', action: () => handleNavigation(activeTabId, 'about:about') },
-      { icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
-      { icon: Languages, label: 'Translate', action: () => handleNavigation(activeTabId, 'about:languages') },
-      { icon: Pencil, label: 'Customize', action: () => { setActivePanel('customize'); if (isMobile) { setMobileMenuOpen(false); } } },
-      { icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') },
-    ];
-    if (isMobile) {
-      return allItems.filter(item => item.label !== 'Customize');
-    }
-    return allItems;
-  }, [isMobile, activeTabId, handleNavigation, setActivePanel, setMobileMenuOpen]);
-
 
   const isInternalPage = currentUrl.startsWith('about:');
 
@@ -3983,7 +3982,13 @@ const BrowserApp = () => {
             </div>
           )}
 
-          <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide min-w-0">
+          <main
+            id="browser-content-area"
+            className="absolute top-0 left-0 right-0 bottom-0 bg-background overflow-y-auto scrollbar-hide transition-[top] duration-300 ease-in-out"
+            style={{
+              top: showBookmarksBar && !isMobile ? `${bookmarksBarHeight}px` : '0px'
+            }}
+          >
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
@@ -4364,6 +4369,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
