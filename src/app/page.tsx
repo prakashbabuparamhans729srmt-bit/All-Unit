@@ -932,6 +932,44 @@ const CustomizePanel = ({
 }) => {
   const [customizeView, setCustomizeView] = useState('main');
 
+  if (isMobile) {
+    if (customizeView === 'toolbar') {
+      return (
+        <ToolbarSettingsPanel
+          setCustomizeView={setCustomizeView}
+          setIsOpen={setIsOpen}
+          isMobile={isMobile}
+          toolbarSettings={toolbarSettings}
+          onSettingChange={onToolbarSettingChange}
+        />
+      );
+    }
+     return (
+      <CustomizePanelMain
+        setCustomizeView={setCustomizeView}
+        setIsOpen={setIsOpen}
+        handleThemeChange={handleThemeChange}
+        theme={theme}
+        isMobile={isMobile}
+        showShortcuts={showShortcuts}
+        setShowShortcuts={setShowShortcuts}
+        shortcutSetting={shortcutSetting}
+        setShortcutSetting={setShortcutSetting}
+        showCards={showCards}
+        setShowCards={setShowCards}
+        showContinueWithTabs={showContinueWithTabs}
+        setShowContinueWithTabs={setShowContinueWithTabs}
+        handleResetToDefault={handleResetToDefault}
+        followDeviceTheme={followDeviceTheme}
+        setFollowDeviceTheme={setFollowDeviceTheme}
+        toast={toast}
+        colors={colors}
+        activeColorTheme={activeColorTheme}
+        handleColorThemeChange={handleColorThemeChange}
+      />
+    );
+  }
+
   if (customizeView === 'toolbar') {
     return (
       <ToolbarSettingsPanel
@@ -1481,7 +1519,7 @@ const BrowserApp = () => {
     });
     setInputValue(newUrl);
     setNtpInputValue("");
-  }, [tabs, isIncognito, searchEngine, toast, activeTabId]);
+  }, [tabs, isIncognito, searchEngine, toast]);
 
   const copyLink = useCallback(() => {
     if (currentUrl !== DEFAULT_URL) {
@@ -1581,7 +1619,7 @@ const BrowserApp = () => {
 
     const primaryHsl = hexToHSL(color.top);
     const accentHsl = hexToHSL(color.bottomRight);
-
+    
     const css = `
       :root {
         --primary: ${primaryHsl};
@@ -1594,6 +1632,7 @@ const BrowserApp = () => {
         --ring: ${primaryHsl};
       }
     `;
+
     styleTag.innerHTML = css;
   }, []);
 
@@ -1676,14 +1715,7 @@ const BrowserApp = () => {
 
   const panelQuickTools = useMemo(() => {
     const allTools = [
-      { key: 'showReadingMode', icon: BookOpen, label: 'Reading mode', action: () => setIsReadingModeOpen(true) },
-      { key: 'showTranslate', icon: Languages, label: 'Translate', action: () => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } } },
-      { key: 'showPrint', icon: Printer, label: 'Print', action: () => window.print() },
       { key: 'showShare', icon: Share, label: 'Share', action: handleShare },
-      { key: 'showQRCode', icon: QrCode, label: 'Create QR Code', action: createQRCode },
-      { key: 'showCast', icon: Cast, label: 'Cast', action: () => toast({ title: "Casting is not supported in this prototype." }) },
-      { key: 'showDevTools', icon: Code, label: 'Developer tools', action: () => setIsConsoleOpen(true) },
-      { key: 'showTaskManager', icon: Gauge, label: 'Performance', action: () => handleNavigation(activeTabId, 'about:performance') },
       { key: 'showDeleteData', icon: Trash2, label: 'Clear browsing data', action: () => setIsClearDataOpen(true) },
       { key: 'showExtensions', icon: Puzzle, label: 'Extensions', action: () => handleNavigation(activeTabId, 'about:extensions') },
       { key: 'showSettings', icon: Settings, label: 'Settings', action: () => handleNavigation(activeTabId, 'about:settings') },
@@ -1691,7 +1723,7 @@ const BrowserApp = () => {
     ];
 
     return allTools.filter(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings]);
-  }, [toolbarSettings, currentUrl, activeTabId, handleNavigation, handleShare, createQRCode, toast]);
+  }, [toolbarSettings, activeTabId, handleNavigation, handleShare, createQRCode, toast]);
 
   const yourAishaToolsList = [
     { key: 'showPayments', icon: CreditCard, label: 'Payment methods', action: () => setActivePanel('payments') },
@@ -2160,7 +2192,6 @@ const BrowserApp = () => {
         }
     }
   }, [activeTab, activeTabId]);
-
 
   const goBack = () => {
     if (!activeTab) return;
@@ -3884,12 +3915,12 @@ const BrowserApp = () => {
           </div>
         </header>
         
-        {!isMobile && (
-          <div className="relative">
+        <div className="relative flex flex-1 min-h-0">
+           {!isMobile && (
             <div
               style={{ height: `${bookmarksBarHeight}px` }}
               className={cn(
-                "overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out relative",
+                "absolute top-0 left-0 right-0 z-10 overflow-hidden border-b bg-card transition-[height] duration-300 ease-in-out",
                 showBookmarksBar
                   ? "opacity-100 p-4"
                   : "h-0 opacity-0 p-0",
@@ -3950,10 +3981,8 @@ const BrowserApp = () => {
                 className="absolute bottom-0 left-0 w-full h-2 cursor-row-resize z-20"
               />
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="flex flex-1 min-h-0">
           <main id="browser-content-area" className="flex-1 bg-background overflow-y-auto relative scrollbar-hide min-w-0">
               {tabs.map(tab => (
                   <div key={tab.id} className={`w-full h-full flex flex-col ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
@@ -4335,6 +4364,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
