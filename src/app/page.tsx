@@ -1154,7 +1154,7 @@ const NewTabPage = ({
     return (
     <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
         <h1 className="text-8xl font-bold mb-8" style={{fontFamily: 'Google Sans, sans-serif'}}>Aisha</h1>
-        <div ref={searchContainerRef} className="w-full max-w-2xl relative">
+        <div ref={searchContainerRef} className="w-full max-w-2xl relative z-20">
             <div className={cn(
                 "relative w-full",
                 isSearchFocused ? "rounded-t-3xl bg-card shadow-lg" : ""
@@ -2870,7 +2870,7 @@ const BrowserApp = () => {
     </div>
   );
 
-  const RightSidePanel = ({ title, icon: Icon, children, panelId, setOpen, isMobile = false }) => (
+  const RightSidePanel = ({ title, icon: Icon, children, panelId, onCloseRequest, isMobile = false }) => (
     <aside className={cn("flex flex-col",
         isMobile
         ? "flex-1 h-full bg-background"
@@ -2878,7 +2878,7 @@ const BrowserApp = () => {
     )}>
         <div className="flex items-center p-2 border-b shrink-0">
             {isMobile && (
-                <Button variant="ghost" size="icon" onClick={() => setOpen(null)} className="mr-2">
+                <Button variant="ghost" size="icon" onClick={() => onCloseRequest(null)} className="mr-2">
                     <ArrowLeft className="w-5 h-5 text-muted-foreground" />
                 </Button>
             )}
@@ -2891,7 +2891,7 @@ const BrowserApp = () => {
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => {
                         handleNavigation(activeTabId, `about:${panelId}`);
-                        setOpen(null);
+                        onCloseRequest(null);
                     }}>
                     <SquareArrowOutUpRight className="w-5 h-5 text-muted-foreground" />
                     </Button>
@@ -2903,7 +2903,7 @@ const BrowserApp = () => {
             </TooltipProvider>
 
             {!isMobile && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setOpen(null)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onCloseRequest(null)}>
                     <X className="w-5 h-5 text-muted-foreground" />
                 </Button>
             )}
@@ -3283,12 +3283,6 @@ const BrowserApp = () => {
     medium: 'text-base',
     large: 'text-lg',
   }[fontSize] || 'text-base';
-
-  const panelProps = {
-    setOpen: setActivePanel,
-    handleNavigation: handleNavigation,
-    activeTabId: activeTabId,
-  };
 
   return (
     <div className={cn("flex h-screen bg-background text-foreground", fontSizeClass)}>
@@ -4070,7 +4064,7 @@ const BrowserApp = () => {
                     title={panelConfig[activePanel].title} 
                     icon={panelConfig[activePanel].icon} 
                     panelId={activePanel} 
-                    {...panelProps}
+                    onCloseRequest={setActivePanel}
                   >
                     {panelConfig[activePanel].content}
                   </RightSidePanel>
@@ -4334,7 +4328,7 @@ const BrowserApp = () => {
                       title={panelConfig[activePanel].title}
                       icon={panelConfig[activePanel].icon}
                       panelId={activePanel}
-                      {...panelProps}
+                      onCloseRequest={setActivePanel}
                     >
                       {panelConfig[activePanel].content}
                     </RightSidePanel>
@@ -4355,6 +4349,7 @@ export default function BrowserPage() {
 }
 
     
+
 
 
 
