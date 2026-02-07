@@ -1183,8 +1183,7 @@ const NewTabPage = React.memo(({
 
     return (
     <div className="flex-1 flex flex-col items-center justify-start pt-16 bg-background text-foreground p-4 overflow-y-auto scrollbar-hide">
-        <h1 className="text-8xl font-bold mb-4 font-headline">Aisha</h1>
-        <p className="text-2xl text-muted-foreground mb-8">वसुधैव कुटुंबकम</p>
+        <h1 className="text-8xl font-bold mb-8 font-headline">वसुधैव कुटुंबकम</h1>
         <div ref={searchContainerRef} className="w-full max-w-2xl relative z-20">
             <div className={cn(
                 "relative w-full transition-all",
@@ -4345,3 +4344,4 @@ export default function BrowserPage() {
 
 
     
+
