@@ -226,6 +226,8 @@ const searchEngines: { [key: string]: { name: string; url: string } } = {
   bing: { name: 'Bing', url: 'https://www.bing.com/search?q=' },
   duckduckgo: { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
   yahoo: { name: 'Yahoo', url: 'https://search.yahoo.com/search?p=' },
+  qmamu: { name: 'Qmamu', url: 'https://qmamu.com/search?q=' },
+  '13tabs': { name: '13Tabs', url: 'https://13tabs.com/search?q=' },
 };
 
 const initialToolbarSettings = {
@@ -545,7 +547,7 @@ const AishaAssistant = React.memo(({
 ));
 AishaAssistant.displayName = 'AishaAssistant';
 
-const ToolbarSettingsPanel = ({
+const ToolbarSettingsPanel = React.memo(({
   setCustomizeView,
   setIsOpen,
   isMobile = false,
@@ -681,10 +683,11 @@ const ToolbarSettingsPanel = ({
       </ScrollArea>
     </div>
   );
-}
+});
+ToolbarSettingsPanel.displayName = 'ToolbarSettingsPanel';
 
 
-const CustomizePanelMain = ({
+const CustomizePanelMain = React.memo(({
   setIsOpen,
   setCustomizeView,
   handleThemeChange,
@@ -705,16 +708,37 @@ const CustomizePanelMain = ({
   colors,
   activeColorTheme,
   handleColorThemeChange,
+}: {
+  setIsOpen: (isOpen: boolean) => void;
+  setCustomizeView: (view: string) => void;
+  handleThemeChange: (theme: 'light' | 'dark' | 'device') => void;
+  theme: string;
+  isMobile?: boolean;
+  showShortcuts: boolean;
+  setShowShortcuts: (show: boolean) => void;
+  shortcutSetting: string;
+  setShortcutSetting: (setting: string) => void;
+  showCards: boolean;
+  setShowCards: (show: boolean) => void;
+  showContinueWithTabs: boolean;
+  setShowContinueWithTabs: (show: boolean) => void;
+  handleResetToDefault: () => void;
+  followDeviceTheme: boolean;
+  setFollowDeviceTheme: (follow: boolean) => void;
+  toast: (options: any) => void;
+  colors: any[];
+  activeColorTheme: string;
+  handleColorThemeChange: (color: any) => void;
 }) => {
-  const handleModeChange = (mode) => {
+  const handleModeChange = (mode: 'light' | 'dark') => {
     if (!followDeviceTheme) {
       handleThemeChange(mode);
     }
   };
   
-  const handleDeviceModeChange = (checked) => {
+  const handleDeviceModeChange = (checked: boolean) => {
     setFollowDeviceTheme(checked);
-    handleThemeChange(checked ? 'device' : theme);
+    handleThemeChange(checked ? 'device' : theme as 'light' | 'dark');
   };
 
   const handleShortcutSettingChange = (value: string) => {
@@ -882,10 +906,11 @@ const CustomizePanelMain = ({
       </ScrollArea>
     </div>
   );
-};
+});
+CustomizePanelMain.displayName = 'CustomizePanelMain';
 
 
-const CustomizePanel = ({
+const CustomizePanel = React.memo(({
   setIsOpen,
   handleThemeChange,
   theme,
@@ -1006,7 +1031,8 @@ const CustomizePanel = ({
       handleColorThemeChange={handleColorThemeChange}
     />
   );
-};
+});
+CustomizePanel.displayName = 'CustomizePanel';
 
 
 const renderShortcutIcon = (shortcut: Shortcut) => {
@@ -1020,7 +1046,7 @@ const renderShortcutIcon = (shortcut: Shortcut) => {
     return shortcut.icon;
 };
 
-const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
+const ShortcutItem = React.memo(({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
   shortcut: Shortcut;
   onNavigate: (url: string) => void;
   onEdit: () => void;
@@ -1081,10 +1107,11 @@ const ShortcutItem = ({ shortcut, onNavigate, onEdit, onRemove, isIncognito }: {
       )}
     </div>
   );
-};
+});
+ShortcutItem.displayName = 'ShortcutItem';
 
 
-const NewTabPage = ({
+const NewTabPage = React.memo(({
     searchContainerRef,
     isSearchFocused,
     searchEngines,
@@ -1112,6 +1139,7 @@ const NewTabPage = ({
     showShortcuts,
     showCards,
     showContinueWithTabs,
+    setIsCustomizeOpen,
 } : {
     searchContainerRef: React.RefObject<HTMLDivElement>;
     isSearchFocused: boolean;
@@ -1222,7 +1250,7 @@ const NewTabPage = ({
                 </div>
             </div>
             {isSearchFocused && (
-                <div className="w-full bg-card rounded-b-3xl shadow-lg border-t">
+                <div className="w-full bg-card rounded-b-3xl shadow-lg border-t absolute top-full left-0 z-0">
                     <CardContent className="p-0">
                          <div className="max-h-[60vh] overflow-y-auto scrollbar-hide">
                             {searchHistory.length > 0 && (
@@ -1323,7 +1351,8 @@ const NewTabPage = ({
         )}
     </div>
   );
-}
+});
+NewTabPage.displayName = 'NewTabPage';
 
 const colorThemes = [
   // Row 1
@@ -1449,6 +1478,12 @@ const BrowserApp = () => {
   
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
   
+  const updateTab = (id: string, updates: Partial<Tab>) => {
+    setTabs((prevTabs) =>
+      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
+    );
+  };
+
   const handleNavigation = useCallback((tabId: string, url: string) => {
     const currentTab = tabs.find(t => t.id === tabId);
     if (!currentTab) return;
@@ -1512,15 +1547,9 @@ const BrowserApp = () => {
     });
     setInputValue(newUrl);
     setNtpInputValue("");
-  }, [tabs, isIncognito, searchEngine, toast]);
+  }, [tabs, isIncognito, searchEngine, toast, updateTab]);
 
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
-
-  const updateTab = (id: string, updates: Partial<Tab>) => {
-    setTabs((prevTabs) =>
-      prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
-    );
-  };
   
   const copyLink = useCallback(() => {
     if (currentUrl !== DEFAULT_URL) {
@@ -1573,7 +1602,7 @@ const BrowserApp = () => {
     allItems.push({ icon: BookOpen, label: 'Editor', action: () => handleNavigation(activeTabId, 'about:editor') });
     
     return allItems;
-  }, [isMobile, activeTabId, setActivePanel, handleNavigation]);
+  }, [isMobile, activeTabId, handleNavigation]);
 
   const handleToolbarSettingsChange = (key: keyof typeof toolbarSettings, value: boolean) => {
     const newSettings = { ...toolbarSettings, [key]: value };
@@ -1583,7 +1612,7 @@ const BrowserApp = () => {
     }
   };
 
-  const applyCustomTheme = useCallback((color) => {
+  const applyCustomTheme = useCallback((color: any) => {
     const styleId = 'custom-color-theme';
     let styleTag = document.getElementById(styleId);
 
@@ -1657,7 +1686,7 @@ const BrowserApp = () => {
     styleTag.innerHTML = css;
   }, []);
 
-  const handleColorThemeChange = useCallback((color) => {
+  const handleColorThemeChange = useCallback((color: any) => {
     setActiveColorTheme(color.name);
     if (!isIncognito) {
       localStorage.setItem('aisha-color-theme', JSON.stringify(color));
@@ -1984,7 +2013,7 @@ const BrowserApp = () => {
     }
   };
 
-  const handleOpenAddShortcut = (context: 'ntp' | 'dropdown') => {
+  const handleOpenAddShortcut = useCallback((context: 'ntp' | 'dropdown') => {
     if (isIncognito) {
       toast({ title: "Can't add shortcuts in Incognito mode." });
       return;
@@ -1994,18 +2023,18 @@ const BrowserApp = () => {
     setNewShortcutUrl('');
     setShortcutModalContext(context);
     setIsAddOrEditShortcutOpen(true);
-  };
+  }, [isIncognito, toast]);
   
-  const handleOpenEditShortcut = (shortcut: Shortcut, context: 'ntp' | 'dropdown') => {
+  const handleOpenEditShortcut = useCallback((shortcut: Shortcut, context: 'ntp' | 'dropdown') => {
     if (isIncognito) return;
     setShortcutToEdit(shortcut);
     setNewShortcutName(shortcut.name);
     setNewShortcutUrl(shortcut.url);
     setShortcutModalContext(context);
     setIsAddOrEditShortcutOpen(true);
-  };
+  }, [isIncognito]);
   
-  const handleRemoveShortcut = (shortcutToRemove: Shortcut, context: 'ntp' | 'dropdown') => {
+  const handleRemoveShortcut = useCallback((shortcutToRemove: Shortcut, context: 'ntp' | 'dropdown') => {
     if (isIncognito) return;
     
     const targetShortcuts = context === 'ntp' ? shortcuts : dropdownShortcuts;
@@ -2017,9 +2046,9 @@ const BrowserApp = () => {
     setTargetShortcuts(newShortcuts);
     localStorage.setItem(storageKey, JSON.stringify(newShortcuts));
     toast({ title: 'Shortcut removed' });
-  };
+  }, [isIncognito, shortcuts, dropdownShortcuts, toast]);
   
-  const handleSaveShortcut = () => {
+  const handleSaveShortcut = useCallback(() => {
     if (isIncognito || !shortcutModalContext) return;
     if (!newShortcutName.trim() || !newShortcutUrl.trim()) {
       toast({ title: 'Please fill out both name and URL.', variant: 'destructive' });
@@ -2067,8 +2096,8 @@ const BrowserApp = () => {
     setNewShortcutName('');
     setNewShortcutUrl('');
     setShortcutModalContext(null);
-  };
-
+  }, [isIncognito, shortcutModalContext, newShortcutName, newShortcutUrl, shortcuts, dropdownShortcuts, shortcutToEdit, toast]);
+  
   useEffect(() => {
     const authStatus = sessionStorage.getItem('aisha-auth');
     if (authStatus !== 'true') {
@@ -2593,6 +2622,7 @@ const BrowserApp = () => {
             newBookmarks.push({
                 url: url,
                 title: tab.title,
+                favicon: `https://www.google.com/s2/favicons?sz=16&domain_url=${url}`
             });
             addedCount++;
         }
@@ -2614,12 +2644,14 @@ const BrowserApp = () => {
         return;
     }
     localStorage.removeItem('aisha-bookmarks');
+    localStorage.removeItem('aisha-dropdown-shortcuts');
     localStorage.removeItem('aisha-shortcuts');
     localStorage.removeItem('aisha-search-history');
     
     setBookmarks([]);
     setSearchHistory([]);
     setShortcuts(initialShortcuts);
+    setDropdownShortcuts(initialShortcuts);
     
     setTabs(prevTabs => 
         prevTabs.map(tab => ({
@@ -3444,12 +3476,6 @@ const BrowserApp = () => {
                 placeholder="Ask or navigate..."
               />
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handleShare}>
-                    <Upload className="w-5 h-5 text-muted-foreground" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => { if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith("about:")) { setIsTranslateOpen(true) } else { toast({title: "Can't translate this page."}) } }}>
-                    <Languages className="w-5 h-5 text-muted-foreground" />
-                </Button>
                 <TooltipProvider>
                     <Tooltip>
                     <TooltipTrigger asChild>
@@ -3479,10 +3505,9 @@ const BrowserApp = () => {
               </div>
             </div>
             
-            <div className="flex-shrink-0 flex items-center ml-auto">
+            <div className={cn("flex-shrink-0 flex items-center ml-auto", isMobile ? 'hidden' : 'flex')}>
               <div className={cn("items-center gap-1", isMobile ? "hidden" : "flex")}>
-                {yourAishaToolsList.map(tool => (
-                  toolbarSettings[tool.key as keyof typeof toolbarSettings] && (
+                {yourAishaToolsList.filter(tool => toolbarSettings[tool.key as keyof typeof toolbarSettings]).map(tool => (
                     <TooltipProvider key={tool.key}>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -3499,7 +3524,7 @@ const BrowserApp = () => {
                       </Tooltip>
                     </TooltipProvider>
                   )
-                ))}
+                )}
                 <Separator orientation="vertical" className="h-6 mx-1" />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -3836,90 +3861,6 @@ const BrowserApp = () => {
                       </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <div className="block md:hidden">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-5 h-5" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-80">
-                             <div className="flex items-center justify-around px-2 py-2">
-                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:bookmarks'); }}>
-                                      <BookMarked className="h-6 w-6 text-muted-foreground" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:downloads'); }}>
-                                      <Download className="h-6 w-6 text-muted-foreground" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:history'); }}>
-                                      <HistoryIcon className="h-6 w-6 text-muted-foreground" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => { handleNavigation(activeTabId, 'about:settings'); }}>
-                                      <Settings className="h-6 w-6 text-muted-foreground" />
-                                  </Button>
-                            </div>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={addTab}>
-                                <Plus className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>New tab</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => window.open(window.location.href + '?incognito=true')}>
-                                <ShieldOff className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>New Incognito window</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={handleShare}>
-                                <Share className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Share...</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={handleFind}>
-                                <Search className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Find in page</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => {
-                                if (currentUrl !== DEFAULT_URL && !currentUrl.startsWith('about:')) {
-                                    const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=en&u=${encodeURIComponent(currentUrl)}`;
-                                    handleNavigation(activeTabId, googleTranslateUrl);
-                                } else {
-                                    toast({ title: "Can't translate internal pages." });
-                                }
-                            }}>
-                                <Languages className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Translate...</span>
-                            </DropdownMenuItem>
-                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={handleInstallClick}>
-                                <PlusSquare className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Add to Home screen</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuCheckboxItem
-                                checked={isDesktopSite}
-                                onCheckedChange={(checked) => {
-                                    setIsDesktopSite(checked as boolean);
-                                    toast({ title: `Desktop site ${checked ? 'enabled' : 'disabled'}. Page reload may be required.` });
-                                }}
-                            >
-                                <div className="flex items-center">
-                                    <Laptop className="mr-4 h-5 w-5 text-muted-foreground" />
-                                    <span>Desktop site</span>
-                                </div>
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuSeparator />
-                             <DropdownMenuItem onSelect={() => handleNavigation(activeTabId, 'about:about')}>
-                                  <Info className="mr-4 h-5 w-5 text-muted-foreground"/>
-                                  <span>About Aisha</span>
-                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => setIsFeedbackOpen(true)}>
-                                <HelpCircle className="mr-4 h-5 w-5 text-muted-foreground" />
-                                <span>Help & feedback</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={handleSignOut}>
-                              <LogOut className="mr-4 h-5 w-5 text-muted-foreground"/>
-                              <span>Sign Out</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
                </div>
             </div>
           </div>
@@ -3928,7 +3869,8 @@ const BrowserApp = () => {
         <div className="relative flex flex-1 min-h-0">
           <main
             id="browser-content-area"
-            className="flex-1 bg-background overflow-y-auto scrollbar-hide transition-all duration-300 ease-in-out"
+            className="flex-1 bg-background overflow-y-auto scrollbar-hide transition-[padding] duration-300 ease-in-out"
+            style={{ paddingTop: showBookmarksBar && !isMobile ? `${bookmarksBarHeight}px` : '0px' }}
           >
               <div
                 style={{ height: `${bookmarksBarHeight}px` }}
@@ -3949,7 +3891,7 @@ const BrowserApp = () => {
                         <div className="space-y-1">
                           {bookmarks.length > 0 ? bookmarks.map(bookmark => (
                             <Button key={bookmark.url} variant="ghost" size="sm" className="w-full h-8 justify-start" onClick={() => { handleNavigation(activeTabId, bookmark.url); }}>
-                              <Image src={`https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
+                              <Image src={bookmark.favicon || `https://www.google.com/s2/favicons?sz=16&domain_url=${bookmark.url}`} width={16} height={16} alt={`${bookmark.title} favicon`} className="mr-2 rounded-sm"/>
                               <span className="text-xs font-light truncate">{bookmark.title}</span>
                             </Button>
                           )) : <p className="text-xs text-muted-foreground p-2">No bookmarks yet.</p>}
@@ -3996,7 +3938,7 @@ const BrowserApp = () => {
               </div>
 
               {tabs.map(tab => (
-                  <div key={tab.id} className={`w-full h-full flex flex-col transition-all duration-300 ease-in-out ${activeTabId === tab.id ? 'block' : 'hidden'}`} style={{ paddingTop: showBookmarksBar && !isMobile ? `${bookmarksBarHeight}px` : '0px' }}>
+                  <div key={tab.id} className={`w-full h-full flex flex-col transition-all duration-300 ease-in-out ${activeTabId === tab.id ? 'block' : 'hidden'}`}>
                       {renderCurrentPage()}
                   </div>
               ))}
@@ -4375,6 +4317,8 @@ export default function BrowserPage() {
 }
 
     
+
+
 
 
 

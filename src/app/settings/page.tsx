@@ -682,6 +682,8 @@ export default function SettingsPage() {
                   <SelectItem value="bing">Bing</SelectItem>
                   <SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
                   <SelectItem value="yahoo">Yahoo</SelectItem>
+                  <SelectItem value="qmamu">Qmamu (India)</SelectItem>
+                  <SelectItem value="13tabs">13Tabs (India)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -845,3 +847,4 @@ export default function SettingsPage() {
     
 
     
+
