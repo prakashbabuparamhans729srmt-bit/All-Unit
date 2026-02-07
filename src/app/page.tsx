@@ -1492,8 +1492,8 @@ const BrowserApp = () => {
     let newUrl = url.trim();
     if (!newUrl) return;
 
-    if (newUrl.startsWith('aisha:')) {
-      newUrl = newUrl.replace('aisha://', 'about:');
+    if (newUrl.startsWith('aisha:') || newUrl.startsWith('वसुधा:')) {
+      newUrl = newUrl.replace('aisha://', 'about:').replace('वसुधा://', 'about:');
     }
     
     if (newUrl.startsWith("about:")) {
@@ -3471,7 +3471,7 @@ const BrowserApp = () => {
               )}
               <Input
                 type="text"
-                value={isInternalPage ? inputValue.replace('about:', 'aisha://') : inputValue}
+                value={isInternalPage ? inputValue.replace('about:', 'वसुधा://') : inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleInputKeyDown}
                 className="bg-transparent border-none h-auto p-0 pl-2 focus-visible:ring-0 focus-visible:ring-offset-0 font-light text-sm flex-1"
@@ -4344,6 +4344,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
