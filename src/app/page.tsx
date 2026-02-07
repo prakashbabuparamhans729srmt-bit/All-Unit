@@ -164,15 +164,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 const DEFAULT_URL = "about:newtab";
 
 const initialShortcuts: Shortcut[] = [
-    { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com' },
-    { name: "YouTube", icon: 'Youtube', color: 'bg-red-500', url: 'https://youtube.com' },
-    { name: "ChatGPT", icon: 'Sparkles', color: 'bg-purple-500', url: 'https://chat.openai.com' },
-    { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com' },
-    { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com' },
-    { name: "Canvas", icon: 'C', color: 'bg-cyan-500', url: 'https://canvas.instructure.com/' },
-    { name: "IDX", icon: 'Sparkles', color: 'bg-orange-500', url: 'https://idx.dev' },
-    { name: "AdMob", icon: 'A', color: 'bg-yellow-500', url: 'https://admob.google.com' },
-    { name: "Flutter", icon: 'Book', color: 'bg-sky-500', url: 'https://flutter.dev' },
+    { name: "Google", icon: 'G', color: 'bg-blue-500', url: 'https://google.com', alt: "Google" },
+    { name: "YouTube", icon: 'Youtube', color: 'bg-red-500', url: 'https://youtube.com', alt: "YouTube" },
+    { name: "ChatGPT", icon: 'Sparkles', color: 'bg-purple-500', url: 'https://chat.openai.com', alt: "ChatGPT" },
+    { name: "GitHub", icon: 'G', color: 'bg-gray-700', url: 'https://github.com', alt: "GitHub" },
+    { name: "Vercel", icon: 'V', color: 'bg-black', url: 'https://vercel.com', alt: "Vercel" },
+    { name: "Canvas", icon: 'C', color: 'bg-cyan-500', url: 'https://canvas.instructure.com/', alt: "Canvas" },
+    { name: "IDX", icon: 'Sparkles', color: 'bg-orange-500', url: 'https://idx.dev', alt: "IDX" },
+    { name: "AdMob", icon: 'A', color: 'bg-yellow-500', url: 'https://admob.google.com', alt: "AdMob" },
+    { name: "Flutter", icon: 'Book', color: 'bg-sky-500', url: 'https://flutter.dev', alt: "Flutter" },
 ];
 
 const companyApps = [
@@ -259,6 +259,7 @@ type Shortcut = {
     icon: string | React.ElementType;
     color: string;
     url: string;
+    alt: string;
 };
 
 type Tab = {
@@ -1037,7 +1038,7 @@ CustomizePanel.displayName = 'CustomizePanel';
 
 const renderShortcutIcon = (shortcut: Shortcut) => {
     if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
-        return <Image src={shortcut.icon} alt={shortcut.name} width={24} height={24} className="rounded-full"/>;
+        return <Image src={shortcut.icon} alt={shortcut.alt} width={24} height={24} className="rounded-full"/>;
     }
     if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
     if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
@@ -1172,11 +1173,11 @@ const NewTabPage = React.memo(({
 }) => {
     const isMobile = useIsMobile();
     const mostVisitedSites = [
-        { name: "Wikipedia", icon: 'Globe', color: 'bg-gray-200 text-black', url: 'https://wikipedia.org' },
-        { name: "Reddit", icon: 'Globe', color: 'bg-orange-500', url: 'https://reddit.com' },
-        { name: "Twitter / X", icon: 'Globe', color: 'bg-black', url: 'https://x.com' },
-        { name: "Amazon", icon: 'Globe', color: 'bg-yellow-400 text-black', url: 'https://amazon.com' },
-        { name: "LinkedIn", icon: 'Globe', color: 'bg-blue-600', url: 'https://linkedin.com' },
+        { name: "Wikipedia", icon: 'Globe', color: 'bg-gray-200 text-black', url: 'https://wikipedia.org', alt: "Wikipedia" },
+        { name: "Reddit", icon: 'Globe', color: 'bg-orange-500', url: 'https://reddit.com', alt: "Reddit" },
+        { name: "Twitter / X", icon: 'Globe', color: 'bg-black', url: 'https://x.com', alt: "Twitter / X" },
+        { name: "Amazon", icon: 'Globe', color: 'bg-yellow-400 text-black', url: 'https://amazon.com', alt: "Amazon" },
+        { name: "LinkedIn", icon: 'Globe', color: 'bg-blue-600', url: 'https://linkedin.com', alt: "LinkedIn" },
     ];
     const shortcutsToDisplay = shortcutSetting === 'most-visited' ? mostVisitedSites : shortcuts;
 
@@ -1305,7 +1306,7 @@ const NewTabPage = React.memo(({
             )}
         </div>
         {showShortcuts ? (
-            <div className="w-full max-w-2xl mt-12 p-4">
+            <div className="w-full max-w-2xl mt-8 p-4">
                 <div className="grid grid-cols-5 gap-4">
                     {shortcutsToDisplay.map((shortcut, index) => (
                         <ShortcutItem
@@ -1483,7 +1484,7 @@ const BrowserApp = () => {
       prevTabs.map((tab) => (tab.id === id ? { ...tab, ...updates } : tab))
     );
   };
-
+  
   const handleNavigation = useCallback((tabId: string, url: string) => {
     const currentTab = tabs.find(t => t.id === tabId);
     if (!currentTab) return;
@@ -1547,7 +1548,7 @@ const BrowserApp = () => {
     });
     setInputValue(newUrl);
     setNtpInputValue("");
-  }, [tabs, isIncognito, searchEngine, toast, updateTab]);
+  }, [tabs, isIncognito, searchEngine, toast]);
 
   const currentUrl = activeTab?.history[activeTab.currentIndex] || DEFAULT_URL;
   
@@ -2068,7 +2069,7 @@ const BrowserApp = () => {
       // Editing existing shortcut
       newShortcuts = targetShortcuts.map(s =>
         s.name === shortcutToEdit.name
-          ? { ...s, name: newShortcutName, url: url, icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}` }
+          ? { ...s, name: newShortcutName, url: url, icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`, alt: newShortcutName }
           : s
       );
       toast({ title: "Shortcut updated!" });
@@ -2083,6 +2084,7 @@ const BrowserApp = () => {
         url: url,
         icon: `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`,
         color: 'bg-secondary',
+        alt: newShortcutName,
       };
       newShortcuts = [...targetShortcuts, newShortcut];
       toast({ title: "Shortcut added!" });
@@ -3869,17 +3871,23 @@ const BrowserApp = () => {
         <div className="relative flex flex-1 min-h-0">
           <main
             id="browser-content-area"
-            className="flex-1 bg-background overflow-y-auto scrollbar-hide transition-[padding] duration-300 ease-in-out"
-            style={{ paddingTop: showBookmarksBar && !isMobile ? `${bookmarksBarHeight}px` : '0px' }}
+            className={cn(
+              "flex-1 bg-background overflow-y-auto scrollbar-hide transition-[padding] duration-300 ease-in-out",
+              showBookmarksBar && !isMobile && "pt-[var(--bookmarks-bar-height)]"
+            )}
+            style={
+              {
+                "--bookmarks-bar-height": `${bookmarksBarHeight}px`,
+              } as React.CSSProperties
+            }
           >
               <div
-                style={{ height: `${bookmarksBarHeight}px` }}
+                style={{ height: `var(--bookmarks-bar-height, ${bookmarksBarHeight}px)` }}
                 className={cn(
-                  "absolute top-0 left-0 right-0 z-10 overflow-hidden border-b bg-card transition-[height,opacity] duration-300 ease-in-out",
+                  "absolute top-0 left-0 right-0 z-10 overflow-hidden border-b bg-card transition-all duration-300 ease-in-out",
                   showBookmarksBar && !isMobile
                     ? "opacity-100 p-4 pointer-events-auto"
-                    : "h-0 opacity-0 p-0 pointer-events-none",
-                  !showBookmarksBar ? "border-transparent" : "border-border"
+                    : "h-0 opacity-0 p-0 pointer-events-none border-transparent"
                 )}
               >
                 <ScrollArea className="h-full scrollbar-hide">
@@ -4333,3 +4341,6 @@ export default function BrowserPage() {
 
 
 
+
+
+    
