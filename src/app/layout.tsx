@@ -16,8 +16,8 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: 'Aisha Browser',
-  description: 'A browser experience built with Next.js',
+  title: 'All Unit',
+  description: 'A custom browser experience built with Next.js by All Unit.',
   manifest: '/manifest.json',
 };
 
