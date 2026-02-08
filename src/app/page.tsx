@@ -1038,7 +1038,7 @@ CustomizePanel.displayName = 'CustomizePanel';
 
 const renderShortcutIcon = (shortcut: Shortcut) => {
     if (typeof shortcut.icon === 'string' && shortcut.icon.startsWith('https://')) {
-        return <Image src={shortcut.icon} alt={shortcut.alt} width={24} height={24} className="rounded-full"/>;
+        return <Image src={shortcut.icon} alt={shortcut.alt || shortcut.name} width={24} height={24} className="rounded-full"/>;
     }
     if (shortcut.icon === 'Sparkles') return <Sparkles className="w-5 h-5" />;
     if (shortcut.icon === 'Book') return <Book className="w-5 h-5" />;
@@ -3463,7 +3463,7 @@ const BrowserApp = () => {
                   <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1 bg-background/50 rounded-full px-2 py-0.5">
                           <Globe className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-light text-muted-foreground">Aisha</span>
+                          <span className="text-sm font-light text-muted-foreground">वसुधा</span>
                       </div>
                   </div>
               ) : (
@@ -4344,6 +4344,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
