@@ -141,7 +141,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { summarizeText } from '@/ai/flows/summarize-flow';
+import { answerQuestion } from '@/ai/flows/answer-question-flow';
 import { describeImage } from '@/ai/flows/describe-image-flow';
 import { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1815,8 +1815,8 @@ const BrowserApp = () => {
     setIsAssistantLoading(true);
 
     try {
-      const result = await summarizeText({ text: userInput });
-      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
+      const result = await answerQuestion({ question: userInput });
+      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.answer };
       
       setAssistantMessages([...newMessages, assistantMessage]);
 
@@ -4344,6 +4344,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 

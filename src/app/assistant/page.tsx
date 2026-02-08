@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { summarizeText } from '@/ai/flows/summarize-flow';
+import { answerQuestion } from '@/ai/flows/answer-question-flow';
 
 type AssistantMessage = {
   role: 'user' | 'assistant';
@@ -37,8 +37,8 @@ const AssistantPage = () => {
     setIsAssistantLoading(true);
 
     try {
-      const result = await summarizeText({ text: userInput });
-      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.summary };
+      const result = await answerQuestion({ question: userInput });
+      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.answer };
       setAssistantMessages([...newMessages, assistantMessage]);
     } catch (error) {
       console.error("Assistant error:", error);
