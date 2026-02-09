@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, PlusSquare, Mic, Paperclip, ArrowUp, Globe, Link as LinkIcon } from 'lucide-react';
@@ -25,8 +25,26 @@ const AssistantPage = () => {
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [assistantInput, setAssistantInput] = useState('');
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isStreaming = streamIntervalRef.current !== null;
+
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleAssistantSubmit = useCallback(async (text?: string) => {
+    if (isAssistantLoading || isStreaming) return;
+
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+    }
+
     const currentInput = text || assistantInput;
     if (!currentInput.trim()) return;
 
@@ -40,13 +58,36 @@ const AssistantPage = () => {
 
     try {
       const result = await answerQuestion({ question: userInput });
+      setIsAssistantLoading(false);
+
       const assistantMessage: AssistantMessage = { 
         role: 'assistant', 
-        content: result.answer,
+        content: '',
         sources: result.sources,
         relatedQuestions: result.relatedQuestions,
       };
-      setAssistantMessages([...newMessages, assistantMessage]);
+      setAssistantMessages(prev => [...prev, assistantMessage]);
+
+      const textToStream = result.answer;
+      let charIndex = 0;
+      streamIntervalRef.current = setInterval(() => {
+        if (charIndex < textToStream.length) {
+          setAssistantMessages(prev => {
+            const updatedMessages = [...prev];
+            const lastMessage = updatedMessages[updatedMessages.length - 1];
+            if (lastMessage && lastMessage.role === 'assistant') {
+              lastMessage.content = textToStream.slice(0, charIndex + 1);
+            }
+            return updatedMessages;
+          });
+          charIndex++;
+        } else {
+          if (streamIntervalRef.current) {
+            clearInterval(streamIntervalRef.current);
+            streamIntervalRef.current = null;
+          }
+        }
+      }, 20);
     } catch (error) {
       console.error("Assistant error:", error);
       toast({
@@ -55,10 +96,9 @@ const AssistantPage = () => {
         variant: "destructive",
       });
       setAssistantMessages(assistantMessages); // Revert on error
-    } finally {
       setIsAssistantLoading(false);
     }
-  }, [assistantInput, assistantMessages, toast]);
+  }, [assistantInput, assistantMessages, toast, isAssistantLoading, isStreaming]);
 
   const handleAttachment = () => {
     toast({ title: "Attachment is not implemented on this page." });
@@ -122,6 +162,7 @@ const AssistantPage = () => {
                       }`}
                     >
                       {message.content}
+                      {isStreaming && message.role === 'assistant' && index === assistantMessages.length - 1 && <span className="typing-cursor" />}
                     </div>
 
                     {message.role === 'assistant' && (message.sources?.length || message.relatedQuestions?.length) ? (
@@ -193,7 +234,7 @@ const AssistantPage = () => {
                 handleAssistantSubmit();
               }
             }}
-            disabled={isAssistantLoading}
+            disabled={isAssistantLoading || isStreaming}
           />
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -211,7 +252,7 @@ const AssistantPage = () => {
                     size="icon" 
                     className="h-8 w-8"
                     onClick={() => handleAssistantSubmit()} 
-                    disabled={isAssistantLoading}
+                    disabled={isAssistantLoading || isStreaming}
                 >
                     <ArrowUp className="w-5 h-5" />
                 </Button>

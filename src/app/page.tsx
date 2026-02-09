@@ -364,8 +364,8 @@ const VoiceSearchOverlay = ({
 const AishaAssistant = React.memo(({
   isMobile = false,
   assistantMessages,
-  setAssistantMessages,
   isAssistantLoading,
+  isStreaming,
   assistantInput,
   setAssistantInput,
   handleAssistantSubmit,
@@ -373,6 +373,7 @@ const AishaAssistant = React.memo(({
   startVoiceSearch,
   listeningState,
   voiceSearchSource,
+  setAssistantMessages,
   setActivePanel,
   setMobileMenuOpen,
   toggleMainSidebar,
@@ -383,8 +384,8 @@ const AishaAssistant = React.memo(({
 }: {
   isMobile?: boolean;
   assistantMessages: AssistantMessage[];
-  setAssistantMessages: (messages: AssistantMessage[]) => void;
   isAssistantLoading: boolean;
+  isStreaming: boolean;
   assistantInput: string;
   setAssistantInput: (value: string) => void;
   handleAssistantSubmit: (text?: string) => void;
@@ -392,6 +393,7 @@ const AishaAssistant = React.memo(({
   startVoiceSearch: (source: 'address' | 'assistant') => void;
   listeningState: 'listening' | 'error' | 'inactive';
   voiceSearchSource: 'address' | 'assistant' | null;
+  setAssistantMessages: (messages: AssistantMessage[] | ((prev: AssistantMessage[]) => AssistantMessage[])) => void;
   setActivePanel: (panel: string | null) => void;
   setMobileMenuOpen: (open: boolean) => void;
   toggleMainSidebar: () => void;
@@ -476,6 +478,7 @@ const AishaAssistant = React.memo(({
                   }`}
                 >
                   {message.content}
+                  {isStreaming && message.role === 'assistant' && index === assistantMessages.length - 1 && <span className="typing-cursor" />}
                 </div>
                 {message.role === 'assistant' && (message.sources?.length || message.relatedQuestions?.length) ? (
                   <div className="space-y-4">
@@ -546,7 +549,7 @@ const AishaAssistant = React.memo(({
             handleAssistantSubmit();
           }
         }}
-        disabled={isAssistantLoading}
+        disabled={isAssistantLoading || isStreaming}
       />
       <div className="mt-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -564,7 +567,7 @@ const AishaAssistant = React.memo(({
                 size="icon" 
                 className="h-8 w-8"
                 onClick={() => handleAssistantSubmit()} 
-                disabled={isAssistantLoading}
+                disabled={isAssistantLoading || isStreaming}
             >
                 <ArrowUp className="w-5 h-5" />
             </Button>
@@ -1452,6 +1455,7 @@ const BrowserApp = () => {
   const [assistantInput, setAssistantInput] = useState('');
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const assistantStreamIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isIncognito, setIsIncognito] = useState(false);
   const [searchEngine, setSearchEngine] = useState('google');
   const [isFindOpen, setIsFindOpen] = useState(false);
@@ -1515,6 +1519,7 @@ const BrowserApp = () => {
   const isResizingBookmarksBar = useRef(false);
   
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  const isAssistantStreaming = assistantStreamIntervalRef.current !== null;
   
   const updateTab = (id: string, updates: Partial<Tab>) => {
     setTabs((prevTabs) =>
@@ -1837,6 +1842,13 @@ const BrowserApp = () => {
   ];
   
   const handleAssistantSubmit = useCallback(async (text?: string) => {
+    if (isAssistantLoading || isAssistantStreaming) return;
+
+    if (assistantStreamIntervalRef.current) {
+      clearInterval(assistantStreamIntervalRef.current);
+      assistantStreamIntervalRef.current = null;
+    }
+
     const currentInput = text || assistantInput;
     if (!currentInput.trim()) return;
 
@@ -1853,14 +1865,37 @@ const BrowserApp = () => {
 
     try {
       const result = await answerQuestion({ question: userInput });
+      setIsAssistantLoading(false);
+
       const assistantMessage: AssistantMessage = { 
         role: 'assistant', 
-        content: result.answer,
+        content: '',
         sources: result.sources,
         relatedQuestions: result.relatedQuestions,
       };
       
-      setAssistantMessages([...newMessages, assistantMessage]);
+      setAssistantMessages(prev => [...prev, assistantMessage]);
+
+      const textToStream = result.answer;
+      let charIndex = 0;
+      assistantStreamIntervalRef.current = setInterval(() => {
+        if (charIndex < textToStream.length) {
+          setAssistantMessages(prev => {
+            const updatedMessages = [...prev];
+            const lastMessage = updatedMessages[updatedMessages.length - 1];
+            if (lastMessage && lastMessage.role === 'assistant') {
+              lastMessage.content = textToStream.slice(0, charIndex + 1);
+            }
+            return updatedMessages;
+          });
+          charIndex++;
+        } else {
+          if (assistantStreamIntervalRef.current) {
+            clearInterval(assistantStreamIntervalRef.current);
+            assistantStreamIntervalRef.current = null;
+          }
+        }
+      }, 20);
 
     } catch (error) {
       console.error("Assistant error:", error);
@@ -1870,10 +1905,9 @@ const BrowserApp = () => {
         variant: "destructive",
       });
       setAssistantMessages(assistantMessages);
-    } finally {
       setIsAssistantLoading(false);
     }
-  }, [assistantInput, assistantMessages, toast]);
+  }, [assistantInput, assistantMessages, toast, isAssistantLoading, isAssistantStreaming]);
 
   const stopVoiceSearch = useCallback(() => {
     if (voiceSearchTimeoutRef.current) {
@@ -4061,6 +4095,7 @@ const BrowserApp = () => {
                     assistantMessages={assistantMessages}
                     setAssistantMessages={setAssistantMessages}
                     isAssistantLoading={isAssistantLoading}
+                    isStreaming={isAssistantStreaming}
                     assistantInput={assistantInput}
                     setAssistantInput={setAssistantInput}
                     handleAssistantSubmit={handleAssistantSubmit}
@@ -4284,6 +4319,7 @@ const BrowserApp = () => {
                         assistantMessages={assistantMessages}
                         setAssistantMessages={setAssistantMessages}
                         isAssistantLoading={isAssistantLoading}
+                        isStreaming={isAssistantStreaming}
                         assistantInput={assistantInput}
                         setAssistantInput={setAssistantInput}
                         handleAssistantSubmit={handleAssistantSubmit}
@@ -4386,6 +4422,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 

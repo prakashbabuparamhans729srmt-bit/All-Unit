@@ -99,4 +99,16 @@
     -webkit-app-region: no-drag;
     app-region: no-drag;
   }
+  @keyframes blink {
+    from, to { background-color: transparent }
+    50% { background-color: hsl(var(--foreground)) }
+  }
+  .typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background-color: hsl(var(--foreground));
+    animation: blink 1s step-end infinite;
+    vertical-align: bottom;
+  }
 }
