@@ -284,6 +284,8 @@ type BookmarkItem = {
 type AssistantMessage = {
   role: 'user' | 'assistant';
   content: string;
+  sources?: { title: string; url: string; }[];
+  relatedQuestions?: string[];
 }
 
 type SearchHistoryItem = {
@@ -385,7 +387,7 @@ const AishaAssistant = React.memo(({
   isAssistantLoading: boolean;
   assistantInput: string;
   setAssistantInput: (value: string) => void;
-  handleAssistantSubmit: () => void;
+  handleAssistantSubmit: (text?: string) => void;
   toast: (options: any) => void;
   startVoiceSearch: (source: 'address' | 'assistant') => void;
   listeningState: 'listening' | 'error' | 'inactive';
@@ -465,14 +467,49 @@ const AishaAssistant = React.memo(({
                   <AvatarFallback><Sparkles /></AvatarFallback>
                 </Avatar>
               )}
-              <div
-                className={`max-w-[80%] rounded-lg px-3 py-2 text-xs font-light ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary'
-                }`}
-              >
-                {message.content}
+               <div className="flex flex-col gap-4 max-w-[80%]">
+                <div
+                  className={`rounded-lg px-3 py-2 text-xs font-light ${
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary'
+                  }`}
+                >
+                  {message.content}
+                </div>
+                {message.role === 'assistant' && (message.sources?.length || message.relatedQuestions?.length) ? (
+                  <div className="space-y-4">
+                    {message.sources && message.sources.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-semibold mb-2 text-muted-foreground">Sources</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {message.sources.map((source, i) => (
+                                    <a key={i} href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs bg-background border rounded-full px-3 py-1.5 flex items-center gap-1.5 hover:bg-secondary/80">
+                                        <img src={`https://www.google.com/s2/favicons?sz=16&domain_url=${source.url}`} alt="" className="w-3 h-3"/>
+                                        <span className="truncate max-w-[200px]">{source.title}</span>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {message.relatedQuestions && message.relatedQuestions.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-semibold mb-2 text-muted-foreground">Related</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {message.relatedQuestions.map((q, i) => (
+                                    <button 
+                                        key={i} 
+                                        onClick={() => handleAssistantSubmit(q)}
+                                        className="text-xs bg-background border rounded-full px-3 py-1.5 hover:bg-secondary/80"
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
                {message.role === 'user' && (
                 <Avatar className="w-8 h-8">
@@ -1816,7 +1853,12 @@ const BrowserApp = () => {
 
     try {
       const result = await answerQuestion({ question: userInput });
-      const assistantMessage: AssistantMessage = { role: 'assistant', content: result.answer };
+      const assistantMessage: AssistantMessage = { 
+        role: 'assistant', 
+        content: result.answer,
+        sources: result.sources,
+        relatedQuestions: result.relatedQuestions,
+      };
       
       setAssistantMessages([...newMessages, assistantMessage]);
 
@@ -4021,7 +4063,7 @@ const BrowserApp = () => {
                     isAssistantLoading={isAssistantLoading}
                     assistantInput={assistantInput}
                     setAssistantInput={setAssistantInput}
-                    handleAssistantSubmit={() => handleAssistantSubmit()}
+                    handleAssistantSubmit={handleAssistantSubmit}
                     toast={toast}
                     startVoiceSearch={startVoiceSearch}
                     listeningState={listeningState}
@@ -4244,7 +4286,7 @@ const BrowserApp = () => {
                         isAssistantLoading={isAssistantLoading}
                         assistantInput={assistantInput}
                         setAssistantInput={setAssistantInput}
-                        handleAssistantSubmit={() => handleAssistantSubmit()}
+                        handleAssistantSubmit={handleAssistantSubmit}
                         toast={toast}
                         startVoiceSearch={startVoiceSearch}
                         listeningState={listeningState}
@@ -4344,6 +4386,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
