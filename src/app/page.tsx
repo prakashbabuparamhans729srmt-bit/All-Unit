@@ -4350,6 +4350,10 @@ const BrowserApp = () => {
        {isMobile && activePanel && (
           <Dialog open={!!activePanel} onOpenChange={(isOpen) => !isOpen && setActivePanel(null)}>
               <DialogContent className="h-screen w-screen max-w-full p-0 flex flex-col gap-0 border-0 rounded-none">
+                  <DialogHeader className="sr-only">
+                    <DialogTitle>{activePanel.charAt(0).toUpperCase() + activePanel.slice(1)}</DialogTitle>
+                    <DialogDescription>Panel for {activePanel}</DialogDescription>
+                  </DialogHeader>
                   {activePanel === 'assistant' && (
                       <AishaAssistant 
                         isMobile={true}
@@ -4459,6 +4463,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
