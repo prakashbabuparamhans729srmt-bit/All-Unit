@@ -526,7 +526,7 @@ const AishaAssistant = React.memo(({
                                 {message.sources.map((source, i) => (
                                     <a key={i} href={source.url} target="_blank" rel="noopener noreferrer" className="text-xs bg-background border rounded-full px-3 py-1.5 flex items-center gap-1.5 hover:bg-secondary/80">
                                         <img src={`https://www.google.com/s2/favicons?sz=16&domain_url=${source.url}`} alt="" className="w-3 h-3"/>
-                                        <span className="truncate max-w-[200px]">{source.title}</span>
+                                        <span className="truncate">{source.title}</span>
                                     </a>
                                 ))}
                             </div>
@@ -4459,6 +4459,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
