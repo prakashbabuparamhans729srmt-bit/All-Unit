@@ -1571,7 +1571,7 @@ const BrowserApp = () => {
     let newUrl = url.trim();
     if (!newUrl) return;
 
-    if (newUrl.startsWith('वसुधा:')) {
+    if (newUrl.startsWith('वसुधा://')) {
       newUrl = newUrl.replace('वसुधा://', 'about:');
     }
     
@@ -4459,6 +4459,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
