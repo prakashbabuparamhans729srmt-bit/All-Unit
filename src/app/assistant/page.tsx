@@ -11,6 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { answerQuestion } from '@/ai/flows/answer-question-flow';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 type AssistantMessage = {
   role: 'user' | 'assistant';
@@ -161,7 +163,19 @@ const AssistantPage = () => {
                           : 'bg-secondary'
                       }`}
                     >
-                      {message.content}
+                      {message.role === 'user' ? (
+                        message.content
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          className="prose prose-sm dark:prose-invert max-w-none"
+                          components={{
+                            a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline" />
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      )}
                       {isStreaming && message.role === 'assistant' && index === assistantMessages.length - 1 && <span className="typing-cursor" />}
                     </div>
 

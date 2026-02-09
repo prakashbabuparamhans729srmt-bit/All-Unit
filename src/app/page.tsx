@@ -159,6 +159,8 @@ import { CustomGroupIcon } from "@/components/icons/CustomGroupIcon";
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 
 const DEFAULT_URL = "about:newtab";
@@ -477,7 +479,19 @@ const AishaAssistant = React.memo(({
                       : 'bg-secondary'
                   }`}
                 >
-                  {message.content}
+                  {message.role === 'user' ? (
+                      message.content
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      className="prose prose-xs dark:prose-invert max-w-none"
+                      components={{
+                        a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline" />
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  )}
                   {isStreaming && message.role === 'assistant' && index === assistantMessages.length - 1 && <span className="typing-cursor" />}
                 </div>
                 {message.role === 'assistant' && (message.sources?.length || message.relatedQuestions?.length) ? (
@@ -1534,8 +1548,8 @@ const BrowserApp = () => {
     let newUrl = url.trim();
     if (!newUrl) return;
 
-    if (newUrl.startsWith('aisha:') || newUrl.startsWith('वसुधा:')) {
-      newUrl = newUrl.replace('aisha://', 'about:').replace('वसुधा://', 'about:');
+    if (newUrl.startsWith('वसुधा:')) {
+      newUrl = newUrl.replace('वसुधा://', 'about:');
     }
     
     if (newUrl.startsWith("about:")) {
@@ -4422,6 +4436,7 @@ export default function BrowserPage() {
 
 
     
+
 
 
 
