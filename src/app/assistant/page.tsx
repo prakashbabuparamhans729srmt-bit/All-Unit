@@ -4,7 +4,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, PlusSquare, Mic, Paperclip, ArrowUp, Globe, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Sparkles, PlusSquare, Mic, Paperclip, ArrowUp, Globe, Copy, Share, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -155,7 +155,7 @@ const AssistantPage = () => {
                       <AvatarFallback><Sparkles /></AvatarFallback>
                     </Avatar>
                   )}
-                  <div className="flex flex-col gap-4 max-w-[80%]">
+                  <div className="flex flex-col gap-2 max-w-[80%]">
                     <div
                       className={`rounded-lg px-3 py-2 text-sm font-light ${
                         message.role === 'user'
@@ -179,8 +179,28 @@ const AssistantPage = () => {
                       {isStreaming && message.role === 'assistant' && index === assistantMessages.length - 1 && <span className="typing-cursor" />}
                     </div>
 
+                    {message.content && (!isAssistantLoading && (index < assistantMessages.length - 1 || !isStreaming)) && (
+                      <div className={`flex items-center gap-1 ${message.role === 'user' ? 'justify-end' : ''}`}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                            navigator.clipboard.writeText(message.content);
+                            toast({ title: 'Copied to clipboard!' });
+                        }}>
+                            <Copy className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast({ title: 'Share functionality is not implemented.' })}>
+                            <Share className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast({ title: 'Feedback functionality is not implemented.' })}>
+                            <ThumbsUp className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast({ title: 'Feedback functionality is not implemented.' })}>
+                            <ThumbsDown className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    )}
+
                     {message.role === 'assistant' && (message.sources?.length || message.relatedQuestions?.length) ? (
-                      <div className="space-y-4">
+                      <div className="space-y-4 pt-2">
                           {message.sources && message.sources.length > 0 && (
                               <div>
                                   <h3 className="text-xs font-semibold mb-2 text-muted-foreground">Sources</h3>
